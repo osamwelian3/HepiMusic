@@ -1,0 +1,405 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/bottom_navigation_graph"
+    app:startDestination="@id/exploreFragment">
+
+    <fragment
+        android:id="@+id/exploreFragment"
+        android:name="com.hepimusic.main.explore.ExploreFragment"
+        android:label="fragment_explore"
+        tools:layout="@layout/fragment_explore" >
+        <action
+            android:id="@+id/action_exploreFragment_to_navigationDialogFragment"
+            app:destination="@id/navigationDialogFragment" />
+        <action
+            android:id="@+id/action_exploreFragment_to_albumsMenuBottomSheetDialogFragment"
+            app:destination="@id/albumsMenuBottomSheetDialogFragment"
+            app:launchSingleTop="true" >
+            <argument android:defaultValue="@id/exploreFragment"
+                android:name="popUpTo" />
+        </action>
+        <action
+            android:id="@+id/action_exploreFragment_to_albumSongsFragment"
+            app:destination="@id/albumSongsFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/songsFragment"
+        android:name="com.hepimusic.main.songs.SongsFragment"
+        android:label="fragment_songs"
+        tools:layout="@layout/fragment_base_player" >
+        <action
+            android:id="@+id/action_songsFragment_to_navigationDialogFragment"
+            app:destination="@id/navigationDialogFragment">
+            <argument
+                android:name="origin"
+                android:defaultValue="0" />
+        </action>
+        <action
+            android:id="@+id/action_songsFragment_to_songsMenuBottomSheetDialogFragment"
+            app:destination="@id/songsMenuBottomSheetDialogFragment"
+            app:launchSingleTop="true">
+            <argument
+                android:name="popUpTo"
+                android:defaultValue="@id/songsFragment" />
+        </action>
+    </fragment>
+    <fragment
+        android:id="@+id/albumsFragment"
+        android:name="com.hepimusic.main.albums.AlbumsFragment"
+        android:label="fragment_albums"
+        tools:layout="@layout/fragment_albums" >
+        <action
+            android:id="@+id/action_albumsFragment_to_navigationDialogFragment"
+            app:destination="@id/navigationDialogFragment" />
+        <action
+            android:id="@+id/action_albumsFragment_to_albumSongsFragment"
+            app:destination="@id/albumSongsFragment" />
+        <action
+            android:id="@+id/action_albumsFragment_to_albumsMenuBottomSheetDialogFragment"
+            app:destination="@id/albumsMenuBottomSheetDialogFragment"
+            app:launchSingleTop="true">
+            <argument
+                android:name="popUpTo"
+                android:defaultValue="@id/albumsFragment" />
+        </action>
+    </fragment>
+    <fragment
+        android:id="@+id/playlistFragment"
+        android:name="com.hepimusic.main.playlist.PlaylistFragment"
+        android:label="fragment_playlist"
+        tools:layout="@layout/fragment_playlist" >
+        <action
+            android:id="@+id/action_playlistFragment_to_navigationDialogFragment"
+            app:destination="@id/navigationDialogFragment">
+            <argument
+                android:name="origin"
+                android:defaultValue="5" />
+        </action>
+        <action
+            android:id="@+id/action_playlistFragment_to_playlistSongsFragment"
+            app:destination="@id/playlistSongsFragment" />
+        <action
+            android:id="@+id/action_playlistFragment_to_writePlaylistDialogFragment"
+            app:destination="@id/writePlaylistDialogFragment" />
+        <action
+            android:id="@+id/action_playlistFragment_to_playlistMenuBottomSheetDialogFragment"
+            app:destination="@id/playlistMenuBottomSheetDialogFragment"
+            app:launchSingleTop="true">
+            <argument
+                android:name="popUpTo"
+                android:defaultValue="@id/playlistFragment" />
+        </action>
+    </fragment>
+    <fragment
+        android:id="@+id/searchFragment"
+        android:name="com.hepimusic.main.search.SearchFragment"
+        android:label="fragment_search"
+        tools:layout="@layout/fragment_search" >
+        <action
+            android:id="@+id/action_searchFragment_to_songsMenuBottomSheetDialogFragment"
+            app:destination="@id/songsMenuBottomSheetDialogFragment" >
+            <argument
+                android:name="popUpTo"
+                android:defaultValue="@id/searchFragment" />
+        </action>
+        <action
+            android:id="@+id/action_searchFragment_to_albumsMenuBottomSheetDialogFragment"
+            app:destination="@id/albumsMenuBottomSheetDialogFragment" >
+            <argument android:defaultValue="@id/searchFragment"
+                android:name="popUpTo" />
+        </action>
+        <action
+            android:id="@+id/action_searchFragment_to_albumSongsFragment"
+            app:destination="@id/albumSongsFragment" />
+        <action
+            android:id="@+id/action_searchFragment_to_artistAlbumsFragment"
+            app:destination="@id/artistAlbumsFragment" />
+        <action
+            android:id="@+id/action_searchFragment_to_genreSongsFragment"
+            app:destination="@id/genreSongsFragment" />
+        <action
+            android:id="@+id/action_searchFragment_to_genresMenuBottomSheetDialogFragment"
+            app:destination="@id/genresMenuBottomSheetDialogFragment" >
+            <argument android:defaultValue="@id/searchFragment"
+                android:name="popUpTo" />
+        </action>
+        <action
+            android:id="@+id/action_searchFragment_to_playlistSongsFragment"
+            app:destination="@id/playlistSongsFragment" />
+        <action
+            android:id="@+id/action_searchFragment_to_playlistMenuBottomSheetDialogFragment"
+            app:destination="@id/playlistMenuBottomSheetDialogFragment" >
+            <argument android:defaultValue="@id/searchFragment"
+                android:name="popUpTo" />
+        </action>
+    </fragment>
+    <dialog
+        android:id="@+id/navigationDialogFragment"
+        android:name="com.hepimusic.main.navigation.NavigationDialogFragment"
+        android:label="fragment_navigation_dialog"
+        tools:layout="@layout/fragment_navigation_dialog" >
+        <argument
+            android:name="origin"
+            android:defaultValue="-1"
+            app:argType="integer" />
+        <action
+            android:id="@+id/action_navigationDialogFragment_to_songsFragment"
+            app:destination="@id/songsFragment"
+            app:popUpTo="@+id/navigationDialogFragment"
+            app:popUpToInclusive="true" />
+        <action
+            android:id="@+id/action_navigationDialogFragment_to_playlistFragment"
+            app:destination="@id/playlistFragment"
+            app:popUpTo="@+id/navigationDialogFragment"
+            app:popUpToInclusive="true" />
+        <action
+            android:id="@+id/action_navigationDialogFragment_to_artistsFragment"
+            app:destination="@id/artistsFragment"
+            app:launchSingleTop="false"
+            app:popUpTo="@+id/navigationDialogFragment"
+            app:popUpToInclusive="true" />
+        <action
+            android:id="@+id/action_navigationDialogFragment_to_genresFragment"
+            app:destination="@id/genresFragment" />
+    </dialog>
+    <fragment
+        android:id="@+id/albumSongsFragment"
+        android:name="com.hepimusic.main.albums.AlbumSongsFragment"
+        android:label="fragment_album_songs"
+        tools:layout="@layout/fragment_album_songs" >
+        <argument
+            android:name="album"
+            app:argType="com.hepimusic.main.albums.Album" />
+        <argument
+            android:name="transitionName"
+            app:argType="string" />
+        <action
+            android:id="@+id/action_albumSongsFragment_to_albumsMenuBottomSheetDialogFragment"
+            app:destination="@id/albumsMenuBottomSheetDialogFragment" >
+            <argument android:defaultValue="@id/albumSongsFragment"
+                android:name="popUpTo" />
+        </action>
+    </fragment>
+    <fragment
+        android:id="@+id/artistsFragment"
+        android:name="com.hepimusic.main.artists.ArtistsFragment"
+        android:label="fragment_artists"
+        tools:layout="@layout/fragment_artists" >
+        <action
+            android:id="@+id/action_artistsFragment_to_navigationDialogFragment"
+            app:destination="@id/navigationDialogFragment">
+            <argument
+                android:name="origin"
+                android:defaultValue="2" />
+        </action>
+        <action
+            android:id="@+id/action_artistsFragment_to_artistAlbumsFragment"
+            app:destination="@id/artistAlbumsFragment"
+            app:launchSingleTop="false" />
+    </fragment>
+    <fragment
+        android:id="@+id/artistAlbumsFragment"
+        android:name="com.hepimusic.main.artists.ArtistAlbumsFragment"
+        android:label="fragment_artist_albums"
+        tools:layout="@layout/fragment_artist_albums" >
+        <action
+            android:id="@+id/action_artistAlbumsFragment_to_navigationDialogFragment"
+            app:destination="@id/navigationDialogFragment"
+            app:launchSingleTop="false" />
+        <argument
+            android:name="artist"
+            app:argType="com.hepimusic.main.artists.Artist" />
+        <argument
+            android:name="transitionName"
+            app:argType="string" />
+        <action
+            android:id="@+id/action_artistAlbumsFragment_to_albumSongsFragment"
+            app:destination="@id/albumSongsFragment" />
+        <action
+            android:id="@+id/action_artistAlbumsFragment_to_albumsMenuBottomSheetDialogFragment"
+            app:destination="@id/albumsMenuBottomSheetDialogFragment"
+            app:launchSingleTop="true">
+            <argument
+                android:name="popUpTo"
+                android:defaultValue="@id/artistAlbumsFragment" />
+        </action>
+    </fragment>
+    <dialog
+        android:id="@+id/songsMenuBottomSheetDialogFragment"
+        android:name="com.hepimusic.main.songs.SongsMenuBottomSheetDialogFragment"
+        android:label="fragment_songs_menu_bottom_sheet_dialog2"
+        tools:layout="@layout/fragment_songs_menu_bottom_sheet_dialog2" >
+        <argument
+            android:name="mediaId"
+            app:argType="string" />
+        <action
+            android:id="@+id/action_songsMenuBottomSheetDialogFragment_to_addSongsToPlaylistsFragment"
+            app:destination="@id/addSongsToPlaylistsFragment"
+            app:launchSingleTop="true" />
+        <argument
+            android:name="popUpTo"
+            app:argType="reference" />
+    </dialog>
+    <fragment
+        android:id="@+id/playlistSongsFragment"
+        android:name="com.hepimusic.main.playlist.PlaylistSongsFragment"
+        android:label="fragment_playlist_songs"
+        tools:layout="@layout/fragment_playlist_songs" >
+        <argument
+            android:name="transitionName"
+            app:argType="string" />
+        <argument
+            android:name="playlist"
+            app:argType="com.hepimusic.main.playlist.Playlist" />
+        <action
+            android:id="@+id/action_playlistSongsFragment_to_playlistMenuBottomSheetDialogFragment"
+            app:destination="@id/playlistMenuBottomSheetDialogFragment"
+            app:launchSingleTop="true">
+            <argument
+                android:name="popUpTo"
+                android:defaultValue="@id/playlistSongsFragment" />
+        </action>
+    </fragment>
+    <dialog
+        android:id="@+id/writePlaylistDialogFragment"
+        android:name="com.hepimusic.main.playlist.WritePlaylistDialogFragment"
+        android:label="fragment_write_playlist_dialog"
+        tools:layout="@layout/fragment_write_playlist_dialog" >
+        <argument
+            android:name="playlist"
+            android:defaultValue="@null"
+            app:argType="com.hepimusic.main.playlist.Playlist"
+            app:nullable="true" />
+    </dialog>
+    <dialog
+        android:id="@+id/playlistMenuBottomSheetDialogFragment"
+        android:name="com.hepimusic.main.playlist.PlaylistMenuBottomSheetDialogFragment"
+        android:label="fragment_playlist_menu_bottom_sheet_dialog"
+        tools:layout="@layout/fragment_playlist_menu_bottom_sheet_dialog" >
+        <argument
+            android:name="playlist"
+            app:argType="com.hepimusic.main.playlist.Playlist" />
+        <argument
+            android:name="popUpTo"
+            app:argType="reference" />
+        <action
+            android:id="@+id/action_playlistMenuBottomSheetDialogFragment_to_playlistSongsEditorDialogFragment"
+            app:destination="@id/playlistSongsEditorDialogFragment"
+            app:launchSingleTop="true" />
+        <action
+            android:id="@+id/action_playlistMenuBottomSheetDialogFragment_to_writePlaylistDialogFragment"
+            app:destination="@id/writePlaylistDialogFragment"
+            app:launchSingleTop="true" />
+    </dialog>
+    <dialog
+        android:id="@+id/playlistSongsEditorDialogFragment"
+        android:name="com.hepimusic.main.playlist.PlaylistSongsEditorDialogFragment"
+        android:label="fragment_playlist_songs_editor_dialog"
+        tools:layout="@layout/fragment_playlist_songs_editor_dialog" >
+        <argument
+            android:name="playlist"
+            app:argType="com.hepimusic.main.playlist.Playlist" />
+    </dialog>
+    <fragment
+        android:id="@+id/genresFragment"
+        android:name="com.hepimusic.main.genres.GenresFragment"
+        android:label="fragment_genres"
+        tools:layout="@layout/fragment_genres" >
+        <action
+            android:id="@+id/action_genresFragment_to_navigationDialogFragment"
+            app:destination="@id/navigationDialogFragment">
+            <argument
+                android:name="origin"
+                android:defaultValue="4" />
+        </action>
+        <action
+            android:id="@+id/action_genresFragment_to_genreSongsFragment"
+            app:destination="@id/genreSongsFragment" />
+        <action
+            android:id="@+id/action_genresFragment_to_genresMenuBottomSheetDialogFragment"
+            app:destination="@id/genresMenuBottomSheetDialogFragment"
+            app:launchSingleTop="true">
+            <argument
+                android:name="popUpTo"
+                android:defaultValue="@id/genresFragment" />
+        </action>
+    </fragment>
+    <fragment
+        android:id="@+id/genreSongsFragment"
+        android:name="com.hepimusic.main.genres.GenreSongsFragment"
+        android:label="fragment_genre_songs"
+        tools:layout="@layout/fragment_genre_songs" >
+        <argument
+            android:name="genre"
+            app:argType="com.hepimusic.main.genres.Genre" />
+        <argument
+            android:name="transitionName"
+            app:argType="string" />
+        <action
+            android:id="@+id/action_genreSongsFragment_to_genresMenuBottomSheetDialogFragment"
+            app:destination="@id/genresMenuBottomSheetDialogFragment"
+            app:launchSingleTop="true">
+            <argument
+                android:name="popUpTo"
+                android:defaultValue="@id/genreSongsFragment" />
+        </action>
+    </fragment>
+    <dialog
+        android:id="@+id/genresMenuBottomSheetDialogFragment"
+        android:name="com.hepimusic.main.genres.GenresMenuBottomSheetDialogFragment"
+        android:label="fragment_genres_menu_bottom_sheet_dialog"
+        tools:layout="@layout/fragment_genres_menu_bottom_sheet_dialog" >
+        <argument
+            android:name="genre"
+            app:argType="com.hepimusic.main.genres.Genre" />
+        <argument
+            android:name="popUpTo"
+            app:argType="reference" />
+        <action
+            android:id="@+id/action_genresMenuBottomSheetDialogFragment_to_addSongsToPlaylistsFragment"
+            app:destination="@id/addSongsToPlaylistsFragment"
+            app:launchSingleTop="true" />
+    </dialog>
+    <dialog
+        android:id="@+id/addSongsToPlaylistsFragment"
+        android:name="com.hepimusic.main.playlist.AddSongsToPlaylistsFragment"
+        android:label="fragment_add_songs_to_playlists"
+        tools:layout="@layout/fragment_add_songs_to_playlists" >
+        <argument
+            android:name="songsSelectionArgs"
+            app:argType="string[]"
+            app:nullable="true"
+            android:defaultValue="@null" />
+        <argument
+            android:name="songsSelection"
+            app:argType="string"
+            app:nullable="true"
+            android:defaultValue="@null" />
+        <argument
+            android:name="songsUri"
+            app:argType="string"
+            app:nullable="true"
+            android:defaultValue="@null" />
+        <action
+            android:id="@+id/action_addSongsToPlaylistsFragment_to_writePlaylistDialogFragment"
+            app:destination="@id/writePlaylistDialogFragment"
+            app:launchSingleTop="true" />
+    </dialog>
+    <dialog
+        android:id="@+id/albumsMenuBottomSheetDialogFragment"
+        android:name="com.hepimusic.main.albums.AlbumsMenuBottomSheetDialogFragment"
+        android:label="fragment_albums_menu_bottom_sheet_dialog"
+        tools:layout="@layout/fragment_albums_menu_bottom_sheet_dialog" >
+        <action
+            android:id="@+id/action_albumsMenuBottomSheetDialogFragment_to_addSongsToPlaylistsFragment"
+            app:destination="@id/addSongsToPlaylistsFragment" />
+        <argument
+            android:name="popUpTo"
+            app:argType="reference" />
+        <argument
+            android:name="album"
+            app:argType="com.hepimusic.main.albums.Album" />
+    </dialog>
+</navigation>

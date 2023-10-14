@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<androidx.constraintlayout.motion.widget.MotionLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/onBoardingRoot"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/black"
+    app:layoutDescription="@xml/on_boarding_scene"
+    tools:context=".onBoarding.OnBoardingActivity"
+    tools:showPaths="true">
+
+    <View
+        android:id="@+id/leftCircle"
+        android:layout_width="8dp"
+        android:layout_height="8dp"
+        android:layout_marginLeft="@dimen/margin_medium"
+        android:layout_marginRight="@dimen/margin_medium"
+        android:background="@drawable/grey_circle"
+        app:layout_constraintRight_toLeftOf="@+id/centerCircle"
+        app:layout_constraintTop_toTopOf="@+id/centerCircle" />
+
+    <View
+        android:id="@+id/centerCircle"
+        android:layout_width="8dp"
+        android:layout_height="8dp"
+        android:layout_marginTop="@dimen/margin_xx_large"
+        android:background="@drawable/grey_circle"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <View
+        android:id="@+id/rightCircle"
+        android:layout_width="8dp"
+        android:layout_height="8dp"
+        android:layout_marginLeft="@dimen/margin_medium"
+        android:layout_marginRight="@dimen/margin_medium"
+        android:background="@drawable/grey_circle"
+        app:layout_constraintLeft_toRightOf="@+id/centerCircle"
+        app:layout_constraintTop_toTopOf="@+id/centerCircle" />
+
+    <View
+        android:id="@+id/activeCircle"
+        android:layout_width="8dp"
+        android:layout_height="8dp"
+        android:background="@drawable/accent_circle"
+        app:layout_constraintTop_toTopOf="@+id/leftCircle"
+        app:layout_constraintLeft_toLeftOf="@+id/leftCircle"/>
+
+    <Button
+        android:id="@+id/skipButton"
+        style="@style/Base.Widget.AppCompat.Button.Borderless.Colored"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/skip"
+        android:textAllCaps="false"
+        android:textColor="@android:color/white"
+        android:textAppearance="@style/TextAppearance.AppCompat.Widget.Button"
+        android:textStyle="bold" />
+
+    <androidx.viewpager.widget.ViewPager
+        android:id="@+id/viewPager"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginTop="@dimen/margin_x_large"
+        android:layout_marginBottom="@dimen/margin_x_large"
+        android:contentDescription="@string/onboarding_screen"
+        app:layout_constraintBottom_toTopOf="@+id/gotIt"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/centerCircle" />
+
+
+    <Button
+        android:id="@+id/gotIt"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="@dimen/margin_xx_large"
+        android:background="@drawable/round_border"
+        android:minHeight="0dp"
+        android:paddingLeft="@dimen/padding_xx_large"
+        android:paddingTop="@dimen/padding_medium"
+        android:paddingRight="@dimen/padding_xx_large"
+        android:paddingBottom="@dimen/padding_medium"
+        android:text="@string/got_it"
+        android:textStyle="bold"
+        android:textColor="@android:color/white"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent" />
+
+    <Button
+        android:id="@+id/next"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="@dimen/margin_xx_large"
+        android:background="@drawable/round_border_white"
+        android:minHeight="0dp"
+        android:paddingLeft="@dimen/padding_xx_large"
+        android:paddingTop="@dimen/padding_medium"
+        android:paddingRight="@dimen/padding_xx_large"
+        android:paddingBottom="@dimen/padding_medium"
+        android:text="@string/next"
+        android:textStyle="bold"
+        android:textColor="@android:color/white"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent" />
+</androidx.constraintlayout.motion.widget.MotionLayout>

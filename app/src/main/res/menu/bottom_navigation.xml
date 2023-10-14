@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/exploreFragment"
+        android:icon="@drawable/baseline_library_music_24"
+        android:title="@string/home" />
+    <item
+        android:id="@+id/songsFragment"
+        android:icon="@drawable/queue_music_24"
+        android:title="@string/songs" />
+    <item
+        android:id="@+id/searchFragment"
+        android:icon="@drawable/baseline_search_24"
+        android:title="@string/search" />
+    <item
+        android:id="@+id/albumsFragment"
+        android:icon="@drawable/ic_explore"
+        android:title="@string/explore" />
+    <item
+        android:id="@+id/playlistFragment"
+        android:icon="@drawable/playlists_icon"
+        android:title="@string/playlists" />
+</menu>

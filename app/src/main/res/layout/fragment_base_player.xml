@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".main.songs.SongsFragment">
+
+    <TextView
+        android:id="@+id/sectionTitle"
+        style="@style/Theme.HepiMusic.SectionTitle"
+        app:layout_constraintHorizontal_chainStyle="spread_inside"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toLeftOf="@+id/navigationIcon"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="@string/songs" />
+
+    <ImageButton
+        android:id="@+id/navigationIcon"
+        style="@style/Theme.HepiMusic.SectionIcon"
+        android:contentDescription="@string/navigation_icon"
+        app:layout_constraintBottom_toBottomOf="@id/sectionTitle"
+        app:layout_constraintHorizontal_chainStyle="spread_inside"
+        app:layout_constraintLeft_toRightOf="@+id/sectionTitle"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/sectionTitle"
+        app:srcCompat="@drawable/ic_nav" />
+
+
+    <TextView
+        android:id="@+id/dataNum"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/margin_medium"
+        android:paddingLeft="@dimen/margin_large"
+        android:paddingRight="@dimen/margin_large"
+        android:textAppearance="@style/TextAppearance.AppCompat.Body1"
+        app:layout_constraintHorizontal_chainStyle="spread_inside"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toLeftOf="@+id/playButton"
+        app:layout_constraintTop_toBottomOf="@+id/sectionTitle"
+        tools:text="118 tracks" />
+
+    <Button
+        android:id="@+id/playButton"
+        style="@style/Widget.AppCompat.Button.Colored"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="@dimen/margin_medium"
+        android:layout_marginRight="@dimen/margin_medium"
+        android:background="@drawable/accent_round_corner"
+        android:drawableStart="@drawable/ic_play_white"
+        android:drawablePadding="@dimen/padding_large"
+        android:minHeight="0dp"
+        android:paddingLeft="@dimen/padding_xx_large"
+        android:paddingTop="@dimen/padding_small"
+        android:paddingRight="@dimen/padding_xx_large"
+        android:paddingBottom="@dimen/padding_small"
+        android:text="@string/play"
+        android:textColor="@android:color/white"
+        android:textSize="@dimen/text_size_x_small"
+        app:layout_constraintBottom_toBottomOf="@+id/dataNum"
+        app:layout_constraintHorizontal_chainStyle="spread_inside"
+        app:layout_constraintLeft_toRightOf="@+id/dataNum"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/dataNum" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/dataRV"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:fadeScrollbars="false"
+        android:paddingTop="@dimen/padding_small"
+        android:scrollbars="vertical"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/playButton" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

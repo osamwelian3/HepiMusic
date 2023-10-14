@@ -1,0 +1,104 @@
+{
+    "UserAgent": "aws-amplify-cli/2.0",
+    "Version": "1.0",
+    "api": {
+        "plugins": {
+            "awsAPIPlugin": {
+                "hepimusic": {
+                    "endpointType": "GraphQL",
+                    "endpoint": "https://6ft45frm3jenboatz3o4tiatci.appsync-api.ap-south-1.amazonaws.com/graphql",
+                    "region": "ap-south-1",
+                    "authorizationType": "API_KEY",
+                    "apiKey": "da2-ohly5lzbszb2tdnssnxgmzwqcy"
+                }
+            }
+        }
+    },
+    "auth": {
+        "plugins": {
+            "awsCognitoAuthPlugin": {
+                "UserAgent": "aws-amplify-cli/0.1.0",
+                "Version": "0.1.0",
+                "IdentityManager": {
+                    "Default": {}
+                },
+                "AppSync": {
+                    "Default": {
+                        "ApiUrl": "https://6ft45frm3jenboatz3o4tiatci.appsync-api.ap-south-1.amazonaws.com/graphql",
+                        "Region": "ap-south-1",
+                        "AuthMode": "API_KEY",
+                        "ApiKey": "da2-ohly5lzbszb2tdnssnxgmzwqcy",
+                        "ClientDatabasePrefix": "hepimusic_API_KEY"
+                    }
+                },
+                "CredentialsProvider": {
+                    "CognitoIdentity": {
+                        "Default": {
+                            "PoolId": "ap-south-1:38b55e48-2362-4b13-942a-291967bda8de",
+                            "Region": "ap-south-1"
+                        }
+                    }
+                },
+                "CognitoUserPool": {
+                    "Default": {
+                        "PoolId": "ap-south-1_z1btVcOEE",
+                        "AppClientId": "7447th3l5fmmkl6la4haj283m1",
+                        "Region": "ap-south-1"
+                    }
+                },
+                "Auth": {
+                    "Default": {
+                        "OAuth": {
+                            "WebDomain": "hsncomj0befx-dev.auth.ap-south-1.amazoncognito.com",
+                            "AppClientId": "7447th3l5fmmkl6la4haj283m1",
+                            "SignInRedirectURI": "https://hepimusic.com/",
+                            "SignOutRedirectURI": "https://hepimusic.com/",
+                            "Scopes": [
+                                "phone",
+                                "email",
+                                "openid",
+                                "profile",
+                                "aws.cognito.signin.user.admin"
+                            ]
+                        },
+                        "authenticationFlowType": "USER_SRP_AUTH",
+                        "mfaConfiguration": "OFF",
+                        "mfaTypes": [
+                            "SMS"
+                        ],
+                        "passwordProtectionSettings": {
+                            "passwordPolicyMinLength": 8,
+                            "passwordPolicyCharacters": []
+                        },
+                        "signupAttributes": [
+                            "EMAIL"
+                        ],
+                        "socialProviders": [
+                            "FACEBOOK",
+                            "GOOGLE"
+                        ],
+                        "usernameAttributes": [],
+                        "verificationMechanisms": [
+                            "EMAIL"
+                        ]
+                    }
+                },
+                "S3TransferUtility": {
+                    "Default": {
+                        "Bucket": "hepimusic4338794eef5f478fb3bce902d0958964203416-dev",
+                        "Region": "ap-south-1"
+                    }
+                }
+            }
+        }
+    },
+    "storage": {
+        "plugins": {
+            "awsS3StoragePlugin": {
+                "bucket": "hepimusic4338794eef5f478fb3bce902d0958964203416-dev",
+                "region": "ap-south-1",
+                "defaultAccessLevel": "guest"
+            }
+        }
+    }
+}

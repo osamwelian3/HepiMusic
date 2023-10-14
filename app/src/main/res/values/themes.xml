@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="Theme.HepiMusic" parent="Theme.AppCompat.DayNight.NoActionBar" >
+        <!-- Customize your theme here. -->
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorAccent">@color/colorAccent</item>
+        <item name="android:fontFamily">@font/poppins</item>
+        <item name="android:windowBackground">@color/colorPrimary</item>
+        <!--@color/colorBackground-->
+        <item name="android:colorBackground">@color/colorPrimaryDark</item>
+        <!--@color/colorBackground-->
+        <item name="android:navigationBarColor">@color/colorPrimaryDark</item>
+        <item name="android:scrollbarThumbVertical">@drawable/scrollbar_thumb_vertical</item>
+        <item name="android:scrollbarTrackHorizontal">@drawable/scrollbar_track_vertical</item>
+    </style>
+
+    <style name="Theme.HepiMusic.SectionTitle">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:padding">@dimen/padding_large</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textAppearance">@style/TextAppearance.AppCompat.Title</item>
+    </style>
+
+    <style name="Theme.HepiMusic.SectionIcon">
+        <item name="navigationIcon" type="id">@id/navigationIcon</item>
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:background">?attr/selectableItemBackgroundBorderless</item>
+        <item name="android:contentDescription">@string/navigation_icon</item>
+        <item name="android:padding">@dimen/padding_large</item>
+    </style>
+
+    <!--Fullscreen style-->
+    <style name="Theme.HepiMusic.FullScreenDialogStyle">
+        <item name="android:windowNoTitle">true</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="android:windowFullscreen">false
+        </item> <!-- True for full screen without status bar -->
+        <item name="android:windowIsFloating">false</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+    </style>
+
+    <style name="Theme.HepiMusic.DialogAnimation" parent="Theme.AppCompat.Dialog">
+        <item name="android:windowEnterAnimation">@anim/dialog_in</item>
+        <item name="android:windowExitAnimation">@anim/dialog_out</item>
+    </style>
+</resources>
