@@ -15,6 +15,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.fragment.findNavController
 import com.hepimusic.BR
 import com.hepimusic.R
+import com.hepimusic.main.common.view.BaseMediaStoreViewModel
 import com.hepimusic.main.common.view.BasePlayerFragment
 import com.hepimusic.models.mappers.toMediaItem
 import com.hepimusic.playback.PlaybackViewModel
@@ -46,6 +47,7 @@ class SongsFragment : BasePlayerFragment<Song>() {
             param1 = it.getString(ARG_PARAM1)
             param2 = it.getString(ARG_PARAM2)
         }
+
     }
 
     override fun onCreateView(
@@ -53,7 +55,7 @@ class SongsFragment : BasePlayerFragment<Song>() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        val vm: SongsViewModel = ViewModelProvider(requireActivity()).get(SongsViewModel::class.java)
+        /*val vm: SongsViewModel = ViewModelProvider(requireActivity()).get(SongsViewModel::class.java)
         playbackViewModel = ViewModelProvider(requireActivity()).get(PlaybackViewModel::class.java)
         vm.items.observeForever { list ->
             if (list.isNotEmpty()){
@@ -61,7 +63,7 @@ class SongsFragment : BasePlayerFragment<Song>() {
             }
             Log.e("SF VM", "SF VM: "+list.size.toString())
         }
-        viewModel = vm // ViewModelProvider(this).get(SongsViewModel::class.java)
+        viewModel = vm*/ // ViewModelProvider(this).get(SongsViewModel::class.java)
 
         /*viewModel.isBrowserConnected.observe(requireActivity()){ connected ->
                 if (connected) {
@@ -71,14 +73,14 @@ class SongsFragment : BasePlayerFragment<Song>() {
                     }
                 }
             }*/
-        lifecycleScope.launch(Dispatchers.IO) {
+        /*lifecycleScope.launch(Dispatchers.IO) {
             suspend fun load() {
                 if (playbackViewModel.isBrowserInitialized()) {
-                    /*playbackViewModel.mediaItems.observe(requireActivity()){ mediaList ->
+                    *//*playbackViewModel.mediaItems.observe(requireActivity()){ mediaList ->
                         mediaList.map {
                             Log.e("MEDIA ITEM: ", it.mediaMetadata.title.toString())
                         }
-                    }*/
+                    }*//*
                     viewModel.loadData()
                 } else {
                     delay(2000)
@@ -91,16 +93,20 @@ class SongsFragment : BasePlayerFragment<Song>() {
                     load()
                 }
             }
-        }
+        }*/
 
         return super.onCreateView(inflater, container, savedInstanceState)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        viewModel = ViewModelProvider(requireActivity()).get(SongsViewModel::class.java)
         super.onViewCreated(view, savedInstanceState)
 
+        Log.d("SONGS FRAGMENT SV", viewModel.toString())
+        Log.d("SONGS FRAGMENT PV", playbackViewModel.toString())
+
         // viewModel.loadData()
-        Log.e("SF VM", "SF VM: "+viewModel.items.value?.size.toString())
+//        Log.e("SF VM", "SF VM: "+viewModel.items.value?.size.toString())
     }
 
     /*override fun onCreateView(

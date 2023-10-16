@@ -8,6 +8,7 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
+import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModelProvider
 import com.hepimusic.R
 import com.hepimusic.common.BaseActivity
@@ -31,6 +32,12 @@ class SplashActivity : BaseActivity() {
 
     private lateinit var preferences: SharedPreferences
 
+    var conditionOne: Boolean = false
+
+    var conditionTwo: Boolean = false
+
+    var conditionThree: Boolean = false
+
     private val preferencesListener: SharedPreferences.OnSharedPreferenceChangeListener =
         SharedPreferences.OnSharedPreferenceChangeListener { sharedPreferences, key ->
             Log.e("CHANGED KEY", key!!)
@@ -51,38 +58,59 @@ class SplashActivity : BaseActivity() {
 //        MediaBrowserManager.initialize(this.applicationContext)
 //        browser = MediaBrowserManager.getMediaBrowser() // browserInstance.getBrowserInstance()
 
-        viewModel = ViewModelProvider(this).get(SongViewModel::class.java)
         preferences = application.getSharedPreferences("main", Context.MODE_PRIVATE)
-        preferences.edit().putBoolean(INITIALIZATION_COMPLETE, false).apply()
-//        initializeBrowser()
-        preferences.registerOnSharedPreferenceChangeListener(preferencesListener)
 
+
+        // conditions
+        conditionOne = preferences.getBoolean(OnBoardingActivity.HAS_SEEN_ON_BOARDING, false)
+        @RequiresApi(Build.VERSION_CODES.TIRAMISU)
+        conditionTwo = (isPermissionGranted(
+            android.Manifest.permission.READ_MEDIA_AUDIO
+        ) && isPermissionGranted(android.Manifest.permission.READ_MEDIA_IMAGES))
+        conditionThree = isPermissionGranted(android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
+
+        /*if (preferences.getBoolean(Constants.INITIALIZATION_COMPLETE, false) && (conditionTwo || conditionThree)) {
+            startActivity(Intent(this, MainActivity::class.java))
+        } else {
+            viewModel = ViewModelProvider(this).get(SongViewModel::class.java)
+            viewModel.mediaItemList.observe(this) { mediaItemsList ->
+                mediaItemsList.map {
+                    Log.e("MEDIA ITEM: ", it.mediaMetadata.title.toString())
+                }
+            }
+        }*/
+        viewModel = ViewModelProvider(this).get(SongViewModel::class.java)
         viewModel.mediaItemList.observe(this) { mediaItemsList ->
             mediaItemsList.map {
                 Log.e("MEDIA ITEM: ", it.mediaMetadata.title.toString())
             }
         }
+        preferences.edit().putBoolean(INITIALIZATION_COMPLETE, false).apply()
+//        initializeBrowser()
+        preferences.registerOnSharedPreferenceChangeListener(preferencesListener)
+
+
 
         // Do some network activity
 
-        fun run(){
+        /*fun run(){
             Handler.createAsync(Looper.getMainLooper()).postDelayed({
-                /*Log.e("BROWSER WORKING", "Device Volume: "+browser.deviceVolume.toString())
+                *//*Log.e("BROWSER WORKING", "Device Volume: "+browser.deviceVolume.toString())
                 if (browser != null){
                     goToNextScreen()
                 } else {
                     run()
-                }*/
-                /*if (!preferences.getBoolean(Constants.INITIALIZATION_COMPLETE, false)) {
+                }*//*
+                if (!preferences.getBoolean(Constants.INITIALIZATION_COMPLETE, false)) {
                     Log.e("INITIALIZATION COMPLETE", preferences.getBoolean(Constants.INITIALIZATION_COMPLETE, false).toString())
                     run()
                 } else {
                     goToNextScreen()
-                }*/
-                                                                    goToNextScreen()
+                }
+//                                                                    goToNextScreen()
             }, 3000)
         }
-        run()
+        run()*/
 
 
     }
@@ -95,20 +123,20 @@ class SplashActivity : BaseActivity() {
     private fun goToNextScreen() {
         val nextActivity =
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU){
-                if (!preferences.getBoolean(OnBoardingActivity.HAS_SEEN_ON_BOARDING, false)) {
+                if (!conditionOne /*preferences.getBoolean(OnBoardingActivity.HAS_SEEN_ON_BOARDING, false)*/) {
                     OnBoardingActivity::class.java
-                } else if (!(isPermissionGranted(
+                } else if (!conditionTwo /*(isPermissionGranted(
                         android.Manifest.permission.READ_MEDIA_AUDIO
-                    ) && isPermissionGranted(android.Manifest.permission.READ_MEDIA_IMAGES))
+                    ) && isPermissionGranted(android.Manifest.permission.READ_MEDIA_IMAGES))*/
                 ) {
                     GetStartedActivity::class.java
                 } else {
                     MainActivity::class.java
                 }
             } else {
-                if (!preferences.getBoolean(OnBoardingActivity.HAS_SEEN_ON_BOARDING, false)) {
+                if (!conditionOne /*preferences.getBoolean(OnBoardingActivity.HAS_SEEN_ON_BOARDING, false)*/) {
                     OnBoardingActivity::class.java
-                } else if (!isPermissionGranted(android.Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+                } else if (!conditionThree /*isPermissionGranted(android.Manifest.permission.WRITE_EXTERNAL_STORAGE)*/) {
                     GetStartedActivity::class.java
                 } else {
                     MainActivity::class.java

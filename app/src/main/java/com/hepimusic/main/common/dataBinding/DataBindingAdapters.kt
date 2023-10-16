@@ -7,16 +7,20 @@ import android.widget.ImageButton
 import android.widget.ImageView
 import androidx.annotation.DrawableRes
 import androidx.databinding.BindingAdapter
+import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
+import androidx.media3.common.Player
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.MultiTransformation
 import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.load.resource.bitmap.CenterCrop
 import com.bumptech.glide.load.resource.bitmap.CircleCrop
+import com.bumptech.glide.load.resource.bitmap.FitCenter
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.bumptech.glide.request.RequestOptions
 import com.hepimusic.R
 import com.hepimusic.main.albums.Album
+import com.hepimusic.main.common.image.CircularTransparentCenter
 import com.hepimusic.main.explore.RecentlyPlayed
 import com.hepimusic.main.songs.Song
 import com.hepimusic.playback.MediaItemData
@@ -78,6 +82,46 @@ object DataBindingAdapters {
 //            .placeholder(R.drawable.thumb_circular_default)
 //            .into(view)
 //    }
+
+    @BindingAdapter("mediaSrc")
+    @JvmStatic
+    fun setAlbumCoverCompat(view: ImageView, item: MediaItem?) {
+        Glide.with(view)
+            .setDefaultRequestOptions(
+                RequestOptions()
+                    .placeholder(R.drawable.thumb_circular_default_hollow)
+                    .error(R.drawable.thumb_circular_default_hollow)
+                    .diskCacheStrategy(DiskCacheStrategy.DATA)
+            )
+            .load(item?.mediaMetadata?.artworkUri)
+            .transform(
+                MultiTransformation(centerCrop, circleCrop, CircularTransparentCenter(.3F))
+            )
+            .placeholder(R.drawable.thumb_circular_default_hollow)
+            .into(view)
+    }
+
+    @BindingAdapter("repeatSrc")
+    @JvmStatic
+    fun setRepeatModeSrc(view: ImageView, repeat: Int?) {
+        val src = when (repeat) {
+            Player.REPEAT_MODE_ALL -> R.drawable.ic_repeat_all
+            Player.REPEAT_MODE_ONE -> R.drawable.ic_repeat_once
+            else -> R.drawable.ic_repeat_none
+        }
+        view.setImageResource(src)
+    }
+
+    @BindingAdapter("shuffleSrc")
+    @JvmStatic
+    fun setShuffleModeSrc(view: ImageView, shuffle: Boolean?) {
+        val src = if (shuffle!!) {
+            R.drawable.ic_shuffle_off
+        } else {
+            R.drawable.ic_shuffle_on
+        }
+        view.setImageResource(src)
+    }
 
     @BindingAdapter("android:src")
     @JvmStatic
@@ -183,7 +227,7 @@ object DataBindingAdapters {
             )
             .load(album.albumArt)
             .transform(
-                MultiTransformation(centerCrop, RoundedCorners(10))
+                MultiTransformation(centerCrop, FitCenter(), RoundedCorners(10))
             )
             .placeholder(R.drawable.album_art)
             .into(view)

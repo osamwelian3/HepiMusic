@@ -12,14 +12,22 @@ import androidx.activity.viewModels
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.get
+import androidx.navigation.NavHost
 import androidx.navigation.Navigation
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.setupWithNavController
+import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.hepimusic.R
 import com.hepimusic.databinding.FragmentMainBinding
+import com.hepimusic.main.explore.ExploreFragment
 import com.hepimusic.main.explore.ExploreViewModel
 import com.hepimusic.main.songs.SongsViewModel
+import com.hepimusic.playback.BottomPlaybackFragment
 import com.hepimusic.playback.PlaybackViewModel
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 
 // TODO: Rename parameter arguments, choose names that match
 // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
@@ -42,9 +50,10 @@ class MainFragment : Fragment() {
     lateinit var songsViewModel: SongsViewModel
     val exploreViewModel: ExploreViewModel by activityViewModels()
 
+    val navHostF = NavHostFragment()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
         arguments?.let {
             param1 = it.getString(ARG_PARAM1)
             param2 = it.getString(ARG_PARAM2)
@@ -56,6 +65,9 @@ class MainFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View? {
         binding = FragmentMainBinding.inflate(LayoutInflater.from(requireContext()))
+
+        // Dynamically add BottomPlaybackFragment
+//        requireActivity().supportFragmentManager.beginTransaction().add(R.id.bottomPlaybackFragment, BottomPlaybackFragment()).commit()
         // Inflate the layout for this fragment
         return binding.root // inflater.inflate(R.layout.fragment_main, container, false)
     }
@@ -63,7 +75,7 @@ class MainFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        playbackViewModel = ViewModelProvider(requireActivity()).get(PlaybackViewModel::class.java)
+        /*playbackViewModel = ViewModelProvider(requireActivity()).get(PlaybackViewModel::class.java)
         songsViewModel = ViewModelProvider(requireActivity()).get(SongsViewModel::class.java)
 
         songsViewModel.isBrowserConnected.observeForever { connected ->
@@ -76,11 +88,21 @@ class MainFragment : Fragment() {
             if (connected) {
                 exploreViewModel.loadData()
             }
-        }
+        }*/
+
+        /*val navigationBar: BottomNavigationView = view.findViewById(R.id.navigationBar)
+
+        val navController = Navigation.findNavController(requireActivity(), R.id.bottomNavHostFragment)
+        navigationBar.setupWithNavController(navController)*/
+
+        // Dynamically add navHostFragment
 
         val navHostFragment = requireActivity().supportFragmentManager.findFragmentById(R.id.bottomNavHostFragment) as NavHostFragment
-        val navController = navHostFragment.navController // Navigation.findNavController(requireActivity(), R.id.bottomNavHostFragment)
+         val navController = navHostFragment.navController // Navigation.findNavController(requireActivity(), R.id.bottomNavHostFragment)
         binding.navigationBar.setupWithNavController(navController)
+        /*requireActivity().supportFragmentManager.beginTransaction().replace(R.id.bottomNavHostFragment, navHostF).commitNow()
+        navHostF.navController.setGraph(R.navigation.navigation_graph)
+        binding.navigationBar.setupWithNavController(navHostF.navController)*/
 
     }
 

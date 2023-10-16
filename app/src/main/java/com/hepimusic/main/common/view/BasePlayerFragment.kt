@@ -24,6 +24,7 @@ import com.hepimusic.databinding.FragmentBasePlayerBinding
 import com.hepimusic.main.common.callbacks.OnItemClickListener
 import com.hepimusic.main.common.data.Model
 import com.hepimusic.main.songs.Song
+import com.hepimusic.main.songs.SongsViewModel
 import com.hepimusic.playback.PlaybackViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -72,12 +73,13 @@ abstract class BasePlayerFragment<T : Model> : BaseFragment(), View.OnClickListe
                 }
             }
         }*/
-        Log.e("BPF VM", viewModel.items.value?.size.toString())
+//        Log.e("BPF VM", viewModel.items.value?.size.toString())
         return binding.root // inflater.inflate(R.layout.fragment_base_player, container, false)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        playbackViewModel = ViewModelProvider(requireActivity()).get(PlaybackViewModel::class.java)
         setupView()
         observeViewModel()
         /*playbackViewModel.isBrowserConnected.observe(requireActivity()) { connected ->
@@ -128,7 +130,7 @@ abstract class BasePlayerFragment<T : Model> : BaseFragment(), View.OnClickListe
                             }
                         }
                     }
-                    viewModel.items.observe(viewLifecycleOwner, Observer(::updateViews))
+                    viewModel.items.observe(requireActivity(), Observer(::updateViews))
                 }
             }
 

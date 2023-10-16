@@ -7,7 +7,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 
 @HiltViewModel
-class SongsViewModel @Inject constructor(val application: Application): BaseMediaStoreViewModel<Song>(application) {
+open class SongsViewModel @Inject constructor(val application: Application): BaseMediaStoreViewModel<Song>(application) {
 
     override val parentId: String
         get() = "[allSongsID]"

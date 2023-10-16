@@ -72,9 +72,10 @@ class ExploreFragment : Fragment(), OnItemClickListener {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        requireActivity().also { fragmentActivity ->
+        /*requireActivity().also { fragmentActivity ->
             val actvty = fragmentActivity as MainActivity
             val sngsVM: SongsViewModel = actvty.songsViewModel
+            actvty.observeViewModel()
             Log.e("VIEWMODEL FROM ACTIVITY", "VIEWMODEL FROM ACTIVITY: "+actvty.songsViewModel.items.value?.size.toString())
             sngsVM.items.observe(fragmentActivity){
                 if (it.isNotEmpty()){
@@ -82,7 +83,10 @@ class ExploreFragment : Fragment(), OnItemClickListener {
                 }
             }
 
-        }
+        }*/
+
+        Log.d("EXPLORE FRAGMENT EV", viewModel.toString())
+
 //        viewModel = ViewModelProvider(this).get(ExploreViewModel::class.java)
         binding = FragmentExploreBinding.inflate(LayoutInflater.from(requireContext()))
         arguments?.let {
@@ -95,14 +99,16 @@ class ExploreFragment : Fragment(), OnItemClickListener {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
+        setupViews()
+        observeViewModel()
         // Inflate the layout for this fragment
         return binding.root // inflater.inflate(R.layout.fragment_explore, container, false)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        setupViews()
-        observeViewModel()
+        /*setupViews()
+        observeViewModel()*/
         binding.navigationIcon.setOnClickListener(
             Navigation.createNavigateOnClickListener(
                 R.id.action_exploreFragment_to_navigationDialogFragment
@@ -112,8 +118,6 @@ class ExploreFragment : Fragment(), OnItemClickListener {
 
     override fun onStart() {
         super.onStart()
-//        setupViews()
-//        observeViewModel()
     }
 
     companion object {
@@ -188,7 +192,14 @@ class ExploreFragment : Fragment(), OnItemClickListener {
                     }
                 }
             }*/
-            viewModel.isBrowserConnected.observe(viewLifecycleOwner, Observer { connected ->
+            viewModel.items.observe(viewLifecycleOwner, Observer {
+                albums = it
+                (binding.randomAlbumsRV.adapter as BaseAdapter<Album>).updateItems(albums)
+                observePlayed()
+            })
+            /*viewModel.isBrowserConnected.observe(viewLifecycleOwner, Observer { connected ->
+                if (connected) {
+                    viewModel.items.observe(viewLifecycleOwner, Observe/*viewModel.isBrowserConnected.observe(viewLifecycleOwner, Observer { connected ->
                 if (connected) {
                     viewModel.items.observe(viewLifecycleOwner, Observer {
                         albums = it
@@ -196,7 +207,13 @@ class ExploreFragment : Fragment(), OnItemClickListener {
                         observePlayed()
                     })
                 }
-            })
+            })*/r {
+                        albums = it
+                        (binding.randomAlbumsRV.adapter as BaseAdapter<Album>).updateItems(albums)
+                        observePlayed()
+                    })
+                }
+            })*/
             /*viewModel.items.observe(viewLifecycleOwner, Observer {
                 albums = it
                 (binding.randomAlbumsRV.adapter as BaseAdapter<Album>).updateItems(albums)

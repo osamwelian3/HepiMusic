@@ -26,12 +26,14 @@ import com.google.common.util.concurrent.MoreExecutors
 import com.hepimusic.common.Constants
 import com.hepimusic.main.albums.Album
 import com.hepimusic.main.common.view.MyBaseViewModel
+import com.hepimusic.main.explore.RecentlyPlayed
 import com.hepimusic.main.explore.RecentlyPlayedDatabase
 import com.hepimusic.main.explore.RecentlyPlayedRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import java.util.Timer
 import java.util.TimerTask
@@ -44,8 +46,8 @@ class PlaybackViewModel @Inject constructor(
     val glide: RequestManager
 ): MyBaseViewModel(application) {
 
-    private val job = Job()
-    private val backgroundScope = CoroutineScope(Dispatchers.Main + job)
+    private val serviceJob = SupervisorJob()
+    private val serviceScope = CoroutineScope(Dispatchers.IO + serviceJob)
 
     lateinit var browser2: MediaBrowser
     lateinit var controller: MediaController
@@ -93,13 +95,14 @@ class PlaybackViewModel @Inject constructor(
     lateinit var browser: MediaBrowser
 
     init {
-        _isPlaying.postValue(false)
+//        _isPlaying.postValue(false)
         val recentlyPlayed = recentlyPlayedDatabase.dao // RecentlyPlayedRoomDatabase.getDatabase(application).recentDao()
         playedRepository = RecentlyPlayedRepository(recentlyPlayed)
+        init()
     }
 
     fun init() {
-        if (isBrowserConnected.value == true) {
+        if (true /*isBrowserConnected.value == true*/) {
             /*browserFuture.addListener({
                 if (browserFuture.isDone && !browserFuture.isCancelled) browser = browserFuture.get()
             }, ContextCompat.getMainExecutor(application.applicationContext))
@@ -111,143 +114,13 @@ class PlaybackViewModel @Inject constructor(
                 }
             }, MoreExecutors.directExecutor())*/
 
-            isControllerConnected.observeForever { connected ->
-                if (connected) {
-                    controller = globalController
-
-                    Log.e("CONTROLLER VOL", "CONTROLLER VOL: "+controller.deviceVolume.toString())
-
-                    controller.addListener(object : Player.Listener {
-                        override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
-                            nowPlaying.postValue(mediaItem)
-                            try {
-                                _contentLength.postValue(controller.duration.toInt())
-                            } catch (_: Exception){
-
-                            }
-                            if (controller.playbackState == Player.STATE_READY || controller.playbackState == Player.STATE_BUFFERING) {
-                                _contentLength.postValue(controller.duration.toInt())
-                            }
-                            super.onMediaItemTransition(mediaItem, reason)
-                        }
-
-                        override fun onMediaMetadataChanged(mediaMetadata: MediaMetadata) {
-                            val item = nowPlaying.value?.let {
-                                MediaItem.Builder()
-                                    .setMediaId(it.mediaId)
-                                    .setUri(it.requestMetadata.mediaUri)
-                                    .setMediaMetadata(mediaMetadata)
-                                    .build()
-                            }
-                            nowPlaying.postValue(item)
-                            _currentItem.postValue(item)
-                            if (controller.playbackState == Player.STATE_READY || controller.playbackState == Player.STATE_BUFFERING) {
-                                _contentLength.postValue(controller.duration.toInt())
-                            }
-                            super.onMediaMetadataChanged(mediaMetadata)
-                        }
-
-                        override fun onPlaylistMetadataChanged(mediaMetadata: MediaMetadata) {
-                            super.onPlaylistMetadataChanged(mediaMetadata)
-                        }
-
-                        override fun onIsLoadingChanged(isLoading: Boolean) {
-                            super.onIsLoadingChanged(isLoading)
-                        }
-
-                        override fun onLoadingChanged(isLoading: Boolean) {
-                            super.onLoadingChanged(isLoading)
-                        }
-
-                        override fun onPlayerStateChanged(playWhenReady: Boolean, playbackState: Int) {
-                            super.onPlayerStateChanged(playWhenReady, playbackState)
-                            if (playWhenReady && controller.isPlaying) {
-                                _isPlaying.postValue(true)
-                            } else {
-                                _isPlaying.postValue(false)
-                            }
-                            if (controller.playbackState == Player.STATE_READY || controller.playbackState == Player.STATE_BUFFERING) {
-                                _contentLength.postValue(controller.duration.toInt())
-                            }
-                        }
-
-                        override fun onPlaybackStateChanged(playbackState: Int) {
-                            _playbackState.postValue(playbackState)
-                            if (playbackState == Player.STATE_READY || playbackState == Player.STATE_BUFFERING && controller.isPlaying) {
-                                _isPlaying.postValue(true)
-                            } else {
-                                _isPlaying.postValue(false)
-                            }
-                            if (controller.playbackState == Player.STATE_READY || controller.playbackState == Player.STATE_BUFFERING) {
-                                _contentLength.postValue(controller.duration.toInt())
-                            }
-                            super.onPlaybackStateChanged(playbackState)
-                        }
-
-                        override fun onPlayWhenReadyChanged(playWhenReady: Boolean, reason: Int) {
-                            _isPlaying.value = playWhenReady
-                            try {
-                                _contentLength.postValue(controller.duration.toInt())
-                            } catch (_: Exception){
-
-                            }
-                            updatePlaybackPosition()
-                            super.onPlayWhenReadyChanged(playWhenReady, reason)
-                            if (controller.playbackState == Player.STATE_READY || controller.playbackState == Player.STATE_BUFFERING) {
-                                _contentLength.postValue(controller.duration.toInt())
-                            }
-                        }
-
-                        override fun onIsPlayingChanged(isPlaying: Boolean) {
-                            super.onIsPlayingChanged(isPlaying)
-                        }
-
-                        override fun onRepeatModeChanged(repeatMode: Int) {
-                            _repeatMode.postValue(repeatMode)
-                            preferences.edit().putInt(Constants.LAST_REPEAT_MODE, repeatMode).apply()
-                            if (controller.playbackState == Player.STATE_READY || controller.playbackState == Player.STATE_BUFFERING) {
-                                _contentLength.postValue(controller.duration.toInt())
-                            }
-                            super.onRepeatModeChanged(repeatMode)
-                        }
-
-                        override fun onShuffleModeEnabledChanged(shuffleModeEnabled: Boolean) {
-                            super.onShuffleModeEnabledChanged(shuffleModeEnabled)
-                        }
-
-                        override fun onPlayerError(error: PlaybackException) {
-                            if (error.message!!.contains("network", true)) {
-                                networkFailure.postValue(true)
-                            }
-                            super.onPlayerError(error)
-                        }
-
-                        override fun onEvents(player: Player, events: Player.Events) {
-
-                            super.onEvents(player, events)
-                        }
-
-                        override fun onPlayerErrorChanged(error: PlaybackException?) {
-                            super.onPlayerErrorChanged(error)
-                        }
-
-                        override fun onPlaybackParametersChanged(playbackParameters: PlaybackParameters) {
-                            super.onPlaybackParametersChanged(playbackParameters)
-                        }
-
-                        override fun onMetadata(metadata: Metadata) {
-                            super.onMetadata(metadata)
-                        }
-                    })
-
-                }
-            }
-
             isBrowserConnected.observeForever { connected ->
                 if (connected) {
                     browser2 = globalBrowser
 
                     browser = browser2
+
+                    browser.addListener(playerListener)
 
                     browser.also { browser ->
                         browser.getChildren(lastParendId, 0, kotlin.Int.MAX_VALUE, null).also {
@@ -255,6 +128,9 @@ class PlaybackViewModel @Inject constructor(
                                 val result = it.get()!!
                                 val children = result.value!!
                                 _mediaItems.postValue(children)
+                                _currentItem.postValue(children.find { it.mediaId == preferences.getString(Constants.LAST_ID, children.first().mediaId) })
+                                browser.setMediaItems(children, children.indexOf(children.find { it.mediaId == preferences.getString(Constants.LAST_ID, children.first().mediaId) }), Integer.toUnsignedLong(preferences.getInt(Constants.LAST_POSITION, 0)))
+                                browser.prepare()
                             }, ContextCompat.getMainExecutor(application))
                         }
                         subscribe(lastParendId, null)
@@ -265,11 +141,174 @@ class PlaybackViewModel @Inject constructor(
                 }
             }
 
+            isControllerConnected.observeForever { connected ->
+                if (connected) {
+                    controller = globalController
+
+                    Log.e("CONTROLLER VOL", "CONTROLLER VOL: "+controller.deviceVolume.toString())
+
+                    controller.addListener(playerListener)
+
+                }
+            }
+
+        }
+    }
+
+    val playerListener = object : Player.Listener {
+        override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
+            nowPlaying.postValue(mediaItem)
+            _currentItem.value = mediaItem
+            addToRecentlyPlayed(mediaItem!!, browser.isPlaying)
+            persistPosition()
+            try {
+                _contentLength.postValue(browser.duration.toInt())
+            } catch (_: Exception){
+
+            }
+            if (browser.playbackState == Player.STATE_READY || browser.playbackState == Player.STATE_BUFFERING) {
+                _contentLength.postValue(browser.duration.toInt())
+            }
+            super.onMediaItemTransition(mediaItem, reason)
+        }
+
+        override fun onMediaMetadataChanged(mediaMetadata: MediaMetadata) {
+            val item = nowPlaying.value?.let {
+                MediaItem.Builder()
+                    .setMediaId(it.mediaId)
+                    .setUri(it.requestMetadata.mediaUri)
+                    .setMediaMetadata(mediaMetadata)
+                    .build()
+            }
+            nowPlaying.postValue(item)
+//            _currentItem.value = item
+            _currentItem.postValue(item)
+            if (browser.playbackState == Player.STATE_READY || browser.playbackState == Player.STATE_BUFFERING) {
+                _contentLength.postValue(browser.duration.toInt())
+            }
+            super.onMediaMetadataChanged(mediaMetadata)
+        }
+
+        override fun onPlaylistMetadataChanged(mediaMetadata: MediaMetadata) {
+            super.onPlaylistMetadataChanged(mediaMetadata)
+        }
+
+        override fun onIsLoadingChanged(isLoading: Boolean) {
+            super.onIsLoadingChanged(isLoading)
+        }
+
+        override fun onLoadingChanged(isLoading: Boolean) {
+            super.onLoadingChanged(isLoading)
+        }
+
+        override fun onPlayerStateChanged(playWhenReady: Boolean, playbackState: Int) {
+            super.onPlayerStateChanged(playWhenReady, playbackState)
+            _playbackState.value = playbackState
+            if (playWhenReady && browser.isPlaying) {
+                updatePosition = true
+                _isPlaying.postValue(true)
+            } else {
+                updatePosition = false
+                _isPlaying.postValue(false)
+            }
+            if (browser.playbackState == Player.STATE_READY || browser.playbackState == Player.STATE_BUFFERING) {
+                _contentLength.postValue(browser.duration.toInt())
+            }
+        }
+
+        override fun onPlaybackStateChanged(playbackState: Int) {
+            _playbackState.postValue(playbackState)
+            addToRecentlyPlayed(browser.currentMediaItem!!, browser.isPlaying)
+            persistPosition()
+            if (playbackState == Player.STATE_READY /*|| playbackState == Player.STATE_BUFFERING*/ && browser.isPlaying) {
+                _isPlaying.postValue(true)
+                updatePosition = true
+                updatePlaybackPosition()
+            } else {
+                updatePosition = false
+                _isPlaying.postValue(false)
+            }
+            if (browser.playbackState == Player.STATE_READY || browser.playbackState == Player.STATE_BUFFERING) {
+                _contentLength.postValue(browser.duration.toInt())
+            }
+            super.onPlaybackStateChanged(playbackState)
+        }
+
+        override fun onPlayWhenReadyChanged(playWhenReady: Boolean, reason: Int) {
+            _isPlaying.value = playWhenReady
+            try {
+                _contentLength.value = browser.duration.toInt()
+                _contentLength.postValue(browser.duration.toInt())
+            } catch (_: Exception){
+
+            }
+            if (playWhenReady) {
+                updatePosition = true
+                updatePlaybackPosition()
+            } else {
+                updatePosition = false
+            }
+            super.onPlayWhenReadyChanged(playWhenReady, reason)
+            if (browser.playbackState == Player.STATE_READY || browser.playbackState == Player.STATE_BUFFERING) {
+                _contentLength.value = browser.duration.toInt()
+                _contentLength.postValue(browser.duration.toInt())
+
+            }
+        }
+
+        override fun onIsPlayingChanged(isPlaying: Boolean) {
+            super.onIsPlayingChanged(isPlaying)
+            _isPlaying.value = isPlaying
+            if (isPlaying) {
+                updatePosition = true
+                updatePlaybackPosition()
+            } else {
+                updatePosition = false
+            }
+        }
+
+        override fun onRepeatModeChanged(repeatMode: Int) {
+            _repeatMode.postValue(repeatMode)
+            preferences.edit().putInt(Constants.LAST_REPEAT_MODE, repeatMode).apply()
+            if (browser.playbackState == Player.STATE_READY || browser.playbackState == Player.STATE_BUFFERING) {
+                _contentLength.postValue(controller.duration.toInt())
+            }
+            super.onRepeatModeChanged(repeatMode)
+        }
+
+        override fun onShuffleModeEnabledChanged(shuffleModeEnabled: Boolean) {
+            super.onShuffleModeEnabledChanged(shuffleModeEnabled)
+            _shuffleMode.value = shuffleModeEnabled
+            _shuffleMode.postValue(shuffleModeEnabled)
+        }
+
+        override fun onPlayerError(error: PlaybackException) {
+            if (error.message!!.contains("network", true)) {
+                networkFailure.postValue(true)
+            }
+            super.onPlayerError(error)
+        }
+
+        override fun onEvents(player: Player, events: Player.Events) {
+
+            super.onEvents(player, events)
+        }
+
+        override fun onPlayerErrorChanged(error: PlaybackException?) {
+            super.onPlayerErrorChanged(error)
+        }
+
+        override fun onPlaybackParametersChanged(playbackParameters: PlaybackParameters) {
+            super.onPlaybackParametersChanged(playbackParameters)
+        }
+
+        override fun onMetadata(metadata: Metadata) {
+            super.onMetadata(metadata)
         }
     }
 
     fun loadInitialData() {
-        backgroundScope.launch {
+        viewModelScope.launch {
             globalBrowser.getChildren(lastParendId, 0, Int.MAX_VALUE, null).let {
                 it.addListener({
                     _mediaItems.postValue(it.get().value)
@@ -279,17 +318,17 @@ class PlaybackViewModel @Inject constructor(
     }
 
     fun playPause() {
-        if (controller.isPlaying || controller.playWhenReady) {
-            controller.pause()
+        if (browser.isPlaying || browser.playWhenReady) {
+            browser.pause()
         } else {
-            if (controller.playbackState == Player.STATE_READY || controller.playbackState == Player.STATE_BUFFERING && !controller.playWhenReady) controller.play() else playMediaId(currentItem.value)
+            if (browser.playbackState == Player.STATE_READY || browser.playbackState == Player.STATE_BUFFERING && !browser.playWhenReady) browser.play() else playMediaId(currentItem.value)
         }
     }
 
     fun playMediaId(mediaItem: MediaItem?) {
         if (mediaItem == null) return
-        val nowPlaying = controller.currentMediaItem ?: browser.currentMediaItem
-        val transportControls = controller
+        val nowPlaying = browser.currentMediaItem ?: browser.currentMediaItem
+        val transportControls = browser
 
         val isPrepared = browser.playWhenReady
         if (isPrepared && mediaItem.mediaId == nowPlaying?.mediaId) {
@@ -318,29 +357,31 @@ class PlaybackViewModel @Inject constructor(
     fun playAll(playId: String = Constants.PLAY_RANDOM, list: List<MediaItem>? = mediaItems.value) {
         val parentId = lastParendId
 //        val list = mediaItems.value
-        if (controller.mediaItemCount > 0) {
+        if (browser.mediaItemCount > 0) {
             try {
-                controller.seekTo(list!!.indexOf(list.find { it.mediaId == playId }), 0)
+                browser.seekTo(list!!.indexOf(list.find { it.mediaId == playId }), 0)
             } catch (e: Exception) {
-                controller.setMediaItems(
+                browser.setMediaItems(
                     list!!,
                     list.indexOf(list.find { it.mediaId == playId }),
                     0
                 )
             }
         } else {
-            controller.setMediaItems(
+            browser.setMediaItems(
                 list!!,
                 list.indexOf(list.find { it.mediaId == playId }),
                 0
             )
         }
 //        browser.seekTo(0, 0)
-        controller.prepare()
-        controller.setPlaybackSpeed(1f)
-        controller.playWhenReady = true
+//        browser.addListener(playerListener)
+        browser.prepare()
+        browser.setPlaybackSpeed(1f)
+        browser.playWhenReady = true
+        playMediaAfterLoad = playId
 //        browser.play()
-        Log.e("CURRENT ITEM", controller.currentMediaItem?.mediaId ?: "None")
+        Log.e("CURRENT ITEM", browser.currentMediaItem?.mediaId ?: "None")
         /*if (parentId == Constants.SONGS_ROOT && list != null) {
             playMediaId(getItemFrmPlayId(playId, list))
         } else {
@@ -351,7 +392,7 @@ class PlaybackViewModel @Inject constructor(
     }
 
     fun seek(time: Long) {
-        val transportControls = controller
+        val transportControls = browser
         transportControls.seekTo(time)
         preferences.edit().putLong(Constants.LAST_POSITION, time).apply()
     }
@@ -385,8 +426,8 @@ class PlaybackViewModel @Inject constructor(
 
     fun skipToPrevious() {
         if (browser.playbackState == Player.STATE_READY) {
-            controller.seekToNextMediaItem() //.skipToPrevious()
-            controller.playWhenReady = true
+            browser.seekToNextMediaItem() //.skipToPrevious()
+            browser.playWhenReady = true
         } else {
             _mediaItems.value?.let {
                 val i = it.indexOf(currentItem.value)
@@ -457,7 +498,7 @@ class PlaybackViewModel @Inject constructor(
         // Update synchronously so addToRecentlyPlayed can pick up a valid currentItem
         if (currentItem != null) _currentItem.value = currentItem
         _playbackState.postValue(state)
-        if (state == Player.STATE_READY) updatePlaybackPosition()
+        if (state == Player.STATE_READY && browser.isPlaying) updatePlaybackPosition() else updatePosition = false
         return items
     }
 
@@ -490,15 +531,32 @@ class PlaybackViewModel @Inject constructor(
         return isActive && isBuffering
     }
 
+    private fun addToRecentlyPlayed(metadata: MediaItem, isPlaying: Boolean ) {
+        if (isPlaying) {
+            serviceScope.launch {
+                val played = RecentlyPlayed(metadata)
+                playedRepository.insert(played)
+                playedRepository.trim()
+                preferences.edit().putString(Constants.LAST_ID, metadata.mediaId).apply()
+            }
+
+        }
+    }
+
+    private fun persistPosition() {
+        if (browser.playbackState == Player.STATE_READY) {
+            preferences.edit().putInt(Constants.LAST_POSITION, mediaPosition.value ?: 0).apply()
+        }
+    }
+
     private fun updatePlaybackPosition(): Boolean = handler.postDelayed({
-//        Log.e("CONTROLLER POSITION", "CONTROLLER POSITION: "+controller.currentPosition+" MEDIA POSITION: "+mediaPosition.value+" SONG DURATION: "+controller.duration+" - "+controller.contentDuration)
-        val currPosition = controller.currentPosition.toInt() // _playbackState.value?.currentPlayBackPosition
+        Log.e("CONTROLLER POSITION", "CONTROLLER POSITION: "+browser.currentPosition+" MEDIA POSITION: "+mediaPosition.value+" SONG DURATION: "+browser.duration+" - "+browser.contentDuration)
+        val currPosition = browser.currentPosition.toInt() // _playbackState.value?.currentPlayBackPosition
         if (_mediaPosition.value != currPosition) {
             _mediaPosition.value = currPosition
 //            _mediaPosition.postValue(currPosition)
         }
-        if (updatePosition)
-            updatePlaybackPosition()
+        if (updatePosition) updatePlaybackPosition() else Log.e("CONTROLLER POSITION", "CONTROLLER POSITION STOPED")
     }, POSITION_UPDATE_INTERVAL_MILLIS)
 
     /*timer.schedule(object : TimerTask() {
@@ -548,5 +606,5 @@ private fun MediaItem.copy(isPlaying: Boolean): MediaItem {
         .build()
 }
 
-private const val POSITION_UPDATE_INTERVAL_MILLIS = 1L
+private const val POSITION_UPDATE_INTERVAL_MILLIS = 100L
 

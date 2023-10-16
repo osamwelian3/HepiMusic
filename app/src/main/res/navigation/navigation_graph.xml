@@ -25,6 +25,9 @@
         <argument
             android:name="transitionName"
             app:argType="string" />
+        <action
+            android:id="@+id/action_playbackFragment_to_mainFragment2"
+            app:destination="@id/mainFragment" />
     </fragment>
     <fragment
         android:id="@+id/songsMenuBottomSheetDialogFragment"

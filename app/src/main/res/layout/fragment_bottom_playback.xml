@@ -64,7 +64,7 @@
             android:textAppearance="@style/TextAppearance.AppCompat.Body1"
             android:textSize="@dimen/text_size_small"
             android:textStyle="bold"
-            app:layout_constraintEnd_toStartOf="@+id/exo_prev"
+            app:layout_constraintEnd_toStartOf="@+id/previousButton"
             app:layout_constraintStart_toEndOf="@+id/sharableView"
             app:layout_constraintTop_toTopOf="@+id/sharableView"
             tools:text="Beyoncee" />
@@ -76,16 +76,17 @@
             android:ellipsize="end"
             android:maxLines="1"
             android:textColor="@color/white"
-            android:text="@{String.valueOf(viewModel.controller.duration) + String.valueOf(' ') + viewModel.mediaPosition.toString() + viewModel.currentItem.mediaMetadata.title.toString()}"
+            android:text="@{viewModel.currentItem.mediaMetadata.title.toString()}"
             android:textAppearance="@style/TextAppearance.AppCompat.Caption"
             app:layout_constraintLeft_toLeftOf="@+id/songArtist"
             app:layout_constraintRight_toRightOf="@+id/songArtist"
             app:layout_constraintTop_toBottomOf="@+id/songArtist"
             tools:text="Jumping over the roofs" />
+        <!--String.valueOf(viewModel.browser.duration) + String.valueOf(' ') + viewModel.mediaPosition.toString() +-->
         <!--@{viewModel.currentItem.mediaMetadata.title}-->
         
         <ImageButton
-            android:id="@+id/exo_prev"
+            android:id="@+id/previousButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:background="?attr/selectableItemBackgroundBorderless"
@@ -93,12 +94,12 @@
             android:onClick="@{(v) -> viewModel.skipToPrevious()}"
             android:padding="@dimen/padding_large"
             android:src="@drawable/ic_previous"
-            app:layout_constraintEnd_toStartOf="@+id/exo_play_pause"
+            app:layout_constraintEnd_toStartOf="@+id/playButton"
             app:layout_constraintStart_toEndOf="@+id/songArtist"
-            app:layout_constraintTop_toTopOf="@+id/exo_next" />
+            app:layout_constraintTop_toTopOf="@+id/nextButton" />
 
         <ImageButton
-            android:id="@+id/exo_play_pause"
+            android:id="@+id/playButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="@dimen/margin_medium"
@@ -108,9 +109,9 @@
             android:onClick="@{(v) -> viewModel.playPause()}"
             android:padding="@dimen/padding_large"
             android:src="@{viewModel.isPlaying ? @drawable/ic_pause_tertiary : @drawable/ic_play_tertiary }"
-            app:layout_constraintEnd_toStartOf="@+id/exo_next"
-            app:layout_constraintStart_toEndOf="@+id/exo_prev"
-            app:layout_constraintTop_toTopOf="@+id/exo_next" />
+            app:layout_constraintEnd_toStartOf="@+id/nextButton"
+            app:layout_constraintStart_toEndOf="@+id/previousButton"
+            app:layout_constraintTop_toTopOf="@+id/nextButton" />
         <!--@{viewModel.isPlaying ? @drawable/ic_pause_tertiary : @drawable/ic_play_tertiary }-->
         <!--tools:src="@drawable/ic_play_white"-->
 
@@ -120,14 +121,14 @@
             android:layout_height="wrap_content"
             android:indeterminateDrawable="@drawable/progress_thin"
             android:visibility="invisible"
-            app:layout_constraintBottom_toBottomOf="@+id/exo_play_pause"
-            app:layout_constraintEnd_toEndOf="@+id/exo_play_pause"
-            app:layout_constraintStart_toStartOf="@+id/exo_play_pause"
-            app:layout_constraintTop_toTopOf="@+id/exo_play_pause"
+            app:layout_constraintBottom_toBottomOf="@+id/playButton"
+            app:layout_constraintEnd_toEndOf="@+id/playButton"
+            app:layout_constraintStart_toStartOf="@+id/playButton"
+            app:layout_constraintTop_toTopOf="@+id/playButton"
             tools:visibility="gone" />
 
         <ImageButton
-            android:id="@+id/exo_next"
+            android:id="@+id/nextButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginEnd="@dimen/margin_small"
@@ -137,7 +138,7 @@
             android:padding="@dimen/padding_large"
             android:src="@drawable/ic_next"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toEndOf="@+id/exo_play_pause"
+            app:layout_constraintStart_toEndOf="@+id/playButton"
             app:layout_constraintTop_toTopOf="parent" />
         
         <SeekBar
@@ -154,7 +155,7 @@
             android:progressDrawable="@drawable/seek_bar"
             android:thumb="@drawable/seek_bar_thumb"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="@+id/exo_next"
+            app:layout_constraintEnd_toEndOf="@+id/nextButton"
             app:layout_constraintStart_toStartOf="@+id/songArtist"
             tools:progress="50" />
     </androidx.constraintlayout.widget.ConstraintLayout>

@@ -16,6 +16,7 @@ import androidx.media3.session.MediaBrowser
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
 import com.google.common.util.concurrent.ListenableFuture
+import com.google.common.util.concurrent.MoreExecutors
 import com.hepimusic.main.common.data.MediaStoreRepository
 import com.hepimusic.playback.MusicService
 import kotlinx.coroutines.Dispatchers
@@ -150,11 +151,11 @@ abstract class BaseMediaStoreViewModel<T> (
                         controllerFuture.get()
                     }
                     _isControllerConnected.postValue(::controller.isInitialized)
-                    loadData(parentId)
+//                    loadData(parentId)
                 }
             }
 
-        }, ContextCompat.getMainExecutor(application))
+        }, MoreExecutors.directExecutor())
     }
 
     private fun releaseBrowser() {
@@ -236,8 +237,10 @@ abstract class BaseMediaStoreViewModel<T> (
     open fun init(vararg params: Any?) {
 //        observer.onChange(false)
 //        getApplication<Application>().contentResolver.registerContentObserver(uri, true, observer)
-        viewModelScope.launch {
-            repository.loadData(parentId)
+        if (items.value?.isEmpty()!!) {
+            viewModelScope.launch {
+                repository.loadData(parentId)
+            }
         }
     }
 
@@ -264,10 +267,12 @@ abstract class BaseMediaStoreViewModel<T> (
 
     // Give child classes the opportunity to intercept and modify result
     open fun deliverResult(items: List<T>) {
+        data.postValue(items)
         if (data.value != items) data.value = items
     }
 
     fun overrideCurrentItems(items: List<T>) {
+        data.postValue(items)
         data.value = items
     }
 }

@@ -1,17 +1,26 @@
 package com.hepimusic.playback
 
+import android.animation.AnimatorSet
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.view.ViewCompat
 import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
+import androidx.media3.common.Player
+import androidx.navigation.findNavController
+import androidx.navigation.fragment.FragmentNavigator
 import com.hepimusic.R
+import com.hepimusic.common.crossFadeWidth
 import com.hepimusic.databinding.FragmentBottomPlaybackBinding
 import com.hepimusic.main.common.view.BaseFragment
+import com.hepimusic.ui.MainActivity
+import com.hepimusic.ui.MainFragmentDirections
 import dagger.hilt.android.AndroidEntryPoint
 
 // TODO: Rename parameter arguments, choose names that match
@@ -35,6 +44,7 @@ class BottomPlaybackFragment : BaseFragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        viewModel = ViewModelProvider(requireActivity()).get(PlaybackViewModel::class.java)
 //        Snackbar.make(binding.container, viewModel.isPlaying.value.toString(), Snackbar.LENGTH_LONG).show()
 //        Log.e("SNACKBAR", viewModel.isPlaying.value.toString())
         arguments?.let {
@@ -81,20 +91,62 @@ class BottomPlaybackFragment : BaseFragment() {
             }
         }*/
         // Inflate the layout for this fragment
-        return binding.root // inflater.inflate(R.layout.fragment_bottom_playback, container, false)
+        binding.let {
+            viewModel.isBrowserConnected.observe(requireActivity()) { connected ->
+                if (connected) {
+                    it.viewModel = viewModel
+                    it.lifecycleOwner = requireActivity()
+                }
+            }
+            return it.root
+        } // inflater.inflate(R.layout.fragment_bottom_playback, container, false)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        setupViews()
+        observeViewModel()
+    }
 
-        viewModel = ViewModelProvider(requireActivity()).get(PlaybackViewModel::class.java)
-
-        viewModel.isControllerInitialized.observe(requireActivity()) { connected ->
-            if (connected) {
-                binding.viewModel = viewModel
-                binding.lifecycleOwner = requireActivity()
+    private fun observeViewModel() {
+        var animatorSet: AnimatorSet? = null
+        viewModel.playbackState.observe(viewLifecycleOwner, Observer {
+            /*animatorSet?.cancel()
+            animatorSet = if (it == Player.STATE_BUFFERING) {
+                binding.progressBar.crossFadeWidth(binding.playButton, 1, visibility = View.INVISIBLE)
+            } else {
+                binding.playButton.crossFadeWidth(binding.progressBar, 1, visibility = View.INVISIBLE)
+            }*/
+            if (it == Player.STATE_BUFFERING) {
+                binding.progressBar.visibility = View.VISIBLE
+                binding.playButton.visibility = View.INVISIBLE
+            } else {
+                binding.playButton.visibility = View.VISIBLE
+                binding.progressBar.visibility = View.INVISIBLE
+            }
+        })
+        viewModel.isPlaying.observe(viewLifecycleOwner) {
+            if (it) {
+                binding.playButton.visibility = View.VISIBLE
+                binding.progressBar.visibility = View.INVISIBLE
             }
         }
-        super.onViewCreated(view, savedInstanceState)
+    }
+
+    private fun setupViews() {
+        binding.playbackSeekBar.setOnTouchListener { _, _ ->
+            return@setOnTouchListener true
+        }
+
+        binding.clickableView.setOnClickListener {
+            viewModel.currentItem.value?.let {
+                val transitionName = ViewCompat.getTransitionName(binding.sharableView)!!
+                val extras = FragmentNavigator.Extras.Builder().addSharedElement(binding.sharableView, transitionName).build()
+                val action = MainFragmentDirections.actionMainFragmentToPlaybackFragment(transitionName)
+                activity?.findNavController(R.id.mainNavHostFragment)?.navigate(action, extras)
+                /*(requireActivity() as MainActivity).navController.navigate(action, extras)*/
+            }
+        }
     }
 
     companion object {
