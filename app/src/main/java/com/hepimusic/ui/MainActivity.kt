@@ -22,8 +22,16 @@ import com.hepimusic.R
 import com.hepimusic.common.Constants
 import com.hepimusic.databinding.ActivityMainBinding
 import com.hepimusic.main.albums.AlbumSongsViewModel
+import com.hepimusic.main.artists.ArtistAlbumsViewModel
+import com.hepimusic.main.artists.ArtistsViewModel
 import com.hepimusic.main.common.view.BaseAdapter
 import com.hepimusic.main.explore.ExploreViewModel
+import com.hepimusic.main.playlist.AddSongsToPlaylistsViewModel
+import com.hepimusic.main.playlist.PlaylistSongsEditorViewModel
+import com.hepimusic.main.playlist.PlaylistSongsViewModel
+import com.hepimusic.main.playlist.PlaylistViewModel
+import com.hepimusic.main.playlist.WritePlaylistViewModel
+import com.hepimusic.main.search.SearchViewModel
 import com.hepimusic.main.songs.Song
 import com.hepimusic.main.songs.SongsViewModel
 import com.hepimusic.playback.PlaybackViewModel
@@ -48,6 +56,14 @@ class MainActivity : AppCompatActivity() {
     lateinit var songsViewModel: SongsViewModel
     lateinit var exploreViewModel: ExploreViewModel // by viewModels()
     lateinit var albumSongsViewModel: AlbumSongsViewModel
+    lateinit var playlistViewModel: PlaylistViewModel
+    lateinit var writePlaylistViewModel: WritePlaylistViewModel
+    lateinit var playlistSongsViewModel: PlaylistSongsViewModel
+    lateinit var addSongsToPlaylistViewModel: AddSongsToPlaylistsViewModel
+    lateinit var playlistSongsEditorViewModel: PlaylistSongsEditorViewModel
+    lateinit var searchViewModel: SearchViewModel
+    lateinit var artistsViewModel: ArtistsViewModel
+    lateinit var artistAlbumsViewModel: ArtistAlbumsViewModel
     lateinit var navHostFragment: NavHostFragment
     lateinit var navController: NavController
     var items = emptyList<Song>()
@@ -59,6 +75,14 @@ class MainActivity : AppCompatActivity() {
         exploreViewModel = ViewModelProvider(this)[ExploreViewModel::class.java]
         songViewModel = ViewModelProvider(this)[SongViewModel::class.java]
         albumSongsViewModel = ViewModelProvider(this)[AlbumSongsViewModel::class.java]
+        playlistViewModel = ViewModelProvider(this)[PlaylistViewModel::class.java]
+        writePlaylistViewModel = ViewModelProvider(this)[WritePlaylistViewModel::class.java]
+        playlistSongsViewModel = ViewModelProvider(this)[PlaylistSongsViewModel::class.java]
+        addSongsToPlaylistViewModel = ViewModelProvider(this)[AddSongsToPlaylistsViewModel::class.java]
+        playlistSongsEditorViewModel = ViewModelProvider(this)[PlaylistSongsEditorViewModel::class.java]
+        searchViewModel = ViewModelProvider(this)[SearchViewModel::class.java]
+        artistsViewModel = ViewModelProvider(this)[ArtistsViewModel::class.java]
+        artistAlbumsViewModel = ViewModelProvider(this)[ArtistAlbumsViewModel::class.java]
 
         /*songsViewModel.also {
             it.viewModelScope.launch {

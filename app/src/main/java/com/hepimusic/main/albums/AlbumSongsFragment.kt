@@ -1,6 +1,9 @@
 package com.hepimusic.main.albums
 
+import android.content.Context
+import android.content.SharedPreferences
 import android.os.Bundle
+import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
@@ -14,6 +17,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.transition.TransitionInflater
 import com.hepimusic.BR
 import com.hepimusic.R
+import com.hepimusic.common.Constants
 import com.hepimusic.databinding.FragmentAlbumSongsBinding
 import com.hepimusic.main.common.callbacks.OnItemClickListener
 import com.hepimusic.main.common.view.BaseAdapter
@@ -44,11 +48,14 @@ class AlbumSongsFragment : BaseFragment(), OnItemClickListener, View.OnClickList
     private lateinit var album: Album
     private var items = emptyList<Song>()
     private val filteredItems = mutableListOf<Song>()
+    lateinit var preferences: SharedPreferences
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        preferences = requireActivity().getSharedPreferences("main", Context.MODE_PRIVATE)
         sharedElementEnterTransition = TransitionInflater.from(requireContext()).inflateTransition(android.R.transition.move)
         album = requireArguments().getParcelable("album")!!
+        preferences.edit().putString(Constants.CURRENT_ALBUM_ID, album.id).apply()
         playbackViewModel = ViewModelProvider(requireActivity())[PlaybackViewModel::class.java]
         viewModel = ViewModelProvider(requireActivity())[AlbumSongsViewModel::class.java]
         viewModel.init(album.id)
@@ -77,7 +84,9 @@ class AlbumSongsFragment : BaseFragment(), OnItemClickListener, View.OnClickList
     }
 
     private fun observeViewModel() {
-        viewModel.items.observe(viewLifecycleOwner, Observer(this::updateViews))
+        viewModel.albumId = album.id
+        viewModel.getAlbumSongs()
+        viewModel.filteredItems.observe(viewLifecycleOwner, Observer(this::updateViews))
     }
 
     @Suppress("UNCHECKED_CAST")
@@ -87,6 +96,7 @@ class AlbumSongsFragment : BaseFragment(), OnItemClickListener, View.OnClickList
             return
         }
         this.items = items
+        Log.e("ALBUM ITEM COUNT", items.size.toString())
         items.map {
             if (it.album as String == album.name) {
                 filteredItems.add(it)
@@ -114,6 +124,7 @@ class AlbumSongsFragment : BaseFragment(), OnItemClickListener, View.OnClickList
 
     override fun onItemClick(position: Int, sharableView: View?) {
 //        playbackViewModel.playAlbum(album, items[position].id.toString())
+        preferences.edit().putString(Constants.LAST_PARENT_ID, album.id).apply()
         playbackViewModel.playAll(filteredItems[position].toMediaItem().mediaId, filteredItems.map { it.toMediaItem() })
     }
 

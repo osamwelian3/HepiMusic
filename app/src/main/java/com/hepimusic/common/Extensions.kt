@@ -140,6 +140,74 @@ fun View.crossFadeWidth(
     }
 }
 
+/**
+ *  Creates an alpha (0 to 1) and horizontal transition ([translationX] to 0) [Animator] for this view
+ *
+ *   @param [translationX] The position to animate to.
+ *   @param [duration] How long the animation should run
+ *   @param [startDelay] How long to wait before running the animation
+ *
+ *   @return the built animator
+ */
+fun View.fadeInSlideInHorizontally(
+    translationX: Float = 300F,
+    duration: Long = 1000,
+    startDelay: Long = 0
+):
+        Animator {
+    val alpha = PropertyValuesHolder.ofFloat(View.ALPHA, 0F, 1F)
+    val translateY = PropertyValuesHolder.ofFloat(View.TRANSLATION_X, translationX, 0F)
+    val animator = ObjectAnimator.ofPropertyValuesHolder(this, alpha, translateY)
+    val  oldVisibility = this.visibility
+    animator.addListener(object : AnimatorListener {
+        override fun onAnimationStart(animation: Animator) {
+            super.onAnimationStart(animation)
+            this@fadeInSlideInHorizontally.visibility = View.VISIBLE
+            this@fadeInSlideInHorizontally.isEnabled = true
+        }
+
+        override fun onAnimationCancel(animation: Animator) {
+            super.onAnimationCancel(animation)
+            this@fadeInSlideInHorizontally.isEnabled = false
+            this@fadeInSlideInHorizontally.visibility = oldVisibility
+        }
+    })
+    animator.duration = duration
+    animator.startDelay = startDelay
+    return animator
+}
+
+/**
+ *  Creates an alpha (1 to 0) and vertical transition ([translationX] to 0,0) [Animator] for this view
+ *
+ *   @param [translationX] The position to animate to.
+ *   @param [duration] How long the animation should run
+ *   @param [startDelay] How long to wait before running the animation
+ *
+ *   @return the built animator
+ */
+fun View.fadeOutSlideOutHorizontally(
+    translationX: Float = 300F,
+    duration: Long = 1000,
+    startDelay: Long = 0,
+    visibility: Int = View.GONE
+):
+        Animator {
+    val alpha = PropertyValuesHolder.ofFloat(View.ALPHA, 1F, 0F)
+    val translateY = PropertyValuesHolder.ofFloat(View.TRANSLATION_X, 0F, translationX)
+    val animator = ObjectAnimator.ofPropertyValuesHolder(this, alpha, translateY)
+    animator.addListener(object : AnimatorListener {
+        override fun onAnimationEnd(animation: Animator) {
+            super.onAnimationEnd(animation)
+            this@fadeOutSlideOutHorizontally.visibility = visibility
+            this@fadeOutSlideOutHorizontally.isEnabled = false
+        }
+
+    })
+    animator.duration = duration
+    animator.startDelay = startDelay
+    return animator
+}
 
 /**
  * Helper extension to convert a potentially null [String] to a [Uri] falling back to [Uri.EMPTY]

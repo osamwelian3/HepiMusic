@@ -5,6 +5,7 @@ import android.os.Parcel
 import android.os.Parcelable
 import androidx.media3.common.MediaItem
 import com.hepimusic.main.common.data.Model
+import com.hepimusic.models.Creator
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 
@@ -16,6 +17,7 @@ data class Artist(
     @Contextual
     val albumArt: Uri?,
     val tracks: Int? = 0,
+    var albumsCount: Int? = 0,
     val year: String? = "",
     val key: String
 ): Model(), Parcelable {
@@ -26,7 +28,8 @@ data class Artist(
         artist = data.mediaMetadata.artist.toString(),
         albumArt = data.mediaMetadata.artworkUri,
         year = data.mediaMetadata.releaseYear.toString(),
-        tracks = data.mediaMetadata.totalTrackCount,
+        tracks = data.mediaMetadata.totalTrackCount ?: 0,
+        albumsCount = data.mediaMetadata.totalDiscCount ?: 0,
         key = data.mediaId
     )
 
@@ -38,11 +41,23 @@ data class Artist(
         key = data.mediaId
     )
 
+    constructor(creator: Creator) : this(
+        id = creator.key,
+        name = creator.name,
+        artist = creator.name,
+        albumArt = Uri.parse("https://dn1i8z7909ivj.cloudfront.net/public/"+creator.thumbnailKey),
+        year = creator.createdAt?.toDate()?.year.toString(),
+        tracks = 0,
+        albumsCount = 0,
+        key = creator.key
+    )
+
     constructor(parcel: Parcel) : this(
         parcel.readString(),
         parcel.readString()!!,
         parcel.readString()!!,
         parcel.readParcelable(Uri::class.java.classLoader),
+        parcel.readValue(Int::class.java.classLoader) as? Int,
         parcel.readValue(Int::class.java.classLoader) as? Int,
         parcel.readString(),
         parcel.readString()!!
@@ -55,6 +70,7 @@ data class Artist(
         parcel.writeString(artist)
         parcel.writeParcelable(albumArt, flags)
         parcel.writeValue(tracks)
+        parcel.writeValue(albumsCount)
         parcel.writeString(year)
         parcel.writeString(key)
     }

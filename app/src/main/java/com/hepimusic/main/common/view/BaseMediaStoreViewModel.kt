@@ -18,6 +18,8 @@ import androidx.media3.session.SessionToken
 import com.google.common.util.concurrent.ListenableFuture
 import com.google.common.util.concurrent.MoreExecutors
 import com.hepimusic.main.common.data.MediaStoreRepository
+import com.hepimusic.main.common.data.Model
+import com.hepimusic.main.songs.Song
 import com.hepimusic.playback.MusicService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -28,9 +30,12 @@ abstract class BaseMediaStoreViewModel<T> (
     application: Application
 ): ViewModel() {
     protected val data = MutableLiveData<List<T>>()
+    protected val filteredData = MutableLiveData<List<T>>()
     val items: LiveData<List<T>> get() = data
+    val filteredItems: LiveData<List<T>> = filteredData
     abstract val repository: MediaStoreRepository<T>
     abstract val parentId: String
+    var albumId: String? = null
     open var projection: Array<String>? = null
     open var selection: String? = null
     open var selectionArgs: Array<String>? = null
@@ -237,9 +242,11 @@ abstract class BaseMediaStoreViewModel<T> (
     open fun init(vararg params: Any?) {
 //        observer.onChange(false)
 //        getApplication<Application>().contentResolver.registerContentObserver(uri, true, observer)
+        if (items.value == null) return
         if (items.value?.isEmpty()!!) {
             viewModelScope.launch {
                 repository.loadData(parentId)
+
             }
         }
     }
@@ -249,7 +256,7 @@ abstract class BaseMediaStoreViewModel<T> (
         viewModelScope.launch {
             val result = withContext(Dispatchers.IO) {
                 //repository.loadData(uri, projection, selection, selectionArgs, sortOrder)
-                withContext(Dispatchers.Main){
+                withContext(Dispatchers.IO){
                     repository.loadData(parentId)
                 }
 
@@ -264,6 +271,18 @@ abstract class BaseMediaStoreViewModel<T> (
 //        getApplication<Application>().contentResolver.unregisterContentObserver(observer)
     }
 
+    fun getAlbumSongs() {
+        if (albumId != null){
+            val tempList = mutableListOf<T>()
+            items.value?.map {
+                val item = it as Song
+                if ("[album]"+item.album as String == albumId) {
+                    tempList.add(it)
+                }
+            }
+            filteredData.value = tempList
+        }
+    }
 
     // Give child classes the opportunity to intercept and modify result
     open fun deliverResult(items: List<T>) {

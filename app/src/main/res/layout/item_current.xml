@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+
+
+        <import type="android.view.View" />
+
+        <import type="android.text.format.DateUtils" />
+
+        <import type="java.util.concurrent.TimeUnit" />
+
+        <variable
+            name="mediaItem"
+            type="com.hepimusic.playback.MediaItemData" />
+
+
+    </data>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="?attr/selectableItemBackground"
+        android:paddingLeft="@dimen/padding_large"
+        android:paddingTop="@dimen/padding_medium"
+        android:paddingRight="@dimen/padding_large"
+        android:paddingBottom="@dimen/padding_medium">
+
+
+        <TextView
+            android:id="@+id/songTitle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/margin_small"
+            android:layout_marginEnd="@dimen/margin_small"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:text="@{mediaItem.title}"
+            android:textColor="@{mediaItem.playing? @color/colorAccent :@color/textColorPrimary}"
+            android:textSize="@dimen/text_size_small"
+            android:textStyle="normal"
+            app:layout_constraintBottom_toTopOf="@+id/guideLine"
+            app:layout_constraintEnd_toStartOf="@+id/songDuration"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="19"
+            tools:text="Loved it out there"
+            tools:textColor="@color/colorAccent" />
+
+        <TextView
+            android:id="@+id/songArtist"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:text="@{mediaItem.subtitle}"
+            android:textColor="@{mediaItem.playing? @color/colorAccent :@color/textColorSecondary}"
+            android:textSize="@dimen/text_size_x_small"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="@+id/songTitle"
+            app:layout_constraintStart_toStartOf="@+id/songTitle"
+            app:layout_constraintTop_toBottomOf="@+id/guideLine"
+            app:layout_constraintVertical_bias="0"
+            tools:text="Midnight Dogs"
+            tools:textColor="@color/textColorSecondary" />
+
+        <TextView
+            android:id="@+id/songDuration"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="@dimen/margin_medium"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:text="@{DateUtils.formatElapsedTime(TimeUnit.MILLISECONDS.toSeconds(mediaItem.duration))}"
+            android:textColor="@color/textColorSecondary"
+            android:textSize="@dimen/text_size_x_small"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:text="04:57 " />
+
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/guideLine"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            app:layout_constraintGuide_percent="0.5" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</layout>

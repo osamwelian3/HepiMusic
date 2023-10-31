@@ -5,7 +5,19 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.view.ViewCompat
+import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProvider
+import androidx.navigation.Navigation
+import androidx.navigation.fragment.FragmentNavigator
+import androidx.navigation.fragment.findNavController
+import androidx.recyclerview.widget.LinearLayoutManager
+import com.hepimusic.BR
 import com.hepimusic.R
+import com.hepimusic.databinding.FragmentArtistsBinding
+import com.hepimusic.main.common.callbacks.OnItemClickListener
+import com.hepimusic.main.common.view.BaseAdapter
+import com.hepimusic.main.common.view.BaseFragment
 
 // TODO: Rename parameter arguments, choose names that match
 // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
@@ -17,13 +29,19 @@ private const val ARG_PARAM2 = "param2"
  * Use the [ArtistsFragment.newInstance] factory method to
  * create an instance of this fragment.
  */
-class ArtistsFragment : Fragment() {
+class ArtistsFragment : BaseFragment(), OnItemClickListener {
     // TODO: Rename and change types of parameters
     private var param1: String? = null
     private var param2: String? = null
 
+    private var items: List<Artist> = emptyList()
+    private lateinit var viewModel: ArtistsViewModel
+    lateinit var binding: FragmentArtistsBinding
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        binding = FragmentArtistsBinding.inflate(LayoutInflater.from(requireContext()))
+        viewModel = ViewModelProvider(requireActivity())[ArtistsViewModel::class.java]
         arguments?.let {
             param1 = it.getString(ARG_PARAM1)
             param2 = it.getString(ARG_PARAM2)
@@ -35,7 +53,51 @@ class ArtistsFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View? {
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_artists, container, false)
+        return binding.root // inflater.inflate(R.layout.fragment_artists, container, false)
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        /*viewModel = ViewModelProvider(requireActivity())[ArtistsViewModel::class.java]*/
+        viewModel.init()
+        setupRecyclerView()
+        observeViewModel()
+        binding.navigationIcon.setOnClickListener(
+            Navigation.createNavigateOnClickListener(
+                R.id.action_artistsFragment_to_navigationDialogFragment
+            )
+        )
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    private fun observeViewModel() {
+        if (items.isEmpty()) {
+            viewModel.items.observe(viewLifecycleOwner, Observer {
+                this.items = it
+                (binding.artistsRV.adapter as BaseAdapter<Artist>).updateItems(it)
+            })
+        } else {
+            viewModel.overrideCurrentItems(items)
+
+        }
+    }
+
+    private fun setupRecyclerView() {
+        val adapter = BaseAdapter(items, requireActivity(), R.layout.item_artist, BR.artist, this)
+        binding.artistsRV.adapter = adapter
+
+        val layoutManager = LinearLayoutManager(activity)
+        binding.artistsRV.layoutManager = layoutManager
+    }
+
+    override fun onItemClick(position: Int, sharableView: View?) {
+        val transitionName = ViewCompat.getTransitionName(sharableView!!)!!
+        val extras = FragmentNavigator.Extras.Builder()
+            .addSharedElement(sharableView, transitionName)
+            .build()
+        val action =
+            ArtistsFragmentDirections.actionArtistsFragmentToArtistAlbumsFragment(items[position], transitionName)
+        findNavController().navigate(action, extras)
     }
 
     companion object {

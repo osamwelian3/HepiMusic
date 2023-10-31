@@ -1,11 +1,8 @@
 package com.hepimusic.datasource.repositories
 
 import android.content.Context
-import android.content.SharedPreferences
 import android.net.Uri
 import android.util.Log
-import android.widget.Toast
-import androidx.appcompat.app.AlertDialog
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaItem.SubtitleConfiguration
 import androidx.media3.common.MediaMetadata
@@ -13,10 +10,13 @@ import com.google.common.collect.ImmutableList
 import com.hepimusic.common.Constants.INITIALIZATION_COMPLETE
 import com.hepimusic.common.Resource
 import com.hepimusic.datasource.local.entities.AlbumEntity
+import com.hepimusic.datasource.local.entities.ArtistEntity
 import com.hepimusic.datasource.local.entities.SongEntity
 import com.hepimusic.models.Album
+import com.hepimusic.models.Creator
 import com.hepimusic.models.Song
 import com.hepimusic.models.mappers.toAlbum
+import com.hepimusic.models.mappers.toCreator
 import com.hepimusic.models.mappers.toSong
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -57,15 +57,83 @@ object MediaItemTree {
     private const val ITEM_PREFIX = "[item]"
     private const val ALL_SONGS_PREFIX = "[allSongs]"
 
-    private class MediaItemNode(val item: MediaItem) {
+    private class MediaItemNode(var item: MediaItem) {
         private val children: MutableList<MediaItem> = ArrayList()
 
         fun addChild(childID: String) {
+            if (this.item.mediaId.contains("[album]")) updateTracksCount()
             this.children.add(treeNodes[childID]!!.item)
         }
 
         fun getChildren(): List<MediaItem> {
             return ImmutableList.copyOf(children)
+        }
+
+        fun updateTracksCount() {
+            val data = this.item.mediaMetadata
+            var artist: CharSequence? = null
+            if (this.item.mediaMetadata.artist.isNullOrEmpty()) {
+                for (child in this.getChildren()) {
+                    if (child.mediaMetadata.artist.toString().isNotEmpty()) {
+                        artist = child.mediaMetadata.artist
+                        break
+                    }
+                }
+            } else artist = data.artist
+            val subtitleConfigurations: MutableList<SubtitleConfiguration> = mutableListOf()
+            val metadata = MediaMetadata.Builder()
+                .setAlbumTitle(data.albumTitle)
+                .setTitle(data.title)
+                .setArtist(artist)
+                .setGenre(data.genre)
+                .setIsBrowsable(data.isBrowsable)
+                .setIsPlayable(data.isPlayable)
+                .setArtworkUri(data.artworkUri)
+                .setMediaType(data.mediaType)
+                .setReleaseYear(data.releaseYear)
+                .setReleaseMonth(data.releaseMonth)
+                .setReleaseDay(data.releaseDay)
+                .setTotalTrackCount(this.getChildren().size)
+                .build()
+            this.item = MediaItem.Builder()
+                .setMediaId(this.item.mediaId)
+                .setSubtitleConfigurations(subtitleConfigurations)
+                .setMediaMetadata(metadata)
+                .setUri(this.item.requestMetadata.mediaUri)
+                .build()
+        }
+
+        fun updateArtistTracksCount(albumNode: MediaItemNode) {
+            val data = this.item.mediaMetadata
+            var discCount: Int = 0 // (this.item.mediaMetadata.totalDiscCount ?: 0) + 1
+            for (album in albumNode.getChildren()) {
+                if (album.mediaMetadata.artist == data.title) {
+                    discCount += 1
+                    Log.e("discCount "+data.title, discCount.toString())
+                }
+            }
+            val subtitleConfigurations: MutableList<SubtitleConfiguration> = mutableListOf()
+            val metadata = MediaMetadata.Builder()
+                .setAlbumTitle(data.albumTitle)
+                .setTitle(data.title)
+                .setArtist(data.artist)
+                .setGenre(data.genre)
+                .setIsBrowsable(data.isBrowsable)
+                .setIsPlayable(data.isPlayable)
+                .setArtworkUri(data.artworkUri)
+                .setMediaType(data.mediaType)
+                .setReleaseYear(data.releaseYear)
+                .setReleaseMonth(data.releaseMonth)
+                .setReleaseDay(data.releaseDay)
+                .setTotalTrackCount(this.getChildren().size)
+                .setTotalDiscCount(discCount)
+                .build()
+            this.item = MediaItem.Builder()
+                .setMediaId(this.item.mediaId)
+                .setSubtitleConfigurations(subtitleConfigurations)
+                .setMediaMetadata(metadata)
+                .setUri(this.item.requestMetadata.mediaUri)
+                .build()
         }
     }
 
@@ -84,7 +152,8 @@ object MediaItemTree {
         year: Int? = null,
         month: Int? = null,
         day: Int? = null,
-        trackCount: Int? = null
+        trackCount: Int? = null,
+        totalDiscCount: Int? = null
     ): MediaItem {
         val metadata =
             MediaMetadata.Builder()
@@ -100,6 +169,7 @@ object MediaItemTree {
                 .setReleaseMonth(month)
                 .setReleaseDay(day)
                 .setTotalTrackCount(trackCount)
+                .setTotalDiscCount(totalDiscCount)
                 .build()
 
         return MediaItem.Builder()
@@ -193,11 +263,38 @@ object MediaItemTree {
 
         val songs: MutableList<Song> = mutableListOf()
         val albums: MutableList<Album> = mutableListOf()
+        val artists: MutableList<Creator> = mutableListOf()
 
         val albumsFlow = songRepository.getAlbums()
         val songsFlow = songRepository.getSongs()
+        val artistFlow = songRepository.getArtists()
 
-        albumsFlow.combine(songsFlow){ albumsResource, songsResource ->
+        val combinedFlow = combine(albumsFlow, songsFlow, artistFlow) { albumsResource, songsResource, artistsResource ->
+            if (albumsResource is Resource.Success && songsResource is Resource.Success && artistsResource is Resource.Success) {
+                return@combine MusicData(songsResource.data, albumsResource.data, artistsResource.data)
+            }
+            return@combine null
+        }
+
+        combinedFlow.collect { musicData ->
+            if (musicData != null){
+                musicData.albums?.map {
+                    albums.add(it.toAlbum())
+                }
+                musicData.artists?.map {
+                    artists.add(it.toCreator())
+                }
+                musicData.songs?.map {
+                    Log.e("MEDIA ITEM TREE", "ALBUM SIZE: "+albums.size)
+                    songs.add(it.toSong())
+                    addNodeToTree(it.toSong(), albums, artists)
+                }
+                context.applicationContext.getSharedPreferences("main", Context.MODE_PRIVATE).edit().putBoolean(INITIALIZATION_COMPLETE, true).apply()
+                Log.e("PREFERENCES ADDED", "TRUE")
+            }
+        }
+
+        /*albumsFlow.combine(songsFlow){ albumsResource, songsResource ->
             if (albumsResource is Resource.Success && songsResource is Resource.Success) {
                 return@combine MusicData(songsResource.data, albumsResource.data)
             }
@@ -215,7 +312,7 @@ object MediaItemTree {
                 context.applicationContext.getSharedPreferences("main", Context.MODE_PRIVATE).edit().putBoolean(INITIALIZATION_COMPLETE, true).apply()
                 Log.e("PREFERENCES ADDED", "TRUE")
             }
-        }
+        }*/
 
         context.applicationContext.getSharedPreferences("main", Context.MODE_PRIVATE).edit().putBoolean(INITIALIZATION_COMPLETE, true).apply()
         Log.e("PREFERENCES ADDED", "TRUE")
@@ -258,7 +355,11 @@ object MediaItemTree {
 
     }
 
-    private suspend fun addNodeToTree(song: Song, albums: List<Album>) = withContext(Dispatchers.IO) {
+    private suspend fun addNodeToTree(
+        song: Song,
+        albums: List<Album>,
+        artists: MutableList<Creator>
+    ) = withContext(Dispatchers.IO) {
 
         val id = song.key
         val albm = song.partOf.let {
@@ -272,6 +373,9 @@ object MediaItemTree {
         }
         Log.e("Selected Creator", "selectedCreator: $creator")
         val artist = creator?.toString()?.removeSurrounding("\"") ?: "Unknown Artist"
+        val artistImage = "https://dn1i8z7909ivj.cloudfront.net/public/"+song.selectedCreator?.let {
+            Json.parseToJsonElement(it).jsonObject["thumbnailKey"]
+        }?.toString()?.removeSurrounding("\"")
         val genre = song.selectedCategory
         val subtitleConfigurations: MutableList<SubtitleConfiguration> = mutableListOf()
 
@@ -330,6 +434,7 @@ object MediaItemTree {
             treeNodes[ALBUM_ID]!!.addChild(albumFolderIdInTree)
         }
         treeNodes[albumFolderIdInTree]!!.addChild(idInTree)
+//        treeNodes[albumFolderIdInTree]!!.updateTracksCount()
 
         // add into all songs folder
         if (!treeNodes.containsKey(ALL_SONGS_ID)) {
@@ -359,12 +464,16 @@ object MediaItemTree {
                         isBrowsable = true,
                         mediaType = MediaMetadata.MEDIA_TYPE_ARTIST,
                         subtitleConfigurations,
-                        trackCount = treeNodes[albumFolderIdInTree]?.getChildren()?.size
+                        trackCount = treeNodes[artistFolderIdInTree]?.getChildren()?.size,
+                        artist = artist,
+                        imageUri = Uri.parse(artistImage)
                     )
                 )
             treeNodes[ARTIST_ID]!!.addChild(artistFolderIdInTree)
         }
         treeNodes[artistFolderIdInTree]!!.addChild(idInTree)
+        treeNodes[artistFolderIdInTree]?.updateArtistTracksCount(treeNodes[albumFolderIdInTree]!!)
+
 
         // add into genre folder
         if (!treeNodes.containsKey(genreFolderIdInTree)) {
@@ -377,7 +486,8 @@ object MediaItemTree {
                         isBrowsable = true,
                         mediaType = MediaMetadata.MEDIA_TYPE_GENRE,
                         subtitleConfigurations,
-                        trackCount = treeNodes[albumFolderIdInTree]?.getChildren()?.size
+                        trackCount = treeNodes[albumFolderIdInTree]?.getChildren()?.size,
+                        artist = artist
                     )
                 )
             treeNodes[GENRE_ID]!!.addChild(genreFolderIdInTree)
@@ -395,7 +505,8 @@ object MediaItemTree {
                         isBrowsable = true,
                         mediaType = MediaMetadata.MEDIA_TYPE_PLAYLIST,
                         subtitleConfigurations,
-                        trackCount = treeNodes[albumFolderIdInTree]?.getChildren()?.size
+                        trackCount = treeNodes[albumFolderIdInTree]?.getChildren()?.size,
+                        artist = artist
                     )
                 )
             treeNodes[CATEGORY_ID]!!.addChild(categoryFolderIdInTree)
@@ -439,6 +550,11 @@ object MediaItemTree {
     }
 
     fun getChildren(id: String): List<MediaItem>? {
+        /*if (id.contains("[albumID]")){
+            treeNodes[id]?.getChildren()?.forEach { album ->
+                treeNodes[album.mediaId]?.updateTracksCount()
+            }
+        }*/
         return treeNodes[id]?.getChildren()
     }
 
@@ -463,7 +579,8 @@ object MediaItemTree {
 
 data class MusicData(
     val songs: List<SongEntity>?,
-    val albums: List<AlbumEntity>?
+    val albums: List<AlbumEntity>?,
+    val artists: List<ArtistEntity>?
 )
 
 

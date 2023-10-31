@@ -163,4 +163,5 @@
     <string name="dummyLyricsSource">No Lyrics Source</string>
     <string name="home">Home</string>
     <string name="playlists">PlayLists</string>
+    <string name="saved">saved</string>
 </resources>

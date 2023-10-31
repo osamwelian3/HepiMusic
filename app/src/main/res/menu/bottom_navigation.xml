@@ -16,7 +16,7 @@
     <item
         android:id="@+id/albumsFragment"
         android:icon="@drawable/ic_explore"
-        android:title="@string/explore" />
+        android:title="@string/albums" />
     <item
         android:id="@+id/playlistFragment"
         android:icon="@drawable/playlists_icon"

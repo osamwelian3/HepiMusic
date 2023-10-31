@@ -123,7 +123,7 @@ abstract class BasePlayerFragment<T : Model> : BaseFragment(), View.OnClickListe
                     viewModel.items.observe(requireActivity()) { list ->
                         if (list.isNotEmpty()) {
                             viewModel.items.value?.first()?.id?.let {
-                                if (it.toString().contains("[album]")) {
+                                if (parentId != "[albumID]" && it.toString().contains("[album]")) {
                                     Log.e("ID", it.toString())
                                     viewModel.loadData(parentId)
                                 }
@@ -160,7 +160,7 @@ abstract class BasePlayerFragment<T : Model> : BaseFragment(), View.OnClickListe
         }
         val adapter =
             BaseAdapter(
-                items, requireActivity(), itemLayoutId, viewModelVariableId, this,
+                items, requireActivity(), itemLayoutId, viewModelVariableId, this, null,
                 adapterItemAnimSet, longClickItems
             )
         binding.dataRV.adapter = adapter

@@ -14,7 +14,7 @@
             android:id="@+id/action_mainFragment_to_playbackFragment"
             app:destination="@id/playbackFragment" />
     </fragment>
-    <fragment
+    <dialog
         android:id="@+id/playbackFragment"
         android:name="com.hepimusic.playback.PlaybackFragment"
         android:label="fragment_playback"
@@ -26,10 +26,10 @@
             android:name="transitionName"
             app:argType="string" />
         <action
-            android:id="@+id/action_playbackFragment_to_mainFragment2"
+            android:id="@+id/action_playbackFragment_to_mainFragment"
             app:destination="@id/mainFragment" />
-    </fragment>
-    <fragment
+    </dialog>
+    <dialog
         android:id="@+id/songsMenuBottomSheetDialogFragment"
         android:name="com.hepimusic.main.songs.SongsMenuBottomSheetDialogFragment"
         android:label="fragment_songs_menu_bottom_sheet_dialog"
@@ -37,5 +37,53 @@
         <argument
             android:name="mediaId"
             app:argType="string" />
-    </fragment>
+        <argument
+            android:name="song"
+            app:argType="com.hepimusic.main.songs.Song" />
+        <action
+            android:id="@+id/action_songsMenuBottomSheetDialogFragment_to_addSongsToPlaylistsFragment"
+            app:destination="@id/addSongsToPlaylistsFragment"
+            app:launchSingleTop="true" />
+    </dialog>
+    <dialog
+        android:id="@+id/addSongsToPlaylistsFragment"
+        android:name="com.hepimusic.main.playlist.AddSongsToPlaylistsFragment"
+        android:label="fragment_add_songs_to_playlists"
+        tools:layout="@layout/fragment_add_songs_to_playlists" >
+        <argument
+            android:name="songsSelectionArgs"
+            app:argType="string[]"
+            app:nullable="true"
+            android:defaultValue="@null" />
+        <argument
+            android:name="songsSelection"
+            app:argType="string"
+            app:nullable="true"
+            android:defaultValue="@null" />
+        <argument
+            android:name="songsUri"
+            app:argType="string"
+            app:nullable="true"
+            android:defaultValue="@null" />
+        <argument
+            android:name="song"
+            app:argType="com.hepimusic.main.songs.Song"
+            app:nullable="true"
+            android:defaultValue="@null" />
+        <action
+            android:id="@+id/action_addSongsToPlaylistsFragment_to_writePlaylistDialogFragment"
+            app:destination="@id/writePlaylistDialogFragment"
+            app:launchSingleTop="true" />
+    </dialog>
+    <dialog
+        android:id="@+id/writePlaylistDialogFragment"
+        android:name="com.hepimusic.main.playlist.WritePlaylistDialogFragment"
+        android:label="fragment_write_playlist_dialog"
+        tools:layout="@layout/fragment_write_playlist_dialog" >
+        <argument
+            android:name="playlist"
+            android:defaultValue="@null"
+            app:argType="com.hepimusic.main.playlist.Playlist"
+            app:nullable="true" />
+    </dialog>
 </navigation>

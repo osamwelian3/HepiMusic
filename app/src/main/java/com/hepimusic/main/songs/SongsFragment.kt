@@ -1,5 +1,7 @@
 package com.hepimusic.main.songs
 
+import android.content.Context
+import android.content.SharedPreferences
 import android.os.Bundle
 import android.util.Log
 import androidx.fragment.app.Fragment
@@ -15,6 +17,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.fragment.findNavController
 import com.hepimusic.BR
 import com.hepimusic.R
+import com.hepimusic.common.Constants
 import com.hepimusic.main.common.view.BaseMediaStoreViewModel
 import com.hepimusic.main.common.view.BasePlayerFragment
 import com.hepimusic.models.mappers.toMediaItem
@@ -41,8 +44,11 @@ class SongsFragment : BasePlayerFragment<Song>() {
     private var param1: String? = null
     private var param2: String? = null
 
+    lateinit var preferences: SharedPreferences
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        preferences = requireActivity().getSharedPreferences("main", Context.MODE_PRIVATE)
         arguments?.let {
             param1 = it.getString(ARG_PARAM1)
             param2 = it.getString(ARG_PARAM2)
@@ -118,12 +124,14 @@ class SongsFragment : BasePlayerFragment<Song>() {
     }*/
 
     override fun onItemClick(position: Int, sharableView: View?) {
+        preferences.edit().putString(Constants.LAST_PARENT_ID, "[allSongsID]").apply()
         playbackViewModel.playAll(items[position].id.toString(), items.map { it.toMediaItem() })
     }
 
     override fun onOverflowMenuClick(position: Int) {
+        Log.e("MEDIA URI", items[position].path)
         val action =
-            SongsFragmentDirections.actionSongsFragmentToSongsMenuBottomSheetDialogFragment(mediaId = items[position].id)
+            SongsFragmentDirections.actionSongsFragmentToSongsMenuBottomSheetDialogFragment(mediaId = items[position].id, song = items[position])
         findNavController().navigate(action)
     }
 

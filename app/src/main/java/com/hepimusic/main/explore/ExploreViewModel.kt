@@ -5,9 +5,11 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.util.Log
 import androidx.lifecycle.LiveData
+import androidx.lifecycle.viewModelScope
 import com.hepimusic.common.Constants
 import com.hepimusic.main.albums.AlbumsViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
@@ -16,7 +18,7 @@ class ExploreViewModel @Inject constructor(
     /*browser: MediaBrowser,*/
     recentlyPlayedDatabase: RecentlyPlayedDatabase
 ): AlbumsViewModel(application /*browser*/) {
-    private val preferences: SharedPreferences
+    private lateinit var preferences: SharedPreferences
 
     private val preferencesListener: SharedPreferences.OnSharedPreferenceChangeListener =
         SharedPreferences.OnSharedPreferenceChangeListener { sharedPreferences, key ->
@@ -29,16 +31,19 @@ class ExploreViewModel @Inject constructor(
             }
         }
 
-    private val recentlyPlayedRepository: RecentlyPlayedRepository
-    val recentlyPlayed: LiveData<List<RecentlyPlayed>>
+    private lateinit var recentlyPlayedRepository: RecentlyPlayedRepository
+    lateinit var recentlyPlayed: LiveData<List<RecentlyPlayed>>
 
     override var sortOrder: String? = "RANDOM() LIMIT 5"
 
     init {
-        preferences = application.getSharedPreferences("main", Context.MODE_PRIVATE)
-        preferences.registerOnSharedPreferenceChangeListener(preferencesListener)
-        val recentDao = recentlyPlayedDatabase.dao
-        recentlyPlayedRepository = RecentlyPlayedRepository(recentDao)
-        recentlyPlayed = recentlyPlayedRepository.recentlyPlayed
+        viewModelScope.launch {
+            preferences = application.getSharedPreferences("main", Context.MODE_PRIVATE)
+            preferences.registerOnSharedPreferenceChangeListener(preferencesListener)
+            val recentDao = recentlyPlayedDatabase.dao
+            recentlyPlayedRepository = RecentlyPlayedRepository(recentDao)
+            recentlyPlayed = recentlyPlayedRepository.recentlyPlayed
+
+        }
     }
 }

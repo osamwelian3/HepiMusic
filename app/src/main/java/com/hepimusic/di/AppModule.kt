@@ -15,10 +15,13 @@ import com.google.common.util.concurrent.ListenableFuture
 import com.google.common.util.concurrent.MoreExecutors
 import com.hepimusic.R
 import com.hepimusic.datasource.local.databases.AlbumDatabase
+import com.hepimusic.datasource.local.databases.ArtistDatabase
 import com.hepimusic.datasource.local.databases.SongDatabase
 import com.hepimusic.datasource.remote.CloudMusicDatabase
 import com.hepimusic.datasource.repositories.SongRepository
 import com.hepimusic.main.explore.RecentlyPlayedDatabase
+import com.hepimusic.main.playlist.PlaylistDatabase
+import com.hepimusic.main.playlist.PlaylistItemsDatabase
 import com.hepimusic.models.mappers.toAlbum
 import com.hepimusic.playback.MusicService
 import dagger.Module
@@ -127,5 +130,17 @@ object AppModule {
 
     @Singleton
     @Provides
-    fun provideSongRepository(musicDatabase: CloudMusicDatabase, songDatabase: SongDatabase, albumDatabase: AlbumDatabase) = SongRepository(musicDatabase, songDatabase, albumDatabase)
+    fun providePlaylistDatabase(@ApplicationContext context: Context) = PlaylistDatabase(context)
+
+    @Singleton
+    @Provides
+    fun providePlaylistItemsDatabase(@ApplicationContext context: Context) = PlaylistItemsDatabase(context)
+
+    @Singleton
+    @Provides
+    fun provideArtistsDatabase(@ApplicationContext context: Context) = ArtistDatabase(context)
+
+    @Singleton
+    @Provides
+    fun provideSongRepository(musicDatabase: CloudMusicDatabase, songDatabase: SongDatabase, albumDatabase: AlbumDatabase, artistDatabase: ArtistDatabase) = SongRepository(musicDatabase, songDatabase, albumDatabase, artistDatabase)
 }

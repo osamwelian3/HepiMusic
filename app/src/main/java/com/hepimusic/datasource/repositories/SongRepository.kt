@@ -3,16 +3,19 @@ package com.hepimusic.datasource.repositories
 import androidx.room.withTransaction
 import com.hepimusic.common.networkBoundResource
 import com.hepimusic.datasource.local.databases.AlbumDatabase
+import com.hepimusic.datasource.local.databases.ArtistDatabase
 import com.hepimusic.datasource.local.databases.SongDatabase
 import com.hepimusic.datasource.remote.CloudMusicDatabase
 import com.hepimusic.models.mappers.toAlbumEntity
+import com.hepimusic.models.mappers.toArtistEntity
 import com.hepimusic.models.mappers.toSongEntity
 import kotlinx.coroutines.delay
 
 class SongRepository(
     musicDatabase: CloudMusicDatabase,
     songDatabase: SongDatabase,
-    albumDatabase: AlbumDatabase
+    albumDatabase: AlbumDatabase,
+    artistDatabase: ArtistDatabase
 ) {
 
     private val songDao = songDatabase.dao
@@ -20,13 +23,16 @@ class SongRepository(
     private val db = songDatabase
     private val albumDb = albumDatabase
     private val albumDao = albumDb.dao
+    private val artistDB = artistDatabase
+    private val artistDao = artistDB.dao
+
 
     fun getSongs() = networkBoundResource(
         query = {
             songDao.getAllSongs()
         },
         fetch = {
-            delay(2000)
+//            delay(2000)
             api.getAllSongs()
         },
         saveFetchResult = {
@@ -45,13 +51,32 @@ class SongRepository(
             albumDao.getAllAlbums()
         },
         fetch = {
-            delay(2000)
+//            delay(2000)
             api.getAllAlbums()
         },
         saveFetchResult = {
             albumDb.withTransaction {
                 albumDao.clearAllAlbums()
                 albumDao.upsertAllAlbums(it.map { it.toAlbumEntity() })
+            }
+        },
+        shouldFetch = {
+            it.isEmpty()
+        }
+    )
+
+    fun getArtists() = networkBoundResource(
+        query = {
+            artistDao.getAllArtists()
+        },
+        fetch = {
+//            delay(2000)
+            api.getAllArtists()
+        },
+        saveFetchResult = {
+            artistDB.withTransaction {
+                artistDao.clearAllArtists()
+                artistDao.upsertAllArtists(it.map { it.toArtistEntity() })
             }
         },
         shouldFetch = {

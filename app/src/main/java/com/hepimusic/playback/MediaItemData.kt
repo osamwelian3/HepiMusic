@@ -3,9 +3,10 @@ package com.hepimusic.playback
 import android.net.Uri
 import android.os.Parcelable
 import androidx.media3.common.MediaItem
+import com.hepimusic.main.common.data.Model
 
 data class MediaItemData(
-    val id: String,
+    override val id: String,
     val title: String,
     val subtitle: String?, // Artist
     val description: String, //Album
@@ -14,16 +15,16 @@ data class MediaItemData(
     var isPlaying: Boolean,
     var isBuffering: Boolean,
     var duration: Long = 0L
-) {
+): Model() {
 
     val playingOrBuffering get() = isPlaying || isBuffering
 
     constructor(item: MediaItem, isPlaying: Boolean, isBuffering: Boolean) : this(
-        id = item.mediaId!!,
+        id = item.mediaId,
         title = item.mediaMetadata.title!!.toString(),
-        subtitle = item.mediaMetadata.subtitle!!.toString(),
+        subtitle = item.mediaMetadata.artist!!.toString(),
         albumArtUri = item.mediaMetadata.artworkUri,
-        description = item.mediaMetadata.description.toString(),
+        description = item.mediaMetadata.albumTitle.toString(),
         isBrowsable = item.mediaMetadata.isBrowsable,
         isPlaying = isPlaying,
         isBuffering = isBuffering,

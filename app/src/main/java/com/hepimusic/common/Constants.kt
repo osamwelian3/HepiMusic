@@ -22,6 +22,7 @@ object Constants {
     const val LAST_ID = "com.hepimusic.playback.LAST_ID"
     const val LAST_POSITION = "com.hepimusic.playback.LAST_POSITION"
     const val LAST_PARENT_ID = "com.hepimusic.playback.LAST_PARENT_ID"
+    const val CURRENT_ALBUM_ID = "com.hepimusic.playback.CURRENT_ALBUM_ID"
     const val PLAY_FIRST = "com.hepimusic.playback.PLAY_FIRST"
     const val PLAY_RANDOM = "com.hepimusic.playback.PLAY_RANDOM"
     const val PLAYBACK_NOTIFICATION: Int = 0xb2017

@@ -1,14 +1,172 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/black"
+    android:padding="@dimen/padding_large"
     tools:context=".main.playlist.WritePlaylistDialogFragment">
 
-    <!-- TODO: Update blank fragment layout -->
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:text="@string/hello_blank_fragment" />
 
-</FrameLayout>
+    <ImageButton
+        android:id="@+id/closeButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="@string/go_back"
+        android:padding="@dimen/padding_medium"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/ic_close" />
+
+
+    <TextView
+        android:id="@+id/createAPlaylist"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="@string/create_a_playlist"
+        android:textAppearance="@style/TextAppearance.AppCompat.Body1"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toStartOf="@+id/closeButton"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/closeButton" />
+
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/unselectedImageGroup"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/margin_xxx_large"
+        app:layout_constraintEnd_toStartOf="@+id/uploadPicture"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/createAPlaylist">
+
+        <View
+            android:id="@+id/thumbBackground"
+            android:layout_width="@dimen/write_playlist_thumb_width"
+            android:layout_height="138dp"
+            android:background="@drawable/accent_round_corner"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <ImageView
+            android:id="@+id/playlistImage"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:contentDescription="@string/track_album_art"
+            android:padding="@dimen/padding_small"
+            app:layout_constraintBottom_toTopOf="@+id/thumbText"
+            app:layout_constraintEnd_toEndOf="@id/thumbBackground"
+            app:layout_constraintStart_toStartOf="@+id/thumbBackground"
+            app:layout_constraintTop_toTopOf="@+id/thumbBackground"
+            app:srcCompat="@drawable/thumb_circular_default" />
+
+        <TextView
+            android:id="@+id/thumbText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:maxEms="6"
+            android:paddingStart="@dimen/padding_medium"
+            android:paddingTop="@dimen/padding_small"
+            android:paddingEnd="@dimen/padding_medium"
+            android:paddingBottom="@dimen/padding_medium"
+            android:text="@string/create_playlist_thumb_text"
+            android:textAlignment="center"
+            android:textAppearance="@style/TextAppearance.AppCompat.Body1"
+            android:textSize="@dimen/text_size_x_small"
+            app:layout_constraintBottom_toBottomOf="@+id/thumbBackground"
+            app:layout_constraintEnd_toEndOf="@id/thumbBackground"
+            app:layout_constraintStart_toStartOf="@+id/thumbBackground" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <TextView
+        android:id="@+id/uploadPicture"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:paddingStart="@dimen/padding_x_large"
+        android:paddingEnd="@dimen/padding_x_large"
+        android:text="@string/upload_playlist_image"
+        android:textSize="@dimen/text_size_x_small"
+        app:layout_constraintBottom_toBottomOf="@+id/unselectedImageGroup"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/unselectedImageGroup"
+        app:layout_constraintTop_toTopOf="@+id/unselectedImageGroup" />
+
+    <Button
+        android:id="@+id/removePicture"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/round_border_white"
+        android:minHeight="0dp"
+        android:paddingLeft="@dimen/padding_large"
+        android:paddingTop="@dimen/padding_small"
+        android:paddingRight="@dimen/padding_large"
+        android:paddingBottom="@dimen/padding_small"
+        android:text="@string/remove_picture"
+        android:textColor="@android:color/white"
+        android:textStyle="normal"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="@+id/unselectedImageGroup"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/unselectedImageGroup"
+        app:layout_constraintTop_toTopOf="@+id/unselectedImageGroup" />
+
+    <ImageView
+        android:id="@+id/playlistArt"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:contentDescription="@string/playlist_image"
+        app:layout_constraintBottom_toBottomOf="@id/unselectedImageGroup"
+        app:layout_constraintDimensionRatio="1:1"
+        app:layout_constraintStart_toStartOf="@id/unselectedImageGroup"
+        app:layout_constraintTop_toTopOf="@id/unselectedImageGroup" />
+
+    <View
+        android:id="@+id/clickableThumbBackground"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:background="?attr/selectableItemBackground"
+        app:layout_constraintBottom_toBottomOf="@id/unselectedImageGroup"
+        app:layout_constraintDimensionRatio="1:1"
+        app:layout_constraintStart_toStartOf="@id/unselectedImageGroup"
+        app:layout_constraintTop_toTopOf="@id/unselectedImageGroup" />
+
+
+    <com.google.android.material.textfield.TextInputEditText
+        android:id="@+id/playlistNameField"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/margin_xx_large"
+        android:background="@drawable/edit_text_background"
+        android:hint="@string/playlist_name"
+        android:imeOptions="actionDone"
+        android:inputType="text"
+        android:maxLines="1"
+        android:paddingStart="@dimen/padding_x_large"
+        android:paddingTop="@dimen/padding_medium"
+        android:paddingEnd="@dimen/padding_x_large"
+        android:paddingBottom="@dimen/padding_medium"
+        app:hintAnimationEnabled="false"
+        app:hintTextAppearance="@style/TextAppearance.AppCompat.Subhead"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/unselectedImageGroup" />
+
+    <Button
+        android:id="@+id/writePlaylist"
+        style="@style/Widget.AppCompat.Button.Colored"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/margin_x_large"
+        android:enabled="false"
+        android:paddingTop="@dimen/button_padding"
+        android:paddingBottom="18dp"
+        android:text="@string/create_playlist"
+        android:textAppearance="@style/TextAppearance.AppCompat.Body1"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/playlistNameField" />
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>

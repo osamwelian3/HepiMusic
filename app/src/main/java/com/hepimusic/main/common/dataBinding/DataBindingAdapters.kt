@@ -6,6 +6,7 @@ import android.util.Log
 import android.widget.ImageButton
 import android.widget.ImageView
 import androidx.annotation.DrawableRes
+import androidx.core.content.FileProvider
 import androidx.databinding.BindingAdapter
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
@@ -20,10 +21,13 @@ import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.bumptech.glide.request.RequestOptions
 import com.hepimusic.R
 import com.hepimusic.main.albums.Album
+import com.hepimusic.main.artists.Artist
 import com.hepimusic.main.common.image.CircularTransparentCenter
 import com.hepimusic.main.explore.RecentlyPlayed
+import com.hepimusic.main.playlist.Playlist
 import com.hepimusic.main.songs.Song
 import com.hepimusic.playback.MediaItemData
+import java.io.File
 
 object DataBindingAdapters {
     @JvmStatic val centerCrop = CenterCrop()
@@ -197,6 +201,32 @@ object DataBindingAdapters {
             .into(view)
     }
 
+    @BindingAdapter("android:src")
+    @JvmStatic
+    fun setArtistAvatar(view: ImageView, artist: Artist) {
+        Glide.with(view)
+            .load(artist.albumArt)
+            .transform(
+                MultiTransformation(centerCrop, circleCrop)
+            )
+            .placeholder(R.drawable.thumb_circular_default)
+            .into(view)
+    }
+
+    @BindingAdapter("android:src")
+    @JvmStatic
+    fun setPlaylistCover(view: ImageView, playlist: Playlist) {
+        val uri = FileProvider.getUriForFile(view.context.applicationContext, "${view.context.applicationContext.packageName}.provider", File(view.context.applicationContext.filesDir, playlist.name))
+        Log.e("URI", uri.toString())
+        Glide.with(view)
+            .load(/*playlist.modForViewWidth(view.measuredWidth)*/uri)
+            .transform(
+                MultiTransformation(centerCrop, circleCrop)
+            )
+            .placeholder(R.drawable.thumb_circular_default)
+            .into(view)
+    }
+
     @BindingAdapter("android:bottomcoversrc")
     @JvmStatic
     fun setBottomPlaybackCover(view: ImageView, metadata: MediaMetadata?) {
@@ -228,6 +258,19 @@ object DataBindingAdapters {
             .load(album.albumArt)
             .transform(
                 MultiTransformation(centerCrop, FitCenter(), RoundedCorners(10))
+            )
+            .placeholder(R.drawable.album_art)
+            .into(view)
+    }
+
+    @BindingAdapter("playlistSrc")
+    @JvmStatic
+    fun setPlaylistSrc(view: ImageView, playlist: Playlist) {
+        val uri = FileProvider.getUriForFile(view.context.applicationContext, "${view.context.applicationContext.packageName}.provider", File(view.context.applicationContext.filesDir, playlist.name))
+        Glide.with(view)
+            .load(uri)
+            .transform(
+                MultiTransformation(centerCrop, RoundedCorners(10))
             )
             .placeholder(R.drawable.album_art)
             .into(view)

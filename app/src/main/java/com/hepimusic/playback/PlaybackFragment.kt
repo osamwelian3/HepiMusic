@@ -20,6 +20,7 @@ import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
+import androidx.media3.common.Player
 import androidx.navigation.findNavController
 import androidx.navigation.fragment.FragmentNavigator
 import androidx.navigation.fragment.NavHostFragment
@@ -36,6 +37,8 @@ import com.hepimusic.databinding.FragmentPlaybackBinding
 import com.hepimusic.main.common.callbacks.AnimatorListener
 import com.hepimusic.main.common.callbacks.OnSeekBarChangeListener
 import com.hepimusic.main.common.view.BaseFragment
+import com.hepimusic.main.common.view.BaseFullscreenDialogFragment
+import com.hepimusic.models.mappers.toSong
 import com.hepimusic.ui.MainActivity
 import com.hepimusic.ui.MainFragment
 import com.hepimusic.ui.MainFragmentDirections
@@ -51,7 +54,7 @@ private const val ARG_PARAM2 = "param2"
  * Use the [PlaybackFragment.newInstance] factory method to
  * create an instance of this fragment.
  */
-class PlaybackFragment : BaseFragment(), View.OnClickListener {
+class PlaybackFragment : /*BaseFragment()*/ BaseFullscreenDialogFragment(), View.OnClickListener {
     // TODO: Rename and change types of parameters
     private var param1: String? = null
     private var param2: String? = null
@@ -113,6 +116,22 @@ class PlaybackFragment : BaseFragment(), View.OnClickListener {
 
 //        viewModel.playbackState.observe(viewLifecycleOwner, Observer { updateState(it) })
         viewModel.isPlaying.observe(viewLifecycleOwner, Observer { updateState(it) })
+
+        viewModel.playbackState.observe(viewLifecycleOwner, Observer {
+            if (it == Player.STATE_BUFFERING) {
+                binding.progressBarPlay.visibility = View.VISIBLE
+                binding.playPauseButton.visibility = View.INVISIBLE
+            } else {
+                binding.playPauseButton.visibility = View.VISIBLE
+                binding.progressBarPlay.visibility = View.INVISIBLE
+            }
+        })
+        viewModel.isPlaying.observe(viewLifecycleOwner) {
+            if (it) {
+                binding.playPauseButton.visibility = View.VISIBLE
+                binding.progressBarPlay.visibility = View.INVISIBLE
+            }
+        }
     }
 
 
@@ -191,7 +210,7 @@ class PlaybackFragment : BaseFragment(), View.OnClickListener {
     private fun showMenuBottomSheet() {
         val mediaItem = viewModel.currentItem.value ?: return
         val action =
-            PlaybackFragmentDirections.actionPlaybackFragmentToSongsMenuBottomSheetDialogFragment(mediaItem.mediaId)
+            PlaybackFragmentDirections.actionPlaybackFragmentToSongsMenuBottomSheetDialogFragment(mediaItem.mediaId, mediaItem.toSong())
         findNavController().navigate(action)
     }
 

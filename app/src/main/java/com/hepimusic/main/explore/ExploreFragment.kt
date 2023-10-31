@@ -1,5 +1,7 @@
 package com.hepimusic.main.explore
 
+import android.content.Context
+import android.content.SharedPreferences
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
@@ -28,6 +30,7 @@ import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.request.RequestOptions
 import com.hepimusic.BR
 import com.hepimusic.R
+import com.hepimusic.common.Constants
 import com.hepimusic.common.crossFadeWidth
 import com.hepimusic.databinding.FragmentExploreBinding
 import com.hepimusic.main.albums.Album
@@ -35,6 +38,8 @@ import com.hepimusic.main.common.callbacks.OnItemClickListener
 import com.hepimusic.main.common.view.BaseAdapter
 import com.hepimusic.main.songs.SongsViewModel
 import com.hepimusic.models.mappers.toAlbum
+import com.hepimusic.models.mappers.toMediaItem
+import com.hepimusic.playback.PlaybackViewModel
 import com.hepimusic.ui.MainActivity
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
@@ -63,15 +68,19 @@ class ExploreFragment : Fragment(), OnItemClickListener {
     private var albums: List<Album> = emptyList()
     private var playedList: List<RecentlyPlayed> = emptyList()
     private val viewModel  by activityViewModels<ExploreViewModel>() //
+    lateinit var playbackViewModel: PlaybackViewModel
 
     lateinit var binding: FragmentExploreBinding
 
     // TODO: Rename and change types of parameters
     private var param1: String? = null
     private var param2: String? = null
+    lateinit var preferences: SharedPreferences
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        preferences = requireActivity().getSharedPreferences("main", Context.MODE_PRIVATE)
+        playbackViewModel = ViewModelProvider(requireActivity())[PlaybackViewModel::class.java]
         /*requireActivity().also { fragmentActivity ->
             val actvty = fragmentActivity as MainActivity
             val sngsVM: SongsViewModel = actvty.songsViewModel
@@ -99,16 +108,16 @@ class ExploreFragment : Fragment(), OnItemClickListener {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        setupViews()
-        observeViewModel()
+        /*setupViews()
+        observeViewModel()*/
         // Inflate the layout for this fragment
         return binding.root // inflater.inflate(R.layout.fragment_explore, container, false)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        /*setupViews()
-        observeViewModel()*/
+        setupViews()
+        observeViewModel()
         binding.navigationIcon.setOnClickListener(
             Navigation.createNavigateOnClickListener(
                 R.id.action_exploreFragment_to_navigationDialogFragment
@@ -226,7 +235,7 @@ class ExploreFragment : Fragment(), OnItemClickListener {
 
     private fun setupViews() {
         val albumAdapter = BaseAdapter(
-            albums, requireActivity(), R.layout.item_album, BR.album, this,
+            albums, requireActivity(), R.layout.item_album, BR.album, this, null,
             setOf(R.anim.fast_fade_in), true
         )
         binding.randomAlbumsRV.adapter = albumAdapter
@@ -235,10 +244,16 @@ class ExploreFragment : Fragment(), OnItemClickListener {
 
         val playedAdapter =
             BaseAdapter(playedList,
-                requireActivity(), R.layout.item_recently, BR.recentlyPlayed, animSet = null)
+                requireActivity(), R.layout.item_recently, BR.recentlyPlayed, mediaitemClicked = ::mediaitemClicked, animSet = null)
         binding.playedRV.adapter = playedAdapter
         binding.playedRV.layoutManager = LinearLayoutManager(activity)
         binding.scrollView.isNestedScrollingEnabled = true
+    }
+
+    fun mediaitemClicked(position: Int, sharableView: View?) {
+        Log.e("RECENT PLAY CLICKED", "POSITION: "+position.toString()+" ITEM: "+playedList[position].title)
+        preferences.edit().putString(Constants.LAST_PARENT_ID, "[recentlyPlayedId]").apply()
+        playbackViewModel.playAll(playedList[position].id, playedList.map { it.toMediaItem() })
     }
 
     override fun onItemClick(position: Int, sharableView: View?) {

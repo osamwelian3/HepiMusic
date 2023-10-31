@@ -2,6 +2,7 @@ package com.hepimusic.main.common.view
 
 import android.content.Context
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import android.view.animation.AnimationUtils
 import androidx.collection.SparseArrayCompat
@@ -20,6 +21,7 @@ class BaseAdapter<T: Model>(
     private val layoutId: Int,
     private val variableId: Int,
     private val itemClickListener: OnItemClickListener? = null,
+    private val mediaitemClicked: ((position: Int, sharableView: View?) -> Unit)? = null,
     private val animSet: Set<Int>? = setOf(R.anim.up_from_bottom, R.anim.down_from_top),
     private val longClick: Boolean = false,
     private var variables: SparseArrayCompat<Any>? = null
@@ -35,7 +37,7 @@ class BaseAdapter<T: Model>(
                 itemBinding.setVariable(it.keyAt(i), it.valueAt(i))
             }
         }
-        return BaseViewHolder(itemBinding, variableId, itemClickListener, longClick)
+        return BaseViewHolder(itemBinding, variableId, itemClickListener, mediaitemClicked, longClick)
     }
 
     override fun getItemCount(): Int = items.size

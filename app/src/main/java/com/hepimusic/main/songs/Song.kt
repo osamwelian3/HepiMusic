@@ -48,7 +48,7 @@ class Song(
         id = data.mediaId,
         title = data.mediaMetadata.title.toString(),
         titleKey = data.mediaMetadata.subtitle.toString(),
-        artist = if (data.mediaMetadata.artist.toString() == "" || data.mediaMetadata.artist == null) data.mediaMetadata.artist.toString() else data.mediaMetadata.subtitle.toString(),
+        artist = if (data.mediaMetadata.artist.toString() != "" || data.mediaMetadata.artist != null) data.mediaMetadata.artist.toString() else data.mediaMetadata.subtitle.toString(),
         album = data.mediaMetadata.albumTitle.toString(),
         artWork = data.mediaMetadata.artworkUri,
         path = data.requestMetadata.mediaUri.toString(),
