@@ -26,6 +26,26 @@ fun Song.toSongEntity(): SongEntity {
     )
 }
 
+fun com.amplifyframework.datastore.generated.model.Song.toSongEntity(): SongEntity {
+    return SongEntity(
+        key = key,
+        fileUrl = fileUrl,
+        fileKey = fileKey,
+        listens = listens,
+        trendingListens = trendingListens,
+        listOfUidDownVotes = listOfUidDownVotes,
+        listOfUidUpVotes = listOfUidUpVotes,
+        name = name,
+        partOf = partOf,
+        selectedCategory = selectedCategory,
+        selectedCreator = selectedCreator,
+        thumbnail = thumbnail,
+        thumbnailKey = thumbnailKey,
+        createdAt = createdAt,
+        updatedAt = updatedAt
+    )
+}
+
 fun SongEntity.toSong(): Song {
     return Song(
         key = key,
@@ -55,6 +75,20 @@ fun com.hepimusic.main.songs.Song.toMediaItem(): MediaItem{
     return MediaItem.Builder()
         .setMediaId(id)
         .setUri(Uri.parse(path))
+        .setMediaMetadata(data)
+        .build()
+}
+
+fun com.amplifyframework.datastore.generated.model.Song.toMediaItem(): MediaItem{
+    val data = MediaMetadata.Builder()
+        .setTitle(name)
+        .setAlbumTitle(partOf)
+        .setArtist(selectedCreator)
+        .setArtworkUri(Uri.parse("https://dn1i8z7909ivj.cloudfront.net/public/$thumbnailKey"))
+        .build()
+    return MediaItem.Builder()
+        .setMediaId(key)
+        .setUri(Uri.parse("https://dn1i8z7909ivj.cloudfront.net/public/$fileKey"))
         .setMediaMetadata(data)
         .build()
 }

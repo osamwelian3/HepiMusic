@@ -6,19 +6,26 @@ import android.util.Log
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaItem.SubtitleConfiguration
 import androidx.media3.common.MediaMetadata
+import com.amplifyframework.core.Amplify
+import com.amplifyframework.datastore.DataStoreItemChange
+import com.amplifyframework.datastore.generated.model.Album
+import com.amplifyframework.datastore.generated.model.Creator
+import com.amplifyframework.datastore.generated.model.Song
 import com.google.common.collect.ImmutableList
 import com.hepimusic.common.Constants.INITIALIZATION_COMPLETE
 import com.hepimusic.common.Resource
 import com.hepimusic.datasource.local.entities.AlbumEntity
 import com.hepimusic.datasource.local.entities.ArtistEntity
 import com.hepimusic.datasource.local.entities.SongEntity
-import com.hepimusic.models.Album
+/*import com.hepimusic.models.Album
 import com.hepimusic.models.Creator
-import com.hepimusic.models.Song
+import com.hepimusic.models.Song*/
 import com.hepimusic.models.mappers.toAlbum
 import com.hepimusic.models.mappers.toCreator
 import com.hepimusic.models.mappers.toSong
+import com.hepimusic.models.mappers.toSongEntity
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flowOf
@@ -56,6 +63,10 @@ object MediaItemTree {
     private const val LATEST_PREFIX = "[latest]"
     private const val ITEM_PREFIX = "[item]"
     private const val ALL_SONGS_PREFIX = "[allSongs]"
+
+    val songs: MutableList<Song> = mutableListOf()
+    val albums: MutableList<Album> = mutableListOf()
+    val artists: MutableList<Creator> = mutableListOf()
 
     private class MediaItemNode(var item: MediaItem) {
         private val children: MutableList<MediaItem> = ArrayList()
@@ -137,7 +148,7 @@ object MediaItemTree {
         }
     }
 
-    private fun buildMediaItem(
+    fun buildMediaItem(
         title: String,
         mediaId: String,
         isPlayable: Boolean,
@@ -180,9 +191,11 @@ object MediaItemTree {
             .build()
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     suspend fun initialize(context: Context, songRepository: SongRepository) = withContext(Dispatchers.IO) {
         if (isInitialized) return@withContext
         isInitialized = true
+        treeNodes.clear()
         // create root and folders for album/artist/genre.
         treeNodes[ROOT_ID] =
             MediaItemNode(
@@ -261,13 +274,34 @@ object MediaItemTree {
         treeNodes[ROOT_ID]!!.addChild(LATEST_ID)
         treeNodes[ROOT_ID]!!.addChild(ALL_SONGS_ID)
 
-        val songs: MutableList<Song> = mutableListOf()
-        val albums: MutableList<Album> = mutableListOf()
-        val artists: MutableList<Creator> = mutableListOf()
+        Amplify.DataStore.observe(
+            com.amplifyframework.datastore.generated.model.Song::class.java,
+            {
 
-        val albumsFlow = songRepository.getAlbums()
-        val songsFlow = songRepository.getSongs()
-        val artistFlow = songRepository.getArtists()
+            },
+            {
+                if (it.type() == DataStoreItemChange.Type.CREATE) {
+                    songs.add(it.item() /*.toSongEntity().toSong()*/)
+                    Log.e("CHANGE TYPE: CREATE", "song: ${it.item().name}")
+                } else if (it.type() == DataStoreItemChange.Type.UPDATE) {
+                    songs.map { song -> if (song.key == it.item().key) it.item() else song }
+                    Log.e("CHANGE TYPE: UPDATE", "song: ${it.item().name}")
+                } else if (it.type() == DataStoreItemChange.Type.DELETE) {
+                    songs.removeIf { song -> song.key == it.item().key }
+                    Log.e("CHANGE TYPE: DELETE", "song: ${it.item().name}")
+                }
+            },
+            {
+
+            },
+            {
+                // observation completed
+            }
+        )
+
+        val albumsFlow = songRepository.getAllAlbums()
+        val songsFlow = songRepository.getAllSongs()
+        val artistFlow = songRepository.getAllArtists()
 
         val combinedFlow = combine(albumsFlow, songsFlow, artistFlow) { albumsResource, songsResource, artistsResource ->
             if (albumsResource is Resource.Success && songsResource is Resource.Success && artistsResource is Resource.Success) {
@@ -279,15 +313,16 @@ object MediaItemTree {
         combinedFlow.collect { musicData ->
             if (musicData != null){
                 musicData.albums?.map {
-                    albums.add(it.toAlbum())
+                    albums.add(it /*.toAlbum()*/)
+                    Log.e("ALBUM", it.name)
                 }
                 musicData.artists?.map {
-                    artists.add(it.toCreator())
+                    artists.add(it /*.toCreator()*/)
                 }
                 musicData.songs?.map {
                     Log.e("MEDIA ITEM TREE", "ALBUM SIZE: "+albums.size)
-                    songs.add(it.toSong())
-                    addNodeToTree(it.toSong(), albums, artists)
+                    songs.add(it /*.toSong()*/)
+                    addNodeToTree(it /*.toSong()*/, albums, artists)
                 }
                 context.applicationContext.getSharedPreferences("main", Context.MODE_PRIVATE).edit().putBoolean(INITIALIZATION_COMPLETE, true).apply()
                 Log.e("PREFERENCES ADDED", "TRUE")
@@ -578,9 +613,9 @@ object MediaItemTree {
 }
 
 data class MusicData(
-    val songs: List<SongEntity>?,
-    val albums: List<AlbumEntity>?,
-    val artists: List<ArtistEntity>?
+    val songs: List<Song>?,
+    val albums: List<Album>?,
+    val artists: List<Creator>?
 )
 
 

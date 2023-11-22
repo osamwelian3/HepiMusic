@@ -31,6 +31,7 @@ android {
         }
     }
     compileOptions {
+        coreLibraryDesugaringEnabled true
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
@@ -84,11 +85,11 @@ dependencies {
     implementation 'androidx.navigation:navigation-ui-ktx:2.7.3'
     implementation 'androidx.navigation:navigation-dynamic-features-fragment:2.7.3'
 
-    // AWS
-    implementation 'com.amplifyframework:core:2.11.1'
-    implementation 'com.amplifyframework:aws-api:2.11.1'
-    implementation 'com.amplifyframework:aws-datastore:2.11.1'
-    implementation 'com.amplifyframework:aws-auth-cognito:2.11.1'
+    // AWS // 2.11.1
+    implementation 'com.amplifyframework:core:2.14.4'
+    implementation 'com.amplifyframework:aws-api:2.14.4'
+    implementation 'com.amplifyframework:aws-datastore:2.14.4'
+    implementation 'com.amplifyframework:aws-auth-cognito:2.14.4'
 
     // Dagger Hilt
     implementation 'com.google.dagger:hilt-android:2.45'
@@ -113,6 +114,15 @@ dependencies {
 
     // Flexbox layout
     implementation 'com.google.android.flexbox:flexbox:3.0.0'
+
+    // blur image view
+    implementation 'com.github.jgabrielfreitas:BlurImageView:1.0.1'
+
+    // for palettes for extracting colors
+    implementation 'androidx.palette:palette:1.0.0'
+
+    // support for Java 8 features
+    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.0.4'
 
 }
 

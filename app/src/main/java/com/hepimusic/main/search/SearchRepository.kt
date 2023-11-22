@@ -89,7 +89,7 @@ class SearchRepository(application: Application, browser: MediaBrowser, val play
         val playlistRepository = PlaylistRepository(playlistsDatabase.dao)
 
         playlistRepository.playlists.observeForever { playlists ->
-            if (playlists.isNotEmpty()) continuation.resume(if (ascend) playlists.filter { it.name.contains(query, true) }.sortedBy { it.name } else playlists.filter { it.name.contains(query, true) }.sortedBy { it.name }.reversed())
+            if (playlists.isNotEmpty()) continuation.resume(if (ascend) playlists.filter { it.name.contains(query, true) }.sortedBy { it.name } else playlists.filter { it.name.contains(query, true) }.sortedBy { it.name }.reversed()) else continuation.resume(emptyList<Playlist>())
         }
     }
 

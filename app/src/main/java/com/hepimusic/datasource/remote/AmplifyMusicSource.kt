@@ -14,11 +14,12 @@ import android.support.v4.media.MediaMetadataCompat.METADATA_KEY_TITLE
 import androidx.core.net.toUri
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
-import com.hepimusic.models.Album
+import com.amplifyframework.datastore.generated.model.Album
+import com.amplifyframework.datastore.generated.model.Song
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import com.hepimusic.datasource.remote.State.*
-import com.hepimusic.models.Song
+import kotlinx.coroutines.flow.collect
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonObject
 import javax.inject.Inject
@@ -60,11 +61,15 @@ class AmplifyMusicSource {
         state = STATE_INITIALIZING
         val allSongs: MutableList<Song> = mutableListOf()
         val allAlbums: MutableList<Album> = mutableListOf()
-        cloudMusicDatabase.getAllAlbums().map {
-            allAlbums.add(it)
+        cloudMusicDatabase.getAllAlbums().collect {
+            it.map {
+                allAlbums.add(it)
+            }
         }
-        cloudMusicDatabase.getAllSongs().map {
-            allSongs.add(it)
+        cloudMusicDatabase.getAllSongs().collect {
+            it.map {
+                allSongs.add(it)
+            }
         }
         albums = allAlbums
         songs = allSongs.map { song ->

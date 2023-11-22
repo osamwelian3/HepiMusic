@@ -90,9 +90,11 @@ class SongViewModel(application: Application) : AndroidViewModel(application) {
         rootFuture.addListener(
             {
                 val result: LibraryResult<MediaItem> = rootFuture.get()!!
-                val root: MediaItem = result.value!!
-                pushPathStack(root)
-                Log.e("SongViewModel", root.mediaMetadata.title.toString())
+                if (result.value != null) {
+                    val root: MediaItem = result.value!!
+                    pushPathStack(root)
+                    Log.e("SongViewModel", root.mediaMetadata.title.toString())
+                }
             },
             ContextCompat.getMainExecutor(getApplication())
         )
@@ -114,11 +116,13 @@ class SongViewModel(application: Application) : AndroidViewModel(application) {
         childrenFuture.addListener(
             {
                 val result = childrenFuture.get()!!
-                val children = result.value!!
+                result?.let {
+                    val children = result.value!!
 
-                subItemMediaList.addAll(children)
-                mediaItemList.postValue(subItemMediaList)
+                    subItemMediaList.addAll(children)
+                    mediaItemList.postValue(subItemMediaList)
 //                continuation.resume(mediaItemList)
+                }
             },
             ContextCompat.getMainExecutor(getApplication())
         )

@@ -71,9 +71,7 @@ class CurrentSongsFragment : BaseFragment(), OnItemClickListener {
     @Suppress("UNCHECKED_CAST")
     private fun observeViewModel() {
         viewModel.mediaItems.observe(viewLifecycleOwner, Observer {
-            Log.e("MediaItem Count", it.size.toString())
             val mediaItemData = it.map { mediaItem -> mediaItem.toMediaItemData(mediaItem.mediaId == (viewModel.currentItem.value?.mediaId ?: ""), viewModel.browser.isLoading) }
-            Log.e("MediaItemData Count", mediaItemData.size.toString())
             (binding.currentRV.adapter as BaseAdapter<MediaItemData>).updateItems(mediaItemData, MediaItemDataDiffCallback(items, mediaItemData))
             items = mediaItemData
         })

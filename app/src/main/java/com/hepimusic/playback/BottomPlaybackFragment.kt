@@ -44,7 +44,7 @@ class BottomPlaybackFragment : BaseFragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        viewModel = ViewModelProvider(requireActivity()).get(PlaybackViewModel::class.java)
+        viewModel = ViewModelProvider(requireActivity())[PlaybackViewModel::class.java]
 //        Snackbar.make(binding.container, viewModel.isPlaying.value.toString(), Snackbar.LENGTH_LONG).show()
 //        Log.e("SNACKBAR", viewModel.isPlaying.value.toString())
         arguments?.let {

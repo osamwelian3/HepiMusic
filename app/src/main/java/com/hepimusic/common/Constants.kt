@@ -38,6 +38,13 @@ object Constants {
     const val NAV_RADIO = "com.hepimusic.nav.radio"
     const val NAV_SETTINGS = "com.hepimusic.nav.settings"
     const val NAV_VIDEOS = "com.hepimusic.nav.videos"
+    const val LOGOUT = "com.hepimusic.logout"
+
+    // Auth Constants
+    const val USERNAME: String = "com.hepimusic.auth.USERNAME"
+    const val USER_EMAIL: String = "com.hepimusic.auth.USER.EMAIL"
+    const val USER_PHONE: String = "com.hepimusic.auth.USER.PHONE"
+    const val USER_PASSWORD: String = "com.hepimusic.auth.USER.PASSWORD"
 
     // Other constants
     const val MAX_RECENTLY_PLAYED = 50

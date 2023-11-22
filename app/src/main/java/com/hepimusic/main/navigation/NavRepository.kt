@@ -2,15 +2,19 @@ package com.hepimusic.main.navigation
 
 import android.content.SharedPreferences
 import androidx.lifecycle.MediatorLiveData
+import aws.smithy.kotlin.runtime.InternalApi
+import aws.smithy.kotlin.runtime.util.asyncLazy
+import com.amplifyframework.core.Amplify
 import com.hepimusic.R
 import com.hepimusic.common.Constants
 
-class NavRepository(private var origin: Int?, private val preferences: SharedPreferences) {
+@OptIn(InternalApi::class)
+class NavRepository(private var origin: Int?, private val preferences: SharedPreferences, private val userExists: Boolean) {
 
     val liveItems = MediatorLiveData<List<NavItem>>()
 
     init {
-        val items = arrayOfNulls<NavItem?>(9)
+        val items = arrayOfNulls<NavItem?>(10)
         items[preferences.getInt(Constants.NAV_SONGS, 0)] =
             NavItem(Constants.NAV_SONGS, R.string.songs, R.drawable.ic_song_thin, isFrom(0))
         /*items[preferences.getInt(Constants.NAV_IDENTIFY, 1)] =
@@ -29,6 +33,10 @@ class NavRepository(private var origin: Int?, private val preferences: SharedPre
             NavItem(Constants.NAV_SETTINGS, R.string.settings, R.drawable.ic_settings, isFrom(7))
         /*items[preferences.getInt(Constants.NAV_VIDEOS, 8)] =
             NavItem(Constants.NAV_VIDEOS, R.string.videos, R.drawable.ic_video, isFrom(8))*/
+        if (userExists) {
+            items[preferences.getInt(Constants.LOGOUT, 9)] =
+                NavItem(Constants.LOGOUT, R.string.logout, R.drawable.logout_24, isFrom(9))
+        }
         liveItems.value = items.filterNotNull()
     }
 
@@ -59,5 +67,6 @@ val keys = arrayListOf(
     Constants.NAV_PLAYLIST,
     Constants.NAV_RADIO,
     Constants.NAV_SETTINGS,
-    Constants.NAV_VIDEOS
+    Constants.NAV_VIDEOS,
+    Constants.LOGOUT
 )

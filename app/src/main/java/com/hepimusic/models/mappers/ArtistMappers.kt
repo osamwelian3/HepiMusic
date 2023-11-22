@@ -20,6 +20,22 @@ fun Creator.toArtistEntity(): ArtistEntity {
     )
 }
 
+fun com.amplifyframework.datastore.generated.model.Creator.toArtistEntity(): ArtistEntity {
+    return ArtistEntity(
+        key = key,
+        desc = desc,
+        facebook = facebook,
+        instagram = instagram,
+        name = name,
+        thumbnail = thumbnail,
+        thumbnailKey = thumbnailKey,
+        twitter = twitter,
+        youtube = youtube,
+        updatedAt = updatedAt,
+        createdAt = createdAt
+    )
+}
+
 fun ArtistEntity.toCreator(): Creator {
     return Creator(
         key, desc, facebook, instagram, name, thumbnail, thumbnailKey, twitter, youtube, createdAt, updatedAt

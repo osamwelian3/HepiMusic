@@ -4,29 +4,18 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.os.Bundle
 import android.util.Log
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.activity.viewModels
-import androidx.fragment.app.activityViewModels
-import androidx.fragment.app.viewModels
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.viewModelScope
 import androidx.navigation.fragment.findNavController
 import com.hepimusic.BR
 import com.hepimusic.R
 import com.hepimusic.common.Constants
-import com.hepimusic.main.common.view.BaseMediaStoreViewModel
 import com.hepimusic.main.common.view.BasePlayerFragment
 import com.hepimusic.models.mappers.toMediaItem
-import com.hepimusic.playback.PlaybackViewModel
-import com.hepimusic.viewmodels.SongViewModel
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 
 // TODO: Rename parameter arguments, choose names that match
 // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
@@ -105,7 +94,7 @@ class SongsFragment : BasePlayerFragment<Song>() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        viewModel = ViewModelProvider(requireActivity()).get(SongsViewModel::class.java)
+        viewModel = ViewModelProvider(requireActivity())[SongsViewModel::class.java]
         super.onViewCreated(view, savedInstanceState)
 
         Log.d("SONGS FRAGMENT SV", viewModel.toString())
@@ -124,8 +113,9 @@ class SongsFragment : BasePlayerFragment<Song>() {
     }*/
 
     override fun onItemClick(position: Int, sharableView: View?) {
+        Log.e("CLICKED", items[position].title +" "+items[position].path)
         preferences.edit().putString(Constants.LAST_PARENT_ID, "[allSongsID]").apply()
-        playbackViewModel.playAll(items[position].id.toString(), items.map { it.toMediaItem() })
+        playbackViewModel.playAll(items[position].id, items.map { it.toMediaItem() })
     }
 
     override fun onOverflowMenuClick(position: Int) {

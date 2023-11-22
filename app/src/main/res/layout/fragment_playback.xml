@@ -25,6 +25,13 @@
         android:background="@color/colorPrimary"
         tools:context=".main.playback.PlaybackFragment">
 
+        <com.jgabrielfreitas.core.BlurImageView
+            android:id="@+id/blurImageView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="centerCrop"
+            android:contentDescription="@string/blur_image_view" />
+
         <Button
             android:id="@+id/sectionBackButton"
             style="@style/Theme.HepiMusic.SectionBackButton"

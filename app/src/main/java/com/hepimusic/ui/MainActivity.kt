@@ -1,9 +1,12 @@
 package com.hepimusic.ui
 
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.content.ServiceConnection
 import android.os.AsyncTask
 import android.os.Bundle
+import android.os.IBinder
 import android.util.AttributeSet
 import android.util.Log
 import android.view.LayoutInflater
@@ -18,6 +21,8 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import androidx.navigation.findNavController
 import androidx.navigation.fragment.NavHostFragment
+import com.amplifyframework.core.Amplify
+import com.amplifyframework.core.model.query.ObserveQueryOptions
 import com.hepimusic.R
 import com.hepimusic.common.Constants
 import com.hepimusic.databinding.ActivityMainBinding
@@ -34,11 +39,15 @@ import com.hepimusic.main.playlist.WritePlaylistViewModel
 import com.hepimusic.main.search.SearchViewModel
 import com.hepimusic.main.songs.Song
 import com.hepimusic.main.songs.SongsViewModel
+import com.hepimusic.playback.MusicService
 import com.hepimusic.playback.PlaybackViewModel
 import com.hepimusic.viewmodels.SongViewModel
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -67,22 +76,53 @@ class MainActivity : AppCompatActivity() {
     lateinit var navHostFragment: NavHostFragment
     lateinit var navController: NavController
     var items = emptyList<Song>()
+    private val backgroundScope = CoroutineScope(SupervisorJob()+Dispatchers.IO)
+
+    private val serviceConnection = object : ServiceConnection {
+        override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
+            if (service is MusicService.MusicServiceBinder) {
+                playbackViewModel.exoPlayer = service.musicService.player
+            }
+        }
+
+        override fun onServiceDisconnected(name: ComponentName?) {
+
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        playbackViewModel = ViewModelProvider(this)[PlaybackViewModel::class.java]
-        songsViewModel = ViewModelProvider(this)[SongsViewModel::class.java]
-        exploreViewModel = ViewModelProvider(this)[ExploreViewModel::class.java]
-        songViewModel = ViewModelProvider(this)[SongViewModel::class.java]
-        albumSongsViewModel = ViewModelProvider(this)[AlbumSongsViewModel::class.java]
-        playlistViewModel = ViewModelProvider(this)[PlaylistViewModel::class.java]
-        writePlaylistViewModel = ViewModelProvider(this)[WritePlaylistViewModel::class.java]
-        playlistSongsViewModel = ViewModelProvider(this)[PlaylistSongsViewModel::class.java]
-        addSongsToPlaylistViewModel = ViewModelProvider(this)[AddSongsToPlaylistsViewModel::class.java]
-        playlistSongsEditorViewModel = ViewModelProvider(this)[PlaylistSongsEditorViewModel::class.java]
-        searchViewModel = ViewModelProvider(this)[SearchViewModel::class.java]
-        artistsViewModel = ViewModelProvider(this)[ArtistsViewModel::class.java]
-        artistAlbumsViewModel = ViewModelProvider(this)[ArtistAlbumsViewModel::class.java]
+        lifecycleScope.launch(Dispatchers.IO) {
+            playbackViewModel = ViewModelProvider(this@MainActivity)[PlaybackViewModel::class.java]
+            exploreViewModel = ViewModelProvider(this@MainActivity)[ExploreViewModel::class.java]
+            songsViewModel = ViewModelProvider(this@MainActivity)[SongsViewModel::class.java]
+            songViewModel = ViewModelProvider(this@MainActivity)[SongViewModel::class.java]
+            albumSongsViewModel = ViewModelProvider(this@MainActivity)[AlbumSongsViewModel::class.java]
+            playlistViewModel = ViewModelProvider(this@MainActivity)[PlaylistViewModel::class.java]
+            writePlaylistViewModel = ViewModelProvider(this@MainActivity)[WritePlaylistViewModel::class.java]
+            playlistSongsViewModel = ViewModelProvider(this@MainActivity)[PlaylistSongsViewModel::class.java]
+            addSongsToPlaylistViewModel =
+                ViewModelProvider(this@MainActivity)[AddSongsToPlaylistsViewModel::class.java]
+            playlistSongsEditorViewModel =
+                ViewModelProvider(this@MainActivity)[PlaylistSongsEditorViewModel::class.java]
+            searchViewModel = ViewModelProvider(this@MainActivity)[SearchViewModel::class.java]
+            artistsViewModel = ViewModelProvider(this@MainActivity)[ArtistsViewModel::class.java]
+            artistAlbumsViewModel = ViewModelProvider(this@MainActivity)[ArtistAlbumsViewModel::class.java]
+        }
+        startMusicService()
+
+//        Amplify.DataStore.observeQuery(
+//            com.amplifyframework.datastore.generated.model.Song::class.java,
+//            ObserveQueryOptions(),
+//            {
+//                Log.e("Amplify Datastore Cancelable", it.toString())
+//            },
+//            {
+//                Log.e("Amplify ITEM CHANGED", it.items.size.toString())
+//            },
+//            { Log.e("Amplify DataStore Exception", it.message.toString()) },
+//            { Log.e("Amplify COMPLETED", "OBSERVATION COMPLETE") }
+//        )
 
         /*songsViewModel.also {
             it.viewModelScope.launch {
@@ -93,9 +133,11 @@ class MainActivity : AppCompatActivity() {
 //        observeViewModel()
 
 //        exploreViewModel.loadData()
-        Log.d("MAINACTIVITY EV", exploreViewModel.toString())
-        Log.d("MAINACTIVITY SV", songsViewModel.toString())
-        Log.d("MAINACTIVITY PV", playbackViewModel.toString())
+        /*backgroundScope.launch {
+            Log.d("MAINACTIVITY EV", exploreViewModel.toString())
+            Log.d("MAINACTIVITY SV", songsViewModel.toString())
+            Log.d("MAINACTIVITY PV", playbackViewModel.toString())
+        }*/
 
 
 //        playbackViewModel.init()
@@ -106,6 +148,16 @@ class MainActivity : AppCompatActivity() {
 //        navController.setGraph(R.navigation.navigation_graph)
         setContentView(binding.root)
 
+    }
+
+    private fun startMusicService() {
+        val intent = Intent(this, MusicService::class.java)
+        startService(intent)
+        bindService(intent, serviceConnection, BIND_AUTO_CREATE)
+    }
+
+    private fun stopService() {
+        unbindService(serviceConnection)
     }
 
     override fun onStart() {
@@ -205,7 +257,7 @@ class MainActivity : AppCompatActivity() {
         super.onActivityResult(requestCode, resultCode, data)
     }
 
-    fun observeViewModel() {
+    /*fun observeViewModel() {
         Log.d("MAINACTIVITY STARTED", "STARTED OBSERVE VIEWMODEL")
         if (items.isEmpty()) {
             if ((songsViewModel.items.value?.size ?: 0) == 0) {
@@ -258,7 +310,7 @@ class MainActivity : AppCompatActivity() {
     private fun updateViews(items: List<Song>) {
         this.items = items
         Log.d("MAINACTIVITY UPDATE VIEWS", this.items.size.toString())
-    }
+    }*/
 
     override fun onBackPressed() {
         val fragment: Fragment? = supportFragmentManager.findFragmentById(R.id.mainNavHostFragment)
@@ -269,6 +321,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
+        stopService()
         this.applicationContext.getSharedPreferences("main", Context.MODE_PRIVATE).edit().putBoolean(
             Constants.INITIALIZATION_COMPLETE, false).apply()
     }

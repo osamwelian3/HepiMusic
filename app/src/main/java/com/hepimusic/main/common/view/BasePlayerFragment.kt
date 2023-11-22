@@ -25,6 +25,7 @@ import com.hepimusic.main.common.callbacks.OnItemClickListener
 import com.hepimusic.main.common.data.Model
 import com.hepimusic.main.songs.Song
 import com.hepimusic.main.songs.SongsViewModel
+import com.hepimusic.models.mappers.toMediaItem
 import com.hepimusic.playback.PlaybackViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -174,7 +175,7 @@ abstract class BasePlayerFragment<T : Model> : BaseFragment(), View.OnClickListe
 
     override fun onClick(v: View?) {
         when (v?.id) {
-            R.id.playButton -> playbackViewModel.playAll()
+            R.id.playButton -> playbackViewModel.playAll("", (items as List<Song>).map { it.toMediaItem() })
         }
     }
 

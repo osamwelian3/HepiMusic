@@ -38,7 +38,11 @@ class GetStartedActivity : BaseActivity(), View.OnClickListener {
         if (isGranted){
             startMainActivity()
         } else {
-            infoText.text = "Permission Denied. Please Allow Permisiion to proceed."
+            infoText.text = "Permission Denied by user. Please Allow Permissions manually to proceed."
+            if (infoText.visibility != View.VISIBLE) {
+                infoText.fadeIn(duration = 500)
+            }
+            goToAppInfo.crossFadeWidth(getStarted, 500)
         }
     }
 
@@ -47,7 +51,11 @@ class GetStartedActivity : BaseActivity(), View.OnClickListener {
         if (isGranted){
             requestStoragePermission.launch(imagesPermission)
         } else {
-            infoText.text = "Permission Denied. Please Allow Permisiion to proceed."
+            infoText.text = "Permission Denied by user. Please Allow Permissions manually to proceed."
+            if (infoText.visibility != View.VISIBLE) {
+                infoText.fadeIn(duration = 500)
+            }
+            goToAppInfo.crossFadeWidth(getStarted, 500)
         }
     }
 
@@ -64,22 +72,31 @@ class GetStartedActivity : BaseActivity(), View.OnClickListener {
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == permissionRequestExternalStorage) {
-            if (grantResults.size == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                // Permission request was granted
-                startMainActivity()
-            } else {
-                // Permission request was denied.
-                if (ActivityCompat.shouldShowRequestPermissionRationale(this, storagePermission)) {
-                    infoText.setText(R.string.read_storage_permission_info)
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+            if (requestCode == permissionRequestExternalStorage) {
+                if (grantResults.size == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    // Permission request was granted
+                    startMainActivity()
                 } else {
-                    // The user has denied the permission and selected the "Don't ask again"
-                    // option in the permission request dialog
-                    infoText.text = getString(R.string.read_storage_permission_settings, getString(R.string.app_name))
-                    goToAppInfo.crossFadeWidth(getStarted, 500)
-                }
-                if (infoText.visibility != View.VISIBLE) {
-                    infoText.fadeIn(duration = 500)
+                    // Permission request was denied.
+                    if (ActivityCompat.shouldShowRequestPermissionRationale(
+                            this,
+                            storagePermission
+                        )
+                    ) {
+                        infoText.setText(R.string.read_storage_permission_info)
+                    } else {
+                        // The user has denied the permission and selected the "Don't ask again"
+                        // option in the permission request dialog
+                        infoText.text = getString(
+                            R.string.read_storage_permission_settings,
+                            getString(R.string.app_name)
+                        )
+                        goToAppInfo.crossFadeWidth(getStarted, 500)
+                    }
+                    if (infoText.visibility != View.VISIBLE) {
+                        infoText.fadeIn(duration = 500)
+                    }
                 }
             }
         }
@@ -98,12 +115,15 @@ class GetStartedActivity : BaseActivity(), View.OnClickListener {
             if (isPermissionGranted(audioPermission) && isPermissionGranted(imagesPermission)) {
                 startMainActivity()
             } else {
-                requestStoragePermissionTwo.launch(audioPermission)
+                try {
+                    requestStoragePermissionTwo.launch(audioPermission)
 //                requestStoragePermission.launch(imagesPermission)
-                ActivityCompat.requestPermissions(
-                    this, arrayOf(storagePermission),
-                    permissionRequestExternalStorage
-                )
+                } catch (e: Exception) {
+                    ActivityCompat.requestPermissions(
+                        this, arrayOf(storagePermission),
+                        permissionRequestExternalStorage
+                    )
+                }
             }
         } else {
             if (isPermissionGranted(storagePermission)) {

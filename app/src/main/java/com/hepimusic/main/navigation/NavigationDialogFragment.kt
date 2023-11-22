@@ -1,5 +1,6 @@
 package com.hepimusic.main.navigation
 
+import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.drawable.BitmapDrawable
 import android.os.Bundle
@@ -9,12 +10,15 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
+import com.amplifyframework.core.Amplify
 import com.hepimusic.R
+import com.hepimusic.auth.LoginActivity
 import com.hepimusic.common.Constants
 import com.hepimusic.databinding.FragmentNavigationDialogBinding
 import com.hepimusic.main.common.callbacks.OnItemClickListener
@@ -110,6 +114,14 @@ class NavigationDialogFragment : BaseFullscreenDialogFragment(), OnStartDragList
 
 
     private fun observeViewModel() {
+        viewModel.navItemsAdded.observe(viewLifecycleOwner, Observer { added ->
+            if (added) {
+                viewModel.navItems?.observe(viewLifecycleOwner, Observer {
+                    this.items = it
+                    adapter.updateItems(it)
+                })
+            }
+        })
         viewModel.navItems?.observe(viewLifecycleOwner, Observer {
             this.items = it
             adapter.updateItems(it)
@@ -169,6 +181,27 @@ class NavigationDialogFragment : BaseFullscreenDialogFragment(), OnStartDragList
     }
 
     override fun onItemClick(position: Int, sharableView: View?) {
+        val navHostFragment = requireActivity().supportFragmentManager.findFragmentById(R.id.bottomNavHostFragment) as NavHostFragment
+        val navController = navHostFragment.navController
+        when (items[position].id) {
+            Constants.LOGOUT -> {
+                if (sharableView != null) {
+                    sharableView.visibility = View.GONE
+                }
+                Amplify.Auth.signOut {
+                    lifecycleScope.launch(Dispatchers.Main) {
+                        try {
+                            findNavController().popBackStack()
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                            navController.navigate(R.id.action_navigationDialogFragment_to_exploreFragment)
+                        }
+                        startActivity(Intent(requireActivity(), LoginActivity::class.java))
+                        requireActivity().finish()
+                    }
+                }
+            }
+        }
         val navId = when (items[position].id) {
             Constants.NAV_SONGS -> R.id.action_navigationDialogFragment_to_songsFragment
             Constants.NAV_PLAYLIST -> R.id.action_navigationDialogFragment_to_playlistFragment
@@ -176,8 +209,7 @@ class NavigationDialogFragment : BaseFullscreenDialogFragment(), OnStartDragList
             Constants.NAV_GENRES -> R.id.action_navigationDialogFragment_to_genresFragment
             else -> null
         }
-        val navHostFragment = requireActivity().supportFragmentManager.findFragmentById(R.id.bottomNavHostFragment) as NavHostFragment
-        val navController = navHostFragment.navController
+
         if (navId != null) navController.navigate(navId) // findNavController()
 
     }

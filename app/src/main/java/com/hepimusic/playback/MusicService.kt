@@ -7,8 +7,10 @@ import android.app.PendingIntent
 import android.app.PendingIntent.*
 import android.content.Intent
 import android.media.session.PlaybackState
+import android.os.Binder
 import android.os.Build
 import android.os.Bundle
+import android.os.IBinder
 import android.support.v4.media.session.PlaybackStateCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
@@ -53,15 +55,7 @@ class MusicService : MediaLibraryService() {
     @Inject
     lateinit var songRepository: SongRepository
 
-
-//    @Inject
-//    lateinit var songRepository: SongRepository
-
-//    @Inject
-//    lateinit var amplifyMusicSource: AmplifyMusicSource
-
-    //    @Inject
-//    lateinit var mediaSource: MediaStoreSource
+    private val binder = MusicServiceBinder()
 
     private lateinit var mediaLibrarySession: MediaLibrarySession
     private lateinit var customCommands: List<CommandButton>
@@ -115,6 +109,13 @@ class MusicService : MediaLibraryService() {
         initializeSessionAndPlayer()
         setListener(MediaSessionServiceListener())
     }
+
+    inner class MusicServiceBinder(): Binder() {
+        val musicService: MusicService
+            get() = this@MusicService
+    }
+
+    override fun onBind(intent: Intent?): IBinder? = super.onBind(intent) ?: binder
 
     override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaLibrarySession {
         return mediaLibrarySession

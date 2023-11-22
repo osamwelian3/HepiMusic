@@ -8,6 +8,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.viewModelScope
 import com.hepimusic.common.Constants
 import com.hepimusic.main.albums.AlbumsViewModel
+import com.hepimusic.ui.MainActivity
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -43,7 +44,6 @@ class ExploreViewModel @Inject constructor(
             val recentDao = recentlyPlayedDatabase.dao
             recentlyPlayedRepository = RecentlyPlayedRepository(recentDao)
             recentlyPlayed = recentlyPlayedRepository.recentlyPlayed
-
         }
     }
 }

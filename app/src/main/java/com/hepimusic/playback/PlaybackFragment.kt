@@ -3,28 +3,32 @@ package com.hepimusic.playback
 import android.animation.Animator
 import android.animation.AnimatorInflater
 import android.animation.AnimatorSet
-import android.content.Intent
+import android.graphics.Bitmap
 import android.graphics.drawable.Animatable
+import android.graphics.drawable.BitmapDrawable
 import android.os.Bundle
 import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.animation.AccelerateDecelerateInterpolator
+import android.widget.ImageView
 import android.widget.SeekBar
 import android.widget.TextView
-import androidx.core.view.ViewCompat
+import androidx.core.content.ContextCompat
+import androidx.core.graphics.drawable.toBitmap
+import androidx.core.graphics.drawable.toDrawable
 import androidx.core.view.children
+import androidx.core.view.forEach
 import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.media3.common.Player
 import androidx.navigation.findNavController
-import androidx.navigation.fragment.FragmentNavigator
-import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.fragment.findNavController
+import androidx.palette.graphics.Palette
 import androidx.transition.TransitionInflater
 import androidx.vectordrawable.graphics.drawable.AnimatedVectorDrawableCompat
 import com.hepimusic.R
@@ -36,12 +40,8 @@ import com.hepimusic.common.px
 import com.hepimusic.databinding.FragmentPlaybackBinding
 import com.hepimusic.main.common.callbacks.AnimatorListener
 import com.hepimusic.main.common.callbacks.OnSeekBarChangeListener
-import com.hepimusic.main.common.view.BaseFragment
 import com.hepimusic.main.common.view.BaseFullscreenDialogFragment
 import com.hepimusic.models.mappers.toSong
-import com.hepimusic.ui.MainActivity
-import com.hepimusic.ui.MainFragment
-import com.hepimusic.ui.MainFragmentDirections
 import java.util.concurrent.TimeUnit
 
 // TODO: Rename parameter arguments, choose names that match
@@ -62,7 +62,7 @@ class PlaybackFragment : /*BaseFragment()*/ BaseFullscreenDialogFragment(), View
     private var userTouchingSeekBar = false
     lateinit var viewModel: PlaybackViewModel // by sharedViewModel()
     private lateinit var rotationAnimSet: AnimatorSet
-    private val handler = Handler()
+    private val handler = Handler(Looper.getMainLooper())
 
     lateinit var binding: FragmentPlaybackBinding
 
@@ -85,7 +85,7 @@ class PlaybackFragment : /*BaseFragment()*/ BaseFullscreenDialogFragment(), View
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         binding = DataBindingUtil.inflate(inflater, R.layout.fragment_playback, container, false)
         // Inflate the layout for this fragment
         binding.let {
@@ -103,29 +103,87 @@ class PlaybackFragment : /*BaseFragment()*/ BaseFullscreenDialogFragment(), View
         super.onViewCreated(view, savedInstanceState)
         setupView()
         observeViewData()
+        updatePlayerColors()
+    }
+
+    private fun updatePlayerColors() {
+        val bmp: Bitmap = binding.albumArt.drawable.toBitmap()
+        binding.blurImageView.setImageBitmap(bmp)
+        binding.blurImageView.setBlur(4)
+
+        // player control colors
+        Palette.from(bmp).generate { palette ->
+            if (palette != null) {
+                var swatch: Palette.Swatch? = palette.darkVibrantSwatch
+                if (swatch == null) {
+                    swatch = palette.mutedSwatch
+                    if (swatch == null) {
+                        swatch = palette.dominantSwatch
+                    }
+                }
+
+                assert(swatch != null)
+                // extract text colors
+                val titleTextColor: Int = swatch!!.titleTextColor
+                val bodyTextColor: Int = swatch.bodyTextColor
+                val rgbColor: Int = swatch.rgb
+
+                // set color to player view
+                activity?.let {
+                    it.window.statusBarColor = rgbColor
+                    it.window.navigationBarColor = rgbColor
+                }
+
+                // more view colors
+                binding.songTitle.children.forEach { (it as TextView).setTextColor(titleTextColor) }
+                binding.sectionBackButton.setTextColor(titleTextColor)
+                binding.sectionBackButton.compoundDrawables[0].setTint(titleTextColor)
+                binding.nowPlaying.setTextColor(bodyTextColor)
+                binding.playingTracks.drawable.setTint(bodyTextColor)
+                binding.countdownDuration.setTextColor(bodyTextColor)
+                binding.totalDuration.setTextColor(bodyTextColor)
+
+                binding.repeatButton.drawable.setTint(bodyTextColor)
+                binding.repeatButton.setColorFilter(bodyTextColor)
+                binding.shuffleButton.drawable.setTint(bodyTextColor)
+                binding.shuffleButton.setColorFilter(bodyTextColor)
+                binding.moreOptions.drawable.setTint(bodyTextColor)
+                binding.nextButton.drawable.setTint(bodyTextColor)
+                binding.previousButton.drawable.setTint(bodyTextColor)
+                binding.playPauseButton.forEach { (it as ImageView).drawable.setTint(titleTextColor) }
+
+            }
+        }
     }
 
     private fun observeViewData() {
-        viewModel.mediaPosition.observe(viewLifecycleOwner, Observer {
+        viewModel.mediaPosition.observe(viewLifecycleOwner) {
             if (!userTouchingSeekBar) binding.playbackSeekBar.progress = it.toInt()
-        })
+        }
 
-        viewModel.currentItem.observe(viewLifecycleOwner, Observer {
-            binding.playbackSeekBar.max = viewModel.contentLength.value ?: 0 // it?.duration?.toInt() ?: 0
-        })
+        viewModel.mediaBufferPosition.observe(viewLifecycleOwner) {
+            if (!userTouchingSeekBar) binding.playbackSeekBar.secondaryProgress = it.toInt()
+        }
+
+        viewModel.currentItem.observe(viewLifecycleOwner) {
+            binding.playbackSeekBar.max =
+                viewModel.contentLength.value ?: 0 // it?.duration?.toInt() ?: 0
+        }
 
 //        viewModel.playbackState.observe(viewLifecycleOwner, Observer { updateState(it) })
-        viewModel.isPlaying.observe(viewLifecycleOwner, Observer { updateState(it) })
+        viewModel.isPlaying.observe(viewLifecycleOwner) { updateState(it) }
 
-        viewModel.playbackState.observe(viewLifecycleOwner, Observer {
+        viewModel.playbackState.observe(viewLifecycleOwner) {
             if (it == Player.STATE_BUFFERING) {
+                updatePlayerColors()
                 binding.progressBarPlay.visibility = View.VISIBLE
                 binding.playPauseButton.visibility = View.INVISIBLE
             } else {
+                updatePlayerColors()
                 binding.playPauseButton.visibility = View.VISIBLE
                 binding.progressBarPlay.visibility = View.INVISIBLE
             }
-        })
+        }
         viewModel.isPlaying.observe(viewLifecycleOwner) {
             if (it) {
                 binding.playPauseButton.visibility = View.VISIBLE
@@ -136,8 +194,8 @@ class PlaybackFragment : /*BaseFragment()*/ BaseFullscreenDialogFragment(), View
 
 
     private fun setupView() {
-        rotationAnimSet = AnimatorInflater.loadAnimator(activity, R.animator.album_art_rotation) as AnimatorSet
-        rotationAnimSet.setTarget(binding.albumArt)
+        /*rotationAnimSet = AnimatorInflater.loadAnimator(activity, R.animator.album_art_rotation) as AnimatorSet
+        rotationAnimSet.setTarget(binding.albumArt)*/
         binding.songTitle.children.forEach { (it as TextView).isSelected = true }
         binding.sectionBackButton.setOnClickListener(this)
         binding.lyricsButton.setOnClickListener(this)
@@ -145,6 +203,7 @@ class PlaybackFragment : /*BaseFragment()*/ BaseFullscreenDialogFragment(), View
         binding.moreOptions.setOnClickListener(this)
         binding.playingTracks.setOnClickListener(this)
         binding.playbackSeekBar.setOnSeekBarChangeListener(onSeekBarChangeListener)
+        updatePlayerColors()
     }
 
     /*private fun updateState(state: Int) {
@@ -158,10 +217,12 @@ class PlaybackFragment : /*BaseFragment()*/ BaseFullscreenDialogFragment(), View
     }*/
     private fun updateState(isPlaying: Boolean) {
         if (isPlaying) {
+            updatePlayerColors()
             if (binding.playPauseButton.currentView != binding.pauseButton) binding.playPauseButton.showNext()
-            if (!rotationAnimSet.isStarted) rotationAnimSet.start() else rotationAnimSet.resume()
+            /*if (!rotationAnimSet.isStarted) rotationAnimSet.start() else rotationAnimSet.resume()*/
         } else {
-            rotationAnimSet.pause()
+            updatePlayerColors()
+            /*rotationAnimSet.pause()*/
             if (binding.playPauseButton.currentView != binding.playButton) binding.playPauseButton.showPrevious()
         }
     }
@@ -259,7 +320,7 @@ class PlaybackFragment : /*BaseFragment()*/ BaseFullscreenDialogFragment(), View
 
             override fun onAnimationEnd(animation: Animator) {
                 binding.albumArtGroup.visibility = View.GONE
-                Handler().postDelayed({
+                Handler(Looper.getMainLooper()).postDelayed({
                     showFoundLyrics(getString(R.string.dummyLyrics), getString(R.string.dummyLyricsSource))
                 }, TimeUnit.SECONDS.toMillis(4))
                 animatorSet.removeAllListeners()
@@ -321,7 +382,7 @@ class PlaybackFragment : /*BaseFragment()*/ BaseFullscreenDialogFragment(), View
     }
 
     override fun onDestroyView() {
-        rotationAnimSet.cancel()
+        /*rotationAnimSet.cancel()*/
         super.onDestroyView()
     }
 

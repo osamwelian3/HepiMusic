@@ -50,11 +50,11 @@ abstract class MyBaseViewModel(
 
     val _isBrowserConnected = MutableLiveData<Boolean>()
 
-    val isBrowserConnected: LiveData<Boolean> = _isBrowserConnected.apply { value = false }
+    val isBrowserConnected: LiveData<Boolean> = _isBrowserConnected.apply { postValue(false) }
 
     val _isControllerConnected = MutableLiveData<Boolean>()
 
-    val isControllerConnected: LiveData<Boolean> = _isControllerConnected.apply { value = false }
+    val isControllerConnected: LiveData<Boolean> = _isControllerConnected.apply { postValue(false) }
 
     init {
         this.application = application
@@ -70,7 +70,7 @@ abstract class MyBaseViewModel(
         return ::globalBrowser.isInitialized
     }
 
-    suspend fun initializeBrowser(context: Context) {
+    private fun initializeBrowser(context: Context) {
         browserFuture =
             MediaBrowser.Builder(
                 context,
@@ -105,10 +105,10 @@ abstract class MyBaseViewModel(
 
                 }
             }
-                                  }, ContextCompat.getMainExecutor(application))
+                                  }, ContextCompat.getMainExecutor(context))
     }
 
-    suspend fun initializeController(context: Context) {
+    private fun initializeController(context: Context) {
         controllerFuture =
             MediaController.Builder(
                 context,

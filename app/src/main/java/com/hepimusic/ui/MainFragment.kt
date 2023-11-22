@@ -46,11 +46,11 @@ class MainFragment : Fragment() {
     private var param1: String? = null
     private var param2: String? = null
 
-    lateinit var playbackViewModel: PlaybackViewModel
+    /*lateinit var playbackViewModel: PlaybackViewModel
     lateinit var songsViewModel: SongsViewModel
     val exploreViewModel: ExploreViewModel by activityViewModels()
 
-    val navHostF = NavHostFragment()
+    val navHostF = NavHostFragment()*/
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

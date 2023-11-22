@@ -116,7 +116,7 @@ abstract class BaseMediaStoreViewModel<T> (
                     }
                     _isBrowserConnected.postValue(::browser.isInitialized)
                     loadData(parentId)
-                    getRoot()
+//                    getRoot()
                 }
             }
                                   }, ContextCompat.getMainExecutor(application))
@@ -163,7 +163,7 @@ abstract class BaseMediaStoreViewModel<T> (
         }, MoreExecutors.directExecutor())
     }
 
-    private fun releaseBrowser() {
+    /*private fun releaseBrowser() {
         MediaBrowser.releaseFuture(browserFuture)
     }
 
@@ -188,7 +188,7 @@ abstract class BaseMediaStoreViewModel<T> (
             return
         }
         val browser = this.browser ?: return
-        val rootFuture = browser.getLibraryRoot(/* params= */ null)
+        val rootFuture = browser.getLibraryRoot(*//* params= *//* null)
 
         rootFuture.addListener(
             {
@@ -208,9 +208,9 @@ abstract class BaseMediaStoreViewModel<T> (
         val childrenFuture =
             browser.getChildren(
                 mediaItem.mediaId,
-                /* page= */ 0,
-                /* pageSize= */ Int.MAX_VALUE,
-                /* params= */ null
+                *//* page= *//* 0,
+                *//* pageSize= *//* Int.MAX_VALUE,
+                *//* params= *//* null
             )
 
         subItemMediaList.clear()
@@ -227,7 +227,7 @@ abstract class BaseMediaStoreViewModel<T> (
         )
         return mediaItemList
 
-    }
+    }*/
 
 //    private val observer: ContentObserver = object : ContentObserver(null) {
 //        override fun onChange(selfChange: Boolean) {

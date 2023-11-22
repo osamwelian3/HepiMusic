@@ -3,23 +3,26 @@ package com.hepimusic.main.common.data
 import android.app.Application
 import android.content.Context
 import android.content.SharedPreferences
+import android.net.Uri
 import android.util.Log
 import androidx.annotation.WorkerThread
+import androidx.core.content.ContextCompat
 import androidx.media3.common.MediaItem
+import androidx.media3.common.MediaMetadata
 import androidx.media3.session.MediaBrowser
-import com.google.common.util.concurrent.MoreExecutors
-import com.hepimusic.common.Constants
+import com.amplifyframework.core.Amplify
+import com.amplifyframework.core.model.query.Where
+import com.amplifyframework.datastore.generated.model.Song
+import com.hepimusic.datasource.repositories.MediaItemTree
+import com.hepimusic.models.mappers.toMediaItem
+import com.hepimusic.ui.MainActivity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.async
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
-import kotlin.math.log
 
 abstract class BaseMediaStoreRepository(private val application: Application, val browser: MediaBrowser) {
 
@@ -38,17 +41,22 @@ abstract class BaseMediaStoreRepository(private val application: Application, va
         return results
     }
 
-    suspend fun query(parentId: String = "[albumID]"): List<MediaItem> = suspendCoroutine { continuation ->
+    /*suspend fun query(parentId: String = "[albumID]"): List<MediaItem> = suspendCoroutine { continuation ->
         val list = mutableListOf<MediaItem>()
 
         backgroundScope.launch{
-            val children = withContext(Dispatchers.Main) {
+            val children = *//*browser.getChildren(parentId, 0, Int.MAX_VALUE, null)*//*withContext(Dispatchers.Main) {
                 val children = browser.getChildren(parentId, 0, Int.MAX_VALUE, null)
                 children
             }
+
+            children.get()
+
             children.addListener({
                 backgroundScope.launch {
-                    val result = children.get()
+                    val result = children.get()!! *//*withContext(Dispatchers.IO) {
+                        children.get()
+                    }*//*
                     result.value?.map {
                         Log.e("BASEMEDIASTOREREPOSITORY", "query: mediaItem key: "+ it.mediaId +" title: "+it.mediaMetadata.title.toString()+" DiscCount: "+it.mediaMetadata.totalDiscCount+" tracks: "+it.mediaMetadata.totalTrackCount )
                         if (it.mediaId.contains("[album]")) {
@@ -97,10 +105,96 @@ abstract class BaseMediaStoreRepository(private val application: Application, va
                     continuation.resume(list)
                 }
 //            preferences.edit().putString(Constants.LAST_PARENT_ID, parentId).apply()
-            }, application.mainExecutor)
+            }, *//*ContextCompat.getMainExecutor(application)*//*application.mainExecutor)
         }
 
 //        return list
+    }*/
+
+    suspend fun query(parentId: String = "[albumID]"): List<MediaItem> = withContext(Dispatchers.IO) {
+        val list = mutableListOf<MediaItem>()
+        val albums = MediaItemTree.albums
+        val artists = MediaItemTree.artists
+        val songs = MediaItemTree.songs
+
+        // Fetch children on a background thread
+        val children = withContext(Dispatchers.Main) {
+            browser.getChildren(parentId, 0, Int.MAX_VALUE, null)
+        }
+        val childrenResult = children.get()
+
+        // Process the result on the background thread
+        childrenResult.value?.forEach { mediaItem ->
+            when {
+                mediaItem.mediaId.contains("[album]") -> {
+
+                    val itCnt = withContext(Dispatchers.Main) {
+                        browser.getChildren(mediaItem.mediaId, 0, Int.MAX_VALUE, null)
+                    }
+                    val itCount = itCnt.get()
+                    val artist = itCount.value?.firstNotNullOfOrNull { it.mediaMetadata.artist }
+
+                    val data = mediaItem.mediaMetadata.buildUpon()
+                        .setTotalTrackCount(itCount.value?.size)
+                        .setArtist(artist)
+                        .build()
+
+                    val uri = songs.find { it.key == mediaItem.mediaId.replace("[item]", "") }?.fileKey
+                    val item = mediaItem.buildUpon()
+                        .setUri(Uri.parse("https://dn1i8z7909ivj.cloudfront.net/public/$uri"))
+                        .setMediaMetadata(data)
+                        .build()
+
+                    list.add(item)
+                }
+                mediaItem.mediaId.contains("[artist]") -> {
+                    val itCnt = withContext(Dispatchers.Main) {
+                        browser.getChildren(mediaItem.mediaId, 0, Int.MAX_VALUE, null)
+                    }
+                    val itCount = itCnt.get()
+                    val discCount = itCount.value?.distinctBy { it.mediaMetadata.albumTitle }?.count()
+
+                    val data = mediaItem.mediaMetadata.buildUpon()
+                        .setTotalTrackCount(itCount.value?.size)
+                        .setTotalDiscCount(discCount)
+                        .build()
+
+                    val uri = songs.find { it.key == mediaItem.mediaId.replace("[item]", "") }?.fileKey
+                    val item = mediaItem.buildUpon()
+                        .setUri(Uri.parse("https://dn1i8z7909ivj.cloudfront.net/public/$uri"))
+                        .setMediaMetadata(data)
+                        .build()
+
+                    list.add(item)
+                }
+                else -> {
+                    val uri = songs.find { it.key == mediaItem.mediaId.replace("[item]", "") }?.fileKey
+                    val item = MediaItemTree.buildMediaItem(
+                        mediaItem.mediaMetadata.title as String,
+                        mediaItem.mediaId,
+                        mediaItem.mediaMetadata.isPlayable == true,
+                        mediaItem.mediaMetadata.isBrowsable == true,
+                        mediaItem.mediaMetadata.mediaType ?: MediaMetadata.MEDIA_TYPE_MUSIC,
+                        mutableListOf(),
+                        mediaItem.mediaMetadata.albumTitle as String?,
+                        mediaItem.mediaMetadata.artist as String?,
+                        mediaItem.mediaMetadata.genre as String?,
+                        Uri.parse("https://dn1i8z7909ivj.cloudfront.net/public/$uri"),
+                        mediaItem.mediaMetadata.artworkUri,
+                        mediaItem.mediaMetadata.releaseYear,
+                        mediaItem.mediaMetadata.releaseMonth,
+                        mediaItem.mediaMetadata.releaseDay,
+                        mediaItem.mediaMetadata.totalTrackCount,
+                        mediaItem.mediaMetadata.totalDiscCount
+                    )
+
+                    Log.e("URI", item.localConfiguration?.uri.toString())
+                    list.add(item)
+                }
+            }
+        }
+
+        list
     }
 
 }

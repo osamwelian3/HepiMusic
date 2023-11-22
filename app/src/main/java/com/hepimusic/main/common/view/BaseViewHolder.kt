@@ -4,8 +4,10 @@ import android.view.View
 import android.widget.CheckBox
 import androidx.databinding.ViewDataBinding
 import androidx.recyclerview.widget.RecyclerView
+import com.amplifyframework.datastore.generated.model.Song
 import com.hepimusic.R
 import com.hepimusic.main.common.callbacks.OnItemClickListener
+import kotlin.reflect.typeOf
 
 class BaseViewHolder<T>(
     private val binding: ViewDataBinding,
@@ -44,7 +46,7 @@ class BaseViewHolder<T>(
     override fun onClick(v: View?) {
         when (v?.id) {
             R.id.container, R.id.checkbox -> itemClickListener?.onItemClick(
-                adapterPosition,
+                absoluteAdapterPosition,
                 itemView.findViewById(R.id.sharableView)
             )
             R.id.moreOptions -> itemClickListener?.onOverflowMenuClick(adapterPosition)

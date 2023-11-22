@@ -18,6 +18,17 @@ fun Album.toAlbumEntity(): AlbumEntity {
     )
 }
 
+fun com.amplifyframework.datastore.generated.model.Album.toAlbumEntity(): AlbumEntity {
+    return AlbumEntity(
+        key = key,
+        name = name,
+        thumbnail = thumbnail,
+        thumbnailKey = thumbnailKey,
+        createdAt = createdAt,
+        updatedAt = updatedAt
+    )
+}
+
 fun AlbumEntity.toAlbum(): Album {
     return Album(
         key = key,

@@ -13,17 +13,33 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
 import androidx.lifecycle.viewModelScope
+import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
-import androidx.media3.common.Metadata
 import androidx.media3.common.PlaybackException
-import androidx.media3.common.PlaybackParameters
 import androidx.media3.common.Player
-import androidx.media3.common.Player.*
+import androidx.media3.common.Player.COMMAND_GET_TIMELINE
+import androidx.media3.common.Player.REPEAT_MODE_ALL
+import androidx.media3.common.Player.REPEAT_MODE_OFF
+import androidx.media3.common.Player.REPEAT_MODE_ONE
+import androidx.media3.common.Player.STATE_READY
+import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.session.MediaBrowser
 import androidx.media3.session.MediaController
 import androidx.media3.session.MediaLibraryService.LibraryParams
-import com.bumptech.glide.RequestManager
+import com.amplifyframework.auth.AuthUser
+import com.amplifyframework.core.Action
+import com.amplifyframework.core.Amplify
+import com.amplifyframework.core.Consumer
+import com.amplifyframework.core.async.Cancelable
+import com.amplifyframework.core.model.query.ObserveQueryOptions
+import com.amplifyframework.core.model.query.QuerySortBy
+import com.amplifyframework.core.model.query.QuerySortOrder
+import com.amplifyframework.core.model.query.Where
+import com.amplifyframework.core.model.query.predicate.QueryPredicate
+import com.amplifyframework.datastore.DataStoreException
+import com.amplifyframework.datastore.DataStoreQuerySnapshot
+import com.amplifyframework.datastore.generated.model.Song
 import com.google.common.util.concurrent.MoreExecutors
 import com.hepimusic.common.Constants
 import com.hepimusic.main.albums.Album
@@ -46,42 +62,60 @@ import javax.inject.Inject
 @HiltViewModel
 class PlaybackViewModel @Inject constructor(
     val application: Application,
-    val recentlyPlayedDatabase: RecentlyPlayedDatabase,
-    val playlistItemsDatabase: PlaylistItemsDatabase,
-    val glide: RequestManager
+    recentlyPlayedDatabase: RecentlyPlayedDatabase,
+    val playlistItemsDatabase: PlaylistItemsDatabase
 ) : MyBaseViewModel(application) {
+
+    lateinit var exoPlayer: ExoPlayer
 
     private val serviceJob = SupervisorJob()
     private val serviceScope = CoroutineScope(Dispatchers.IO + serviceJob)
 
-    lateinit var browser2: MediaBrowser
+    private lateinit var browser2: MediaBrowser
     lateinit var controller: MediaController
-    private val _isControllerInitialized = MutableLiveData<Boolean>().apply { value = false }
-    val isControllerInitialized: LiveData<Boolean> = _isControllerInitialized
-    val playlistItemsRepository = PlaylistItemsRepository(playlistItemsDatabase.dao)
+    private val playlistItemsRepository = PlaylistItemsRepository(playlistItemsDatabase.dao)
     private val preferences: SharedPreferences =
         application.getSharedPreferences("main", Context.MODE_PRIVATE)
 
     private val playedRepository: RecentlyPlayedRepository
     private val _mediaItems = MutableLiveData<List<MediaItem>>()
     private val _contentLength = MutableLiveData<Int>()
-    private val _currentItem = MutableLiveData<MediaItem?>().apply { value = NOTHING_PLAYING }
-    private val _isPlaying = MutableLiveData<Boolean>().apply { value = false }
-    private val _playbackState = MutableLiveData<Int>().apply { value = Player.STATE_IDLE }
+    private val _currentItem = MutableLiveData<MediaItem?>().apply { try { value = NOTHING_PLAYING } catch (e: Exception) { postValue(NOTHING_PLAYING) } }
+    private val _isPlaying = MutableLiveData<Boolean>().apply { try { value = false } catch (e: Exception) { postValue(false) } }
+    private val _playbackState = MutableLiveData<Int>().apply { try { value = Player.STATE_IDLE } catch (e: Exception) { postValue(Player.STATE_IDLE) } }
     private val _shuffleMode = MutableLiveData<Boolean>().apply {
-        value = preferences.getBoolean(
-            Constants.LAST_SHUFFLE_MODE,
-            false
-        )
+        try {
+            value = preferences.getBoolean(
+                Constants.LAST_SHUFFLE_MODE,
+                false
+            )
+        } catch (e: Exception) {
+            postValue(
+                preferences.getBoolean(
+                    Constants.LAST_SHUFFLE_MODE,
+                    false
+                )
+            )
+        }
     }
     private val _repeatMode = MutableLiveData<Int>().apply {
-        value = preferences.getInt(
-            Constants.LAST_REPEAT_MODE,
-            REPEAT_MODE_ALL
-        )
+        try {
+            value = preferences.getInt(
+                Constants.LAST_REPEAT_MODE,
+                REPEAT_MODE_ALL
+            )
+        } catch (e: Exception) {
+            postValue(
+                preferences.getInt(
+                    Constants.LAST_REPEAT_MODE,
+                    REPEAT_MODE_ALL
+                )
+            )
+        }
     }
     private val _mediaPosition =
-        MutableLiveData<Int>().apply { value = preferences.getInt(Constants.LAST_POSITION, 0) }
+        MutableLiveData<Int>().apply { try { value = preferences.getInt(Constants.LAST_POSITION, 0) } catch (e: Exception) { postValue(preferences.getInt(Constants.LAST_POSITION, 0)) } }
+    private val _mediaBufferPosition = MutableLiveData<Int>().apply { postValue(0) }
     private var updatePosition = true
     private val handler = Handler(Looper.getMainLooper())
     private val timer = Timer()
@@ -93,6 +127,7 @@ class PlaybackViewModel @Inject constructor(
     val isPlaying: LiveData<Boolean> = _isPlaying
     val playbackState: LiveData<Int> = _playbackState
     val mediaPosition: LiveData<Int> = _mediaPosition
+    val mediaBufferPosition: LiveData<Int> = _mediaBufferPosition
     val shuffleMode: LiveData<Boolean> = _shuffleMode
     val repeatMode: LiveData<Int> = _repeatMode
 
@@ -102,100 +137,138 @@ class PlaybackViewModel @Inject constructor(
 
     lateinit var browser: MediaBrowser
 
+    var currentUser: AuthUser? = null
+
+    val _userHaslikedSong = MutableLiveData<Boolean>().apply { postValue(false) }
+    val userHasLikedSong: LiveData<Boolean> = _userHaslikedSong
+
     init {
 //        _isPlaying.postValue(false)
         val recentlyPlayed =
             recentlyPlayedDatabase.dao // RecentlyPlayedRoomDatabase.getDatabase(application).recentDao()
         playedRepository = RecentlyPlayedRepository(recentlyPlayed)
         init()
+        Amplify.Auth.getCurrentUser(
+            {
+                currentUser = it
+            },
+            {
+                currentUser = null
+            }
+        )
     }
 
     fun init() {
-        if (true /*isBrowserConnected.value == true*/) {
-            /*browserFuture.addListener({
-                if (browserFuture.isDone && !browserFuture.isCancelled) browser = browserFuture.get()
-            }, ContextCompat.getMainExecutor(application.applicationContext))
-
-            controllerFuture.addListener({
-                if (controllerFuture.isDone && !controllerFuture.isCancelled) {
-                    controller = controllerFuture.get()
-                    _isControllerInitialized.postValue(true)
-                }
-            }, MoreExecutors.directExecutor())*/
-
+        viewModelScope.launch {
             isBrowserConnected.observeForever { connected ->
                 if (connected) {
                     browser2 = globalBrowser
 
                     browser = browser2
-
                     browser.addListener(playerListener)
 
                     browser.also { browser ->
-                        if (preferences.getString(Constants.LAST_PARENT_ID, "")!!.contains("[playlist]")) {
+                        val lastParentId = preferences.getString(
+                            Constants.LAST_PARENT_ID,
+                            ""
+                        )!!
+                        if (lastParentId.contains("[playlist]")) {
                             playlistItemsRepository.playlistItems.observeForever { _itemList ->
-                                val itemList = _itemList.filter { it.playlistId == preferences.getString(Constants.LAST_PARENT_ID, "")!! }
-                                _mediaItems.postValue(itemList.map { it.toSong().toMediaItem() })
-                                _currentItem.postValue(itemList.find {
-                                    it.id == preferences.getString(
-                                        Constants.LAST_ID,
-                                        itemList.first().id
-                                    )
-                                }?.toSong()?.toMediaItem())
-                                _mediaPosition.value = preferences.getInt(
-                                    Constants.LAST_POSITION,
-                                    0
-                                )
-                                browser.setMediaItems(itemList.map { it.toSong().toMediaItem() },
+                                val itemList = _itemList.filter {
+                                    it.playlistId == lastParentId
+                                }
+                                val songItems = itemList.map { it.toSong().toMediaItem() }
+                                val lastMediaId = preferences.getString(Constants.LAST_ID, songItems.firstOrNull()?.mediaId ?: "")
+                                val lastPosition = preferences.getInt(Constants.LAST_POSITION, 0)
+                                val indexOfLastMediaId = songItems.indexOfFirst { mediaItem -> mediaItem.mediaId == lastMediaId }
+                                val mediaItemstoSet = songItems.toTypedArray()
+                                val startIndex = if (indexOfLastMediaId != -1) indexOfLastMediaId else 0
+                                val currentItem = songItems.find { it.mediaId == lastMediaId }
+                                _mediaItems.postValue(songItems)
+                                _currentItem.postValue(currentItem)
+                                updateLikeButton(currentItem)
+                                _mediaPosition.postValue(lastPosition)
+
+                                browser.setMediaItems(songItems, startIndex, Integer.toUnsignedLong(lastPosition))
+                                /*browser.setMediaItems(itemList.map { it.toSong().toMediaItem() },
                                     itemList.map { it.toSong().toMediaItem() }
-                                        .indexOf(itemList.map { it.toSong().toMediaItem() }.find {
-                                            it.mediaId == preferences.getString(
-                                                Constants.LAST_ID,
-                                                itemList.map { it.toSong().toMediaItem() }.first().mediaId
-                                            )
-                                        }),
+                                        .indexOf(itemList.map { it.toSong().toMediaItem() }
+                                            .find { mediaItem ->
+                                                mediaItem.mediaId == preferences.getString(
+                                                    Constants.LAST_ID,
+                                                    itemList.map { it.toSong().toMediaItem() }
+                                                        .first().mediaId
+                                                )
+                                            }),
                                     Integer.toUnsignedLong(
                                         preferences.getInt(
                                             Constants.LAST_POSITION,
                                             0
                                         )
                                     )
-                                )
-                                browser.prepare()
+                                )*/
                             }
-                        } else if (preferences.getString(
-                                Constants.LAST_PARENT_ID,
-                                ""
-                            ) == "[recentlyPlayedId]"
-                        ) {
-                            observer = Observer<List<RecentlyPlayed>> { playedList ->
-                                _mediaItems.postValue(playedList.map { it.toMediaItem() })
+                        } else if (lastParentId == "[recentlyPlayedId]") {
+                            observer = Observer { playedList ->
+                                val itemList = playedList.map { it.toMediaItem() }
+                                val lastMediaId = preferences.getString(
+                                    Constants.LAST_ID,
+                                    itemList.firstOrNull()?.mediaId ?: ""
+                                )
+                                val lastPosition = preferences.getInt(Constants.LAST_POSITION, 0)
+                                val indexOfLastMediaId =
+                                    itemList.indexOfFirst { mediaItem -> mediaItem.mediaId == lastMediaId }
+                                val mediaItemstoSet = itemList.toTypedArray()
+                                val startIndex =
+                                    if (indexOfLastMediaId != -1) indexOfLastMediaId else 0
+                                val currentItem = itemList.find { it.mediaId == lastMediaId }
+                                _mediaItems.postValue(itemList)
+                                _currentItem.postValue(currentItem)
+                                updateLikeButton(currentItem)
+                                _mediaPosition.postValue(lastPosition)
+
+                                browser.setMediaItems(
+                                    itemList,
+                                    startIndex,
+                                    Integer.toUnsignedLong(lastPosition)
+                                )
+
+                                /*_mediaItems.postValue(playedList.map { it.toMediaItem() })
                                 _currentItem.postValue(playedList.find {
                                     it.id == preferences.getString(
                                         Constants.LAST_ID,
                                         playedList.first().id
                                     )
                                 }?.toMediaItem())
-                                _mediaPosition.value = preferences.getInt(
-                                    Constants.LAST_POSITION,
-                                    0
+                                updateLikeButton(playedList.find {
+                                    it.id == preferences.getString(
+                                        Constants.LAST_ID,
+                                        playedList.first().id
+                                    )
+                                }?.toMediaItem())
+                                _mediaPosition.postValue(
+                                    preferences.getInt(
+                                        Constants.LAST_POSITION,
+                                        0
+                                    )
                                 )
                                 browser.setMediaItems(playedList.map { it.toMediaItem() },
                                     playedList.map { it.toMediaItem() }
-                                        .indexOf(playedList.map { it.toMediaItem() }.find {
-                                            it.mediaId == preferences.getString(
-                                                Constants.LAST_ID,
-                                                playedList.map { it.toMediaItem() }.first().mediaId
-                                            )
-                                        }),
+                                        .indexOf(playedList.map { it.toMediaItem() }
+                                            .find { mediaItem ->
+                                                mediaItem.mediaId == preferences.getString(
+                                                    Constants.LAST_ID,
+                                                    playedList.map { it.toMediaItem() }
+                                                        .first().mediaId
+                                                )
+                                            }),
                                     Integer.toUnsignedLong(
                                         preferences.getInt(
                                             Constants.LAST_POSITION,
                                             0
                                         )
                                     )
-                                )
-                                browser.prepare()
+                                )*/
                                 playedRepository.recentlyPlayed.removeObserver(observer)
                             }
                             playedRepository.recentlyPlayed.observeForever(observer)
@@ -204,46 +277,81 @@ class PlaybackViewModel @Inject constructor(
                                 "LAST_PARENT_ID",
                                 preferences.getString(Constants.LAST_PARENT_ID, "NOT FOUND")!!
                             )
-                            browser.getChildren(lastParendId, 0, kotlin.Int.MAX_VALUE, null).also {
-                                it.addListener({
-                                    val result = it.get()!!
-                                    if (result.value != null) {
-                                        val children = result.value!!
-                                        _mediaItems.postValue(children)
-                                        _currentItem.postValue(children.find {
-                                            it.mediaId == preferences.getString(
+                            browser.getChildren(lastParendId, 0, Int.MAX_VALUE, null)
+                                .also { libraryResultListenableFuture ->
+                                    libraryResultListenableFuture.addListener({
+                                        val result = libraryResultListenableFuture.get()!!
+
+                                        if (result.value != null) {
+                                            val children = result.value!!
+
+                                            val lastMediaId = preferences.getString(
                                                 Constants.LAST_ID,
-                                                children.first().mediaId
+                                                children.firstOrNull()?.mediaId ?: ""
                                             )
-                                        })
-                                        _mediaPosition.value = preferences.getInt(
-                                            Constants.LAST_POSITION,
-                                            0
-                                        )
-                                        browser.setMediaItems(
-                                            children,
-                                            children.indexOf(children.find {
+                                            val lastPosition =
+                                                preferences.getInt(Constants.LAST_POSITION, 0)
+                                            val indexOfLastMediaId =
+                                                children.indexOfFirst { mediaItem -> mediaItem.mediaId == lastMediaId }
+                                            val mediaItemstoSet = children.toTypedArray()
+                                            val startIndex =
+                                                if (indexOfLastMediaId != -1) indexOfLastMediaId else 0
+                                            val currentItem =
+                                                children.find { it.mediaId == lastMediaId }
+                                            _mediaItems.postValue(children)
+                                            _currentItem.postValue(currentItem)
+                                            updateLikeButton(currentItem)
+                                            _mediaPosition.postValue(lastPosition)
+
+                                            browser.setMediaItems(
+                                                children,
+                                                startIndex,
+                                                Integer.toUnsignedLong(lastPosition)
+                                            )
+
+                                            /*_mediaItems.postValue(children)
+                                            _currentItem.postValue(children.find {
                                                 it.mediaId == preferences.getString(
                                                     Constants.LAST_ID,
                                                     children.first().mediaId
                                                 )
-                                            }),
-                                            Integer.toUnsignedLong(
-                                                preferences.getInt(
-                                                    Constants.LAST_POSITION,
-                                                    0
+                                            })
+                                            updateLikeButton(children.find {
+                                                it.mediaId == preferences.getString(
+                                                    Constants.LAST_ID,
+                                                    children.first().mediaId
                                                 )
-                                            )
-                                        )
-                                        browser.prepare()
-                                    }
-                                }, ContextCompat.getMainExecutor(application))
-                            }
+                                            })
+                                            _mediaPosition.postValue(preferences.getInt(
+                                                Constants.LAST_POSITION,
+                                                0
+                                            ))
+                                            browser.setMediaItems(
+                                                children,
+                                                children.indexOf(children.find {
+                                                    it.mediaId == preferences.getString(
+                                                        Constants.LAST_ID,
+                                                        children.first().mediaId
+                                                    )
+                                                }),
+                                                Integer.toUnsignedLong(
+                                                    preferences.getInt(
+                                                        Constants.LAST_POSITION,
+                                                        0
+                                                    )
+                                                )
+                                            )*/
+                                        }
+                                    }, ContextCompat.getMainExecutor(application))
+                                }
                         }
                         subscribe(lastParendId, null)
                         playbackState.observeForever(playbackStateObserver)
                         repeatMode.observeForever(repeatObserver)
                         shuffleMode.observeForever(shuffleObserver)
+                    }
+                    if (browser.playbackState == Player.STATE_IDLE) {
+                        browser.prepare()
                     }
                 }
             }
@@ -254,24 +362,24 @@ class PlaybackViewModel @Inject constructor(
 
                     Log.e("CONTROLLER VOL", "CONTROLLER VOL: " + controller.deviceVolume.toString())
 
-                    controller.addListener(playerListener)
+                    /*controller.addListener(playerListener)*/
 
                 }
             }
-
         }
+
     }
 
-    val playerListener = object : Player.Listener {
+    private val playerListener = object : Player.Listener {
         override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
+            super.onMediaItemTransition(mediaItem, reason)
             val mediaList = mutableListOf<MediaItem>()
             for (i in 0 until browser.mediaItemCount) {
                 mediaList.add(browser.getMediaItemAt(i))
             }
-            _mediaItems.value = mediaList
             _mediaItems.postValue(mediaList)
             nowPlaying.postValue(mediaItem)
-            _currentItem.value = mediaItem
+            _currentItem.postValue(mediaItem)
             /*if (mediaItem != null) {
                 addToRecentlyPlayed(mediaItem, browser.isPlaying)
             }*/
@@ -284,10 +392,10 @@ class PlaybackViewModel @Inject constructor(
             if (browser.playbackState == STATE_READY || browser.playbackState == Player.STATE_BUFFERING) {
                 _contentLength.postValue(browser.duration.toInt())
             }
-            super.onMediaItemTransition(mediaItem, reason)
         }
 
         override fun onMediaMetadataChanged(mediaMetadata: MediaMetadata) {
+            super.onMediaMetadataChanged(mediaMetadata)
             val item = nowPlaying.value?.let {
                 MediaItem.Builder()
                     .setMediaId(it.mediaId)
@@ -301,21 +409,9 @@ class PlaybackViewModel @Inject constructor(
             if (browser.playbackState == STATE_READY || browser.playbackState == Player.STATE_BUFFERING) {
                 _contentLength.postValue(browser.duration.toInt())
             }
-            super.onMediaMetadataChanged(mediaMetadata)
         }
 
-        override fun onPlaylistMetadataChanged(mediaMetadata: MediaMetadata) {
-            super.onPlaylistMetadataChanged(mediaMetadata)
-        }
-
-        override fun onIsLoadingChanged(isLoading: Boolean) {
-            super.onIsLoadingChanged(isLoading)
-        }
-
-        override fun onLoadingChanged(isLoading: Boolean) {
-            super.onLoadingChanged(isLoading)
-        }
-
+        @Deprecated("Deprecated in Java")
         override fun onPlayerStateChanged(playWhenReady: Boolean, playbackState: Int) {
             super.onPlayerStateChanged(playWhenReady, playbackState)
             _playbackState.value = playbackState
@@ -332,6 +428,7 @@ class PlaybackViewModel @Inject constructor(
         }
 
         override fun onPlaybackStateChanged(playbackState: Int) {
+            super.onPlaybackStateChanged(playbackState)
             _playbackState.postValue(playbackState)
             browser.currentMediaItem?.let { addToRecentlyPlayed(it, browser.isPlaying) }
             persistPosition()
@@ -346,13 +443,13 @@ class PlaybackViewModel @Inject constructor(
             if (browser.playbackState == STATE_READY || browser.playbackState == Player.STATE_BUFFERING) {
                 _contentLength.postValue(browser.duration.toInt())
             }
-            super.onPlaybackStateChanged(playbackState)
         }
 
         override fun onPlayWhenReadyChanged(playWhenReady: Boolean, reason: Int) {
-            _isPlaying.value = playWhenReady
+            super.onPlayWhenReadyChanged(playWhenReady, reason)
+            _isPlaying.postValue(playWhenReady)
             try {
-                _contentLength.value = browser.duration.toInt()
+                /*_contentLength.value = browser.duration.toInt()*/
                 _contentLength.postValue(browser.duration.toInt())
             } catch (_: Exception) {
 
@@ -366,9 +463,8 @@ class PlaybackViewModel @Inject constructor(
             } else {
                 updatePosition = false
             }
-            super.onPlayWhenReadyChanged(playWhenReady, reason)
             if (browser.playbackState == STATE_READY || browser.playbackState == Player.STATE_BUFFERING) {
-                _contentLength.value = browser.duration.toInt()
+                /*_contentLength.value = browser.duration.toInt()*/
                 _contentLength.postValue(browser.duration.toInt())
 
             }
@@ -376,12 +472,13 @@ class PlaybackViewModel @Inject constructor(
 
         override fun onIsPlayingChanged(isPlaying: Boolean) {
             super.onIsPlayingChanged(isPlaying)
-            _isPlaying.value = isPlaying
+            _isPlaying.postValue(isPlaying)
             if (isPlaying) {
                 updatePosition = true
                 updatePlaybackPosition()
                 browser.currentMediaItem?.let {
                     addToRecentlyPlayed(it, true)
+                    updateLikeButton(it)
                 }
             } else {
                 updatePosition = false
@@ -392,14 +489,14 @@ class PlaybackViewModel @Inject constructor(
             _repeatMode.postValue(repeatMode)
             preferences.edit().putInt(Constants.LAST_REPEAT_MODE, repeatMode).apply()
             if (browser.playbackState == STATE_READY || browser.playbackState == Player.STATE_BUFFERING) {
-                _contentLength.postValue(controller.duration.toInt())
+                _contentLength.postValue(browser.duration.toInt())
             }
             super.onRepeatModeChanged(repeatMode)
         }
 
         override fun onShuffleModeEnabledChanged(shuffleModeEnabled: Boolean) {
             super.onShuffleModeEnabledChanged(shuffleModeEnabled)
-            _shuffleMode.value = shuffleModeEnabled
+            /*_shuffleMode.value = shuffleModeEnabled*/
             _shuffleMode.postValue(shuffleModeEnabled)
         }
 
@@ -417,11 +514,6 @@ class PlaybackViewModel @Inject constructor(
             super.onPlayerError(error)
         }
 
-        override fun onEvents(player: Player, events: Player.Events) {
-
-            super.onEvents(player, events)
-        }
-
         override fun onPlayerErrorChanged(error: PlaybackException?) {
             super.onPlayerErrorChanged(error)
             if (error?.message != null && error.message!!.contains("source error", true)) {
@@ -434,22 +526,57 @@ class PlaybackViewModel @Inject constructor(
             }
         }
 
-        override fun onPlaybackParametersChanged(playbackParameters: PlaybackParameters) {
-            super.onPlaybackParametersChanged(playbackParameters)
-        }
-
-        override fun onMetadata(metadata: Metadata) {
-            super.onMetadata(metadata)
-        }
     }
 
-    fun loadInitialData() {
+    /*fun loadInitialData() {
         viewModelScope.launch {
             globalBrowser.getChildren(lastParendId, 0, Int.MAX_VALUE, null).let {
                 it.addListener({
                     _mediaItems.postValue(it.get().value)
                 }, ContextCompat.getMainExecutor(application.applicationContext))
             }
+        }
+    }*/
+
+    fun updateLikeButton(mediaItem: MediaItem?) {
+        mediaItem?.let { item ->
+            val key = item.mediaId.replace("[item]", "")
+            val tag = "ViewModel Observe Current Item Query"
+            val onQuerySnapshot: Consumer<DataStoreQuerySnapshot<Song>> = Consumer<DataStoreQuerySnapshot<Song>> { value ->
+                Log.d(tag, "success on snapshot")
+                Log.d(tag, "number of songs: " + value.items.size)
+                Log.d(tag, "sync status: " + value.isSynced)
+                val song: Song? = value.items.find { song -> song.key == key }
+                currentUser?.let { authUser ->
+                    val exists = song?.listOfUidUpVotes?.find { upVoteKey -> upVoteKey == authUser.userId }
+                    if (exists != null) {
+                        _userHaslikedSong.postValue(true)
+                    } else {
+                        _userHaslikedSong.postValue(false)
+                    }
+                }
+            }
+            val observationStarted = Consumer { _: Cancelable ->
+                Log.d(tag, "Success on cancelable")
+            }
+            val onObservationError = Consumer { value: DataStoreException ->
+                Log.d(tag, "error on snapshot $value")
+            }
+            val onObservationComplete = Action {
+                Log.d(tag, "complete")
+            }
+            val predicate: QueryPredicate = Where.identifier(Song::class.java, key).queryPredicate // Song.KEY.contains(key)
+            val querySortBy = QuerySortBy("song", "listofuidupvotes", QuerySortOrder.ASCENDING)
+            val options = ObserveQueryOptions(predicate, listOf(querySortBy))
+
+            Amplify.DataStore.observeQuery(
+                Song::class.java,
+                options,
+                observationStarted,
+                onQuerySnapshot,
+                onObservationError,
+                onObservationComplete
+            )
         }
     }
 
@@ -481,10 +608,12 @@ class PlaybackViewModel @Inject constructor(
                 for (i in 0 until transportControls.mediaItemCount) {
                     mediaList.add(transportControls.getMediaItemAt(i))
                 }
-                transportControls.setMediaItems(mediaList,
+                Log.e("INdex", mediaList.indexOf(mediaItem).toString())
+                transportControls.seekToDefaultPosition(mediaList.indexOf(mediaList.find { it.mediaId == mediaItem.mediaId }))
+                /*transportControls.setMediaItems(mediaList,
                     mediaList.indexOf(mediaItem),
                     0
-                ) // .playFromMediaId(mediaId, null)
+                )*/ // .playFromMediaId(mediaId, null)
                 transportControls.repeatMode = repeatMode.value!!
                 transportControls.shuffleModeEnabled = shuffleMode.value!!
                 transportControls.playWhenReady = true
@@ -517,43 +646,44 @@ class PlaybackViewModel @Inject constructor(
     }
 
     fun playAll(playId: String = Constants.PLAY_RANDOM, list: List<MediaItem>? = mediaItems.value) {
-        Log.e("LAST_PARENT_ID", preferences.getString(Constants.LAST_PARENT_ID, "NOT FOUND")!!)
-        val parentId = lastParendId
-//        val list = mediaItems.value
-        if (browser.isCommandAvailable(COMMAND_GET_TIMELINE) && browser.mediaItemCount != 0 && browser.getMediaItemAt(0).mediaId == (list?.get(0)?.mediaId
-                ?: NOTHING_PLAYING.mediaId)
-        ) {
-            try {
-                browser.seekTo(list!!.indexOf(list.find { it.mediaId == playId }), 0)
-            } catch (e: Exception) {
-                browser.setMediaItems(
-                    list!!,
-                    list.indexOf(list.find { it.mediaId == playId }),
+        kotlin.run {
+            Log.e("LAST_PARENT_ID", preferences.getString(Constants.LAST_PARENT_ID, "NOT FOUND")!!)
+
+            if (browser.isCommandAvailable(COMMAND_GET_TIMELINE) && browser.mediaItemCount != 0 && browser.getMediaItemAt(
                     0
-                )
+                ).mediaId == (list?.get(0)?.mediaId
+                    ?: NOTHING_PLAYING.mediaId)
+            ) {
+                try {
+                    browser.seekTo(list!!.indexOf(list.find { it.mediaId == playId }), 0)
+                } catch (e: Exception) {
+                    viewModelScope.launch {
+                        browser.setMediaItems(
+                            list!!,
+                            list.indexOf(list.find { it.mediaId == playId }),
+                            C.TIME_UNSET
+                        )
+                    }
+                }
+            } else {
+                viewModelScope.launch {
+                    browser.setMediaItems(
+                        list!!,
+                        list.indexOf(list.find { it.mediaId == playId }),
+                        C.TIME_UNSET
+                    )
+                }
             }
-        } else {
-            browser.setMediaItems(
-                list!!,
-                list.indexOf(list.find { it.mediaId == playId }),
-                0
-            )
-        }
-        if (browser.isCommandAvailable(COMMAND_PREPARE)) browser.prepare()
-//        browser.seekTo(0, 0)
-//        browser.addListener(playerListener)
-        browser.setPlaybackSpeed(1f)
-        browser.playWhenReady = true
-        playMediaAfterLoad = playId
-//        browser.play()
-        Log.e("CURRENT ITEM", browser.currentMediaItem?.mediaId ?: "None")
-        /*if (parentId == Constants.SONGS_ROOT && list != null) {
-            playMediaId(getItemFrmPlayId(playId, list))
-        } else {
+
+            if (browser.playbackState == Player.STATE_IDLE) {
+                browser.prepare()
+            }
+            browser.play()
             playMediaAfterLoad = playId
-            browser.unsubscribe(parentId)
-            subscribe(Constants.SONGS_ROOT, null)
-        }*/
+
+            Log.e("CURRENT ITEM", browser.currentMediaItem?.mediaId ?: "None")
+
+        }
     }
 
     fun seek(time: Long) {
@@ -580,7 +710,7 @@ class PlaybackViewModel @Inject constructor(
     fun skipToNext() {
         if (browser.playbackState == STATE_READY) {
             browser.seekToNextMediaItem()
-            browser.playWhenReady = true
+            /*browser.playWhenReady = true*/
         } else {
             _mediaItems.value?.let {
                 val i = it.indexOf(currentItem.value)
@@ -593,7 +723,7 @@ class PlaybackViewModel @Inject constructor(
     fun skipToPrevious() {
         if (browser.playbackState == STATE_READY) {
             browser.seekToPreviousMediaItem() //.skipToPrevious()
-            browser.playWhenReady = true
+            /*browser.playWhenReady = true*/
         } else {
             _mediaItems.value?.let {
                 val i = it.indexOf(currentItem.value)
@@ -603,28 +733,84 @@ class PlaybackViewModel @Inject constructor(
         }
     }
 
-    val NOTHING_PLAYING: MediaItem = MediaItem.Builder()
+    fun upVoteSong() {
+        if (currentUser != null) {
+            val currentKey = browser.currentMediaItem?.mediaId?.replace("[item]", "")
+            currentKey?.let { key ->
+                Amplify.DataStore.query(
+                    Song::class.java,
+                    Where.identifier(Song::class.java, key),
+                    {
+                        if (it.hasNext()) {
+                            val original = it.next()
+                            val upVotes = original.listOfUidUpVotes
+                            val vote = upVotes.find { voteKey -> voteKey == currentUser!!.userId }
+                            if (vote == null) {
+                                upVotes.add(currentUser!!.userId)
+                            } else {
+                                upVotes.remove(currentUser!!.userId)
+                            }
+                            val modifiedSong = original.copyOfBuilder()
+                                .listOfUidUpVotes(upVotes)
+                                .build()
+                            Amplify.DataStore.save(
+                                modifiedSong,
+                                { updatedSong ->
+                                    if (vote == null) {
+                                        Log.e(
+                                            "UPVOTE SUCCESS",
+                                            "Successfully upVoted ${updatedSong.item().name}"
+                                        )
+                                    } else {
+                                        Log.e(
+                                            "REMOVE VOTE SUCCESS",
+                                            "Successfully removed vote from ${updatedSong.item().name}"
+                                        )
+                                    }
+                                },
+                                { dataStoreException ->
+                                    Toast.makeText(
+                                        application.applicationContext,
+                                        dataStoreException.message,
+                                        Toast.LENGTH_LONG
+                                    ).show()
+                                }
+                            )
+
+                        }
+                    },
+                    {
+                        Toast.makeText(
+                            application.applicationContext,
+                            it.message,
+                            Toast.LENGTH_LONG
+                        ).show()
+                    }
+                )
+            }
+        } else {
+            Toast.makeText(application.applicationContext, "You need to be logged in to upvote a song", Toast.LENGTH_LONG).show()
+        }
+    }
+
+    private val NOTHING_PLAYING: MediaItem = MediaItem.Builder()
         .setMediaId("")
         .setMediaMetadata(MediaMetadata.Builder().setAlbumTitle("Nothing playing yet").build())
         .build()
 
     // When the session's [PlaybackStateCompat] changes, the [mediaItems] needs to be updated
     private val playbackStateObserver = Observer<Int> {
-        val state = it ?: Player.STATE_IDLE
-        val metadata = controller.currentMediaItem ?: NOTHING_PLAYING
-        if (metadata.mediaId != null) {
-            _mediaItems.postValue(updateState(state, metadata))
-        }
+        val state = it
+        val metadata = browser.currentMediaItem ?: NOTHING_PLAYING
+        _mediaItems.postValue(updateState(state, metadata))
     }
 
     // When the session's [MediaMetadataCompat] changes, the [mediaItems] needs to be updated
-    private val mediaMetadataObserver = Observer<MediaItem> {
-        val playbackState = controller.playbackState ?: Player.STATE_IDLE
-        val metadata = it ?: NOTHING_PLAYING
-        if (metadata.mediaId != null) {
-            _mediaItems.postValue(updateState(playbackState, metadata))
-        }
-    }
+    /*private val mediaMetadataObserver = Observer<MediaItem> {
+        val playbackState = controller.playbackState
+        val metadata = it
+        _mediaItems.postValue(updateState(playbackState, metadata))
+    }*/
 
     private val shuffleObserver = Observer<Boolean>(_shuffleMode::postValue)
 
@@ -654,7 +840,7 @@ class PlaybackViewModel @Inject constructor(
                 val matchingItem = items.firstOrNull { it.mediaId == metadata.mediaId }
                 matchingItem?.apply {
                     mediaMetadata.extras!!.putBoolean("isPlaying", browser.isPlaying)
-                    mediaMetadata.extras!!.putBoolean("isBu", browser.isPlaying)
+                    mediaMetadata.extras!!.putBoolean("isBuffering", browser.isPlaying)
                     mediaMetadata.extras!!.putBoolean("isPlaying", browser.isPlaying)
                     /*isPlaying = state.isPlaying
                     isBuffering = state.isBuffering
@@ -664,7 +850,7 @@ class PlaybackViewModel @Inject constructor(
         }
 
         // Update synchronously so addToRecentlyPlayed can pick up a valid currentItem
-        if (currentItem != null) _currentItem.value = currentItem
+        if (currentItem != null) _currentItem.postValue(currentItem)
         _playbackState.postValue(state)
         if (state == STATE_READY && browser.isPlaying) {
             updatePlaybackPosition()
@@ -727,8 +913,9 @@ class PlaybackViewModel @Inject constructor(
         )
         val currPosition =
             browser.currentPosition.toInt() // _playbackState.value?.currentPlayBackPosition
+        _mediaBufferPosition.postValue(browser.bufferedPosition.toInt())
         if (_mediaPosition.value != currPosition) {
-            _mediaPosition.value = currPosition
+            _mediaPosition.postValue(currPosition)
 //            _mediaPosition.postValue(currPosition)
         }
         if (updatePosition) updatePlaybackPosition() else Log.e(

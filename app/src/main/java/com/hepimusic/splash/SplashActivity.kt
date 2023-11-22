@@ -5,12 +5,12 @@ import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Build
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
 import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModelProvider
+import com.amplifyframework.core.Amplify
 import com.hepimusic.R
+import com.hepimusic.auth.LoginActivity
 import com.hepimusic.common.BaseActivity
 import com.hepimusic.common.Constants
 import com.hepimusic.common.Constants.INITIALIZATION_COMPLETE
@@ -52,6 +52,21 @@ class SplashActivity : BaseActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_splash)
+        Amplify.Auth.getCurrentUser(
+            {
+                Log.e("AUTH USER", it.username)
+            },
+            {
+                Log.e("AUTH USER Exception", it.stackTraceToString())
+                Log.e("AUTH USER Exception", it.message.toString())
+
+                if (it.message.toString().contains("You are currently signed out.", true)) {
+                    startActivity(Intent(this, LoginActivity::class.java))
+                    finish()
+                }
+            }
+        )
+
 //        val browserInstance = BrowserInstance(this.applicationContext, this)
 //        browserInstance.run()
 
@@ -83,6 +98,9 @@ class SplashActivity : BaseActivity() {
         viewModel.mediaItemList.observe(this) { mediaItemsList ->
             mediaItemsList.map {
                 Log.e("MEDIA ITEM: ", it.mediaMetadata.title.toString())
+            }
+            if (mediaItemsList.isNotEmpty()) {
+                goToNextScreen()
             }
         }
         preferences.edit().putBoolean(INITIALIZATION_COMPLETE, false).apply()

@@ -150,6 +150,11 @@
             app:popUpTo="@+id/navigationDialogFragment"
             app:popUpToInclusive="true" />
         <action
+            android:id="@+id/action_navigationDialogFragment_to_exploreFragment"
+            app:destination="@id/exploreFragment"
+            app:popUpTo="@+id/navigationDialogFragment"
+            app:popUpToInclusive="true" />
+        <action
             android:id="@+id/action_navigationDialogFragment_to_playlistFragment"
             app:destination="@id/playlistFragment"
             app:popUpTo="@+id/navigationDialogFragment"

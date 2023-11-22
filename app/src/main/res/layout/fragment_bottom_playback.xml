@@ -85,7 +85,7 @@
         <!--String.valueOf(viewModel.browser.duration) + String.valueOf(' ') + viewModel.mediaPosition.toString() +-->
         <!--@{viewModel.currentItem.mediaMetadata.title}-->
         
-        <ImageButton
+        <!--<ImageButton
             android:id="@+id/previousButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -94,6 +94,19 @@
             android:onClick="@{(v) -> viewModel.skipToPrevious()}"
             android:padding="@dimen/padding_large"
             android:src="@drawable/ic_previous"
+            app:layout_constraintEnd_toStartOf="@+id/playButton"
+            app:layout_constraintStart_toEndOf="@+id/songArtist"
+            app:layout_constraintTop_toTopOf="@+id/nextButton" />-->
+
+        <ImageButton
+            android:id="@+id/upVoteButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/upvote_button"
+            android:onClick="@{(v) -> viewModel.upVoteSong()}"
+            android:padding="@dimen/padding_large"
+            android:src="@{ viewModel.userHasLikedSong ? @drawable/baseline_favorite_24 : @drawable/baseline_favorite_border_24 }"
             app:layout_constraintEnd_toStartOf="@+id/playButton"
             app:layout_constraintStart_toEndOf="@+id/songArtist"
             app:layout_constraintTop_toTopOf="@+id/nextButton" />
@@ -110,7 +123,7 @@
             android:padding="@dimen/padding_large"
             android:src="@{viewModel.isPlaying ? @drawable/ic_pause_tertiary : @drawable/ic_play_tertiary }"
             app:layout_constraintEnd_toStartOf="@+id/nextButton"
-            app:layout_constraintStart_toEndOf="@+id/previousButton"
+            app:layout_constraintStart_toEndOf="@+id/upVoteButton"
             app:layout_constraintTop_toTopOf="@+id/nextButton" />
         <!--@{viewModel.isPlaying ? @drawable/ic_pause_tertiary : @drawable/ic_play_tertiary }-->
         <!--tools:src="@drawable/ic_play_white"-->
