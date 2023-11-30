@@ -93,7 +93,7 @@ class CloudMusicDatabase {
                             songList.add(song)
                         }
                     }
-                    continuation.resume(flowOf(songList))
+                    continuation.resume(flowOf(songList.sortedByDescending { song -> song.listens.size }))
                 },
                 {
                     continuation.resumeWithException(it)

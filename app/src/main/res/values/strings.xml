@@ -68,6 +68,7 @@
     <string name="genres">Genres</string>
     <string name="radio">Radio</string>
     <string name="settings">Settings</string>
+    <string name="profile">Profile</string>
     <string name="videos">Videos</string>
     <string name="filter_results">Filter results</string>
 
@@ -98,6 +99,10 @@
     <plurals name="numberOfPlaylists">
         <item quantity="one">%d playlist</item>
         <item quantity="other">%d playlists</item>
+    </plurals>
+    <plurals name="numberOfStreams">
+        <item quantity="one">%d stream</item>
+        <item quantity="other">%d streams</item>
     </plurals>
 
 
@@ -180,4 +185,6 @@
     <string name="go_back_to_sign_up_click_here">Go back to sign up? Click here</string>
     <string name="google_login_button">Google Login Button</string>
     <string name="upvote_button">Upvote Button</string>
+    <string name="trending_on_hepi_music">Trending On Hepi Music</string>
+    <string name="stream_icon">stream icon</string>
 </resources>

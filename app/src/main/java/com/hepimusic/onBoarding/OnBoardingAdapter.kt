@@ -9,7 +9,6 @@ import com.bumptech.glide.RequestManager
 import com.bumptech.glide.load.MultiTransformation
 import com.bumptech.glide.load.resource.bitmap.CenterCrop
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
-import com.hepimusic.R
 import com.hepimusic.databinding.ItemOnBoardingBinding
 
 class OnBoardingAdapter(private val context: Context, private val boards: Array<Board>, val glide: RequestManager) : PagerAdapter() {

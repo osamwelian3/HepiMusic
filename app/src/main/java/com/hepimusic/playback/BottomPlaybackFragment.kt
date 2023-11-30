@@ -2,24 +2,20 @@ package com.hepimusic.playback
 
 import android.animation.AnimatorSet
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.core.view.ViewCompat
 import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.media3.common.Player
 import androidx.navigation.findNavController
 import androidx.navigation.fragment.FragmentNavigator
 import com.hepimusic.R
-import com.hepimusic.common.crossFadeWidth
 import com.hepimusic.databinding.FragmentBottomPlaybackBinding
 import com.hepimusic.main.common.view.BaseFragment
-import com.hepimusic.ui.MainActivity
 import com.hepimusic.ui.MainFragmentDirections
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -58,14 +54,14 @@ class BottomPlaybackFragment : BaseFragment() {
         savedInstanceState: Bundle?
     ): View? {
         binding = DataBindingUtil.inflate(inflater, R.layout.fragment_bottom_playback, container, false)
-        /*viewModel.isBrowserConnected.observe(requireActivity()){ connected ->
+        /*viewModel.isBrowserConnected.observe(viewLifecycleOwner){ connected ->
             if (connected){
-                viewModel.currentItem.observe(requireActivity()){
+                viewModel.currentItem.observe(viewLifecycleOwner){
                     it?.let {
                         binding.container.visibility = View.VISIBLE
                     }
                 }
-                viewModel.mediaItems.observe(requireActivity()){ mediaList ->
+                viewModel.mediaItems.observe(viewLifecycleOwner){ mediaList ->
                     mediaList.map {
                         Log.e("MEDIA ITEM: ", it.mediaMetadata.title.toString())
                     }
@@ -74,7 +70,7 @@ class BottomPlaybackFragment : BaseFragment() {
         }
         suspend fun load() {
             if (viewModel.isBrowserInitialized()) {
-                viewModel.mediaItems.observe(requireActivity()){ mediaList ->
+                viewModel.mediaItems.observe(viewLifecycleOwner){ mediaList ->
                     mediaList.map {
                         Log.e("MEDIA ITEM: ", it.mediaMetadata.title.toString())
                     }
@@ -92,7 +88,7 @@ class BottomPlaybackFragment : BaseFragment() {
         }*/
         // Inflate the layout for this fragment
         binding.let {
-            viewModel.isBrowserConnected.observe(requireActivity()) { connected ->
+            viewModel.isBrowserConnected.observe(viewLifecycleOwner) { connected ->
                 if (connected) {
                     it.viewModel = viewModel
                     it.lifecycleOwner = requireActivity()

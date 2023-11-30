@@ -5,13 +5,35 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.util.Log
 import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
+import com.amplifyframework.core.Action
+import com.amplifyframework.core.Amplify
+import com.amplifyframework.core.Consumer
+import com.amplifyframework.core.async.Cancelable
+import com.amplifyframework.core.model.query.ObserveQueryOptions
+import com.amplifyframework.core.model.query.QuerySortBy
+import com.amplifyframework.core.model.query.QuerySortOrder
+import com.amplifyframework.core.model.query.Where
+import com.amplifyframework.core.model.query.predicate.QueryPredicate
+import com.amplifyframework.datastore.DataStoreException
+import com.amplifyframework.datastore.DataStoreQuerySnapshot
+import com.amplifyframework.datastore.generated.model.Song
 import com.hepimusic.common.Constants
 import com.hepimusic.main.albums.AlbumsViewModel
 import com.hepimusic.ui.MainActivity
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.jsonObject
+import org.json.JSONObject
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import javax.inject.Inject
+import kotlin.coroutines.resume
 
 @HiltViewModel
 class ExploreViewModel @Inject constructor(
@@ -31,11 +53,15 @@ class ExploreViewModel @Inject constructor(
                 }
             }
         }
+    val _trendingSongs = MutableLiveData<List<Song>>()
+    val trendingSongs: LiveData<List<Song>> = _trendingSongs
 
     private lateinit var recentlyPlayedRepository: RecentlyPlayedRepository
     lateinit var recentlyPlayed: LiveData<List<RecentlyPlayed>>
 
     override var sortOrder: String? = "RANDOM() LIMIT 5"
+
+    val tempCount = MutableLiveData<Int>().apply { postValue(0) }
 
     init {
         viewModelScope.launch {
@@ -43,7 +69,71 @@ class ExploreViewModel @Inject constructor(
             preferences.registerOnSharedPreferenceChangeListener(preferencesListener)
             val recentDao = recentlyPlayedDatabase.dao
             recentlyPlayedRepository = RecentlyPlayedRepository(recentDao)
-            recentlyPlayed = recentlyPlayedRepository.recentlyPlayed
+            recentlyPlayed = withContext(Dispatchers.IO) { recentlyPlayedRepository.recentlyPlayed }
+            getTrending()
+        }
+    }
+
+    private fun getTrending() {
+        val tag = "ViewModel Observe Trending Songs Query"
+        val onQuerySnapshot: Consumer<DataStoreQuerySnapshot<Song>> = Consumer<DataStoreQuerySnapshot<Song>> { value ->
+            Log.d(tag, "success on snapshot")
+            Log.d(tag, "number of trending songs: " + value.items.size)
+            Log.d(tag, "sync status: " + value.isSynced)
+
+            val songs = mutableListOf<Song>()
+            value.items.filter { it.trendingListens.size > 0 }.sortedByDescending { it.trendingListens.size }.forEach {
+                val song = it.copyOfBuilder()
+                    .trendingListens(filterListenCount(it.trendingListens))
+                    .build()
+                songs.add(song)
+            }
+
+            val trending = songs.map { it.copyOfBuilder().key("[item]${it.key}").build() }
+
+            _trendingSongs.postValue(trending)
+        }
+        val observationStarted = Consumer { _: Cancelable ->
+            Log.d(tag, "Success on cancelable")
+        }
+        val onObservationError = Consumer { value: DataStoreException ->
+            Log.d(tag, "error on snapshot $value")
+        }
+        val onObservationComplete = Action {
+            Log.d(tag, "complete")
+        }
+        val predicate: QueryPredicate = Where.matches(Song.TRENDING_LISTENS.gt(0)).queryPredicate // Song.KEY.contains(key)
+        val querySortBy = QuerySortBy("Song", "trendingListens", QuerySortOrder.DESCENDING)
+        val options = ObserveQueryOptions(predicate, listOf(querySortBy))
+        Amplify.DataStore.observeQuery(
+            Song::class.java,
+            options,
+            observationStarted,
+            onQuerySnapshot,
+            onObservationError,
+            onObservationComplete
+        )
+    }
+
+    fun filterListenCount(listenCount: List<String>): List<String> {
+        val threeDaysAgo = LocalDateTime.now().minusDays(30)
+
+        val filteredListens = listenCount.reversed().map { json ->
+            Log.e("LISTEN JSON", Json.parseToJsonElement(json).jsonObject["timestamp"].toString().removeSurrounding("\""))
+            Json.parseToJsonElement(json)
+        }.filter { listen ->
+            val listenTimeStamp = LocalDateTime.parse(listen.jsonObject["timestamp"].toString().removeSurrounding("\""), DateTimeFormatter.ISO_DATE_TIME)
+            if (listenTimeStamp.isAfter(threeDaysAgo)) {
+                Log.e("LISTEN TIMESTAMP", listenTimeStamp.toString())
+                Log.e("THREE DAYS AGO TIMESTAMP", threeDaysAgo.toString())
+                Log.e("IS AFTER THREE DAYS AGO", listenTimeStamp.isAfter(threeDaysAgo).toString())
+            }
+            listenTimeStamp.isAfter(threeDaysAgo)
+        }
+
+        return filteredListens.map { listen ->
+            Log.e("Filtered listens", listen.jsonObject.toString())
+            listen.jsonObject.toString()
         }
     }
 }

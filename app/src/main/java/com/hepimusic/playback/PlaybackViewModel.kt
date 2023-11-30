@@ -27,7 +27,9 @@ import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.session.MediaBrowser
 import androidx.media3.session.MediaController
 import androidx.media3.session.MediaLibraryService.LibraryParams
+import androidx.room.withTransaction
 import com.amplifyframework.auth.AuthUser
+import com.amplifyframework.auth.options.AuthFetchSessionOptions
 import com.amplifyframework.core.Action
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.Consumer
@@ -40,8 +42,10 @@ import com.amplifyframework.core.model.query.predicate.QueryPredicate
 import com.amplifyframework.datastore.DataStoreException
 import com.amplifyframework.datastore.DataStoreQuerySnapshot
 import com.amplifyframework.datastore.generated.model.Song
+import com.google.common.collect.ImmutableList
 import com.google.common.util.concurrent.MoreExecutors
 import com.hepimusic.common.Constants
+import com.hepimusic.datasource.repositories.MediaItemTree
 import com.hepimusic.main.albums.Album
 import com.hepimusic.main.common.view.MyBaseViewModel
 import com.hepimusic.main.explore.RecentlyPlayed
@@ -51,22 +55,33 @@ import com.hepimusic.main.playlist.PlaylistItemsDatabase
 import com.hepimusic.main.playlist.PlaylistItemsRepository
 import com.hepimusic.models.mappers.toMediaItem
 import com.hepimusic.models.mappers.toSong
+import com.hepimusic.models.mappers.toStreamCount
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.util.Timer
+import java.util.UUID
 import javax.inject.Inject
 
 @HiltViewModel
 class PlaybackViewModel @Inject constructor(
     val application: Application,
-    recentlyPlayedDatabase: RecentlyPlayedDatabase,
+    private val recentlyPlayedDatabase: RecentlyPlayedDatabase,
     val playlistItemsDatabase: PlaylistItemsDatabase
 ) : MyBaseViewModel(application) {
 
     lateinit var exoPlayer: ExoPlayer
+    private var currentIndex = 0
+    private var addedUpTo = 0
+
+    var listensMap: MutableMap<String, ListenItemNode> = mutableMapOf()
+    private var trendingListensMap: MutableMap<String, String> = mutableMapOf()
 
     private val serviceJob = SupervisorJob()
     private val serviceScope = CoroutineScope(Dispatchers.IO + serviceJob)
@@ -77,7 +92,7 @@ class PlaybackViewModel @Inject constructor(
     private val preferences: SharedPreferences =
         application.getSharedPreferences("main", Context.MODE_PRIVATE)
 
-    private val playedRepository: RecentlyPlayedRepository
+    private lateinit var playedRepository: RecentlyPlayedRepository
     private val _mediaItems = MutableLiveData<List<MediaItem>>()
     private val _contentLength = MutableLiveData<Int>()
     private val _currentItem = MutableLiveData<MediaItem?>().apply { try { value = NOTHING_PLAYING } catch (e: Exception) { postValue(NOTHING_PLAYING) } }
@@ -117,6 +132,7 @@ class PlaybackViewModel @Inject constructor(
         MutableLiveData<Int>().apply { try { value = preferences.getInt(Constants.LAST_POSITION, 0) } catch (e: Exception) { postValue(preferences.getInt(Constants.LAST_POSITION, 0)) } }
     private val _mediaBufferPosition = MutableLiveData<Int>().apply { postValue(0) }
     private var updatePosition = true
+    private var updateListen = true
     private val handler = Handler(Looper.getMainLooper())
     private val timer = Timer()
     private var playMediaAfterLoad: String? = null
@@ -138,28 +154,53 @@ class PlaybackViewModel @Inject constructor(
     lateinit var browser: MediaBrowser
 
     var currentUser: AuthUser? = null
+    val session_id = preferences.getString(Constants.SESSION_ID, null)
+
+    var job: Job? = null
 
     val _userHaslikedSong = MutableLiveData<Boolean>().apply { postValue(false) }
     val userHasLikedSong: LiveData<Boolean> = _userHaslikedSong
+    val _upVotesCount = MutableLiveData<String>().apply { postValue(0.toStreamCount()) }
+    val upVotesCount: LiveData<String> = _upVotesCount
+    val _listensCount = MutableLiveData<String>().apply { postValue(0.toStreamCount()) }
+    val listensCount: LiveData<String> = _listensCount
+
+    val sharedPreferencesListener = SharedPreferences.OnSharedPreferenceChangeListener { sharedPreferences, key ->
+        when (key) {
+            Constants.SESSION_ID -> {
+                if (!listensMap.containsKey(session_id)) {
+                    listensMap[sharedPreferences.getString(key, null)!!] = ListenItemNode(session_id!!)
+                }
+            }
+        }
+    }
 
     init {
 //        _isPlaying.postValue(false)
-        val recentlyPlayed =
-            recentlyPlayedDatabase.dao // RecentlyPlayedRoomDatabase.getDatabase(application).recentDao()
-        playedRepository = RecentlyPlayedRepository(recentlyPlayed)
-        init()
-        Amplify.Auth.getCurrentUser(
-            {
-                currentUser = it
-            },
-            {
-                currentUser = null
+        CoroutineScope(Dispatchers.IO).launch {
+            val recentlyPlayed =
+                recentlyPlayedDatabase.dao // RecentlyPlayedRoomDatabase.getDatabase(application).recentDao()
+            playedRepository = RecentlyPlayedRepository(recentlyPlayed)
+            init()
+            Amplify.Auth.getCurrentUser(
+                {
+                    currentUser = it
+                },
+                {
+                    currentUser = null
+                }
+            )
+            preferences.registerOnSharedPreferenceChangeListener(sharedPreferencesListener)
+            if (session_id != null) {
+                if (!listensMap.containsKey(session_id)) {
+                    listensMap[session_id] = ListenItemNode(session_id)
+                }
             }
-        )
+        }
     }
 
     fun init() {
-        viewModelScope.launch {
+        CoroutineScope(Dispatchers.Main).launch {
             isBrowserConnected.observeForever { connected ->
                 if (connected) {
                     browser2 = globalBrowser
@@ -190,23 +231,7 @@ class PlaybackViewModel @Inject constructor(
                                 _mediaPosition.postValue(lastPosition)
 
                                 browser.setMediaItems(songItems, startIndex, Integer.toUnsignedLong(lastPosition))
-                                /*browser.setMediaItems(itemList.map { it.toSong().toMediaItem() },
-                                    itemList.map { it.toSong().toMediaItem() }
-                                        .indexOf(itemList.map { it.toSong().toMediaItem() }
-                                            .find { mediaItem ->
-                                                mediaItem.mediaId == preferences.getString(
-                                                    Constants.LAST_ID,
-                                                    itemList.map { it.toSong().toMediaItem() }
-                                                        .first().mediaId
-                                                )
-                                            }),
-                                    Integer.toUnsignedLong(
-                                        preferences.getInt(
-                                            Constants.LAST_POSITION,
-                                            0
-                                        )
-                                    )
-                                )*/
+
                             }
                         } else if (lastParentId == "[recentlyPlayedId]") {
                             observer = Observer { playedList ->
@@ -233,42 +258,6 @@ class PlaybackViewModel @Inject constructor(
                                     Integer.toUnsignedLong(lastPosition)
                                 )
 
-                                /*_mediaItems.postValue(playedList.map { it.toMediaItem() })
-                                _currentItem.postValue(playedList.find {
-                                    it.id == preferences.getString(
-                                        Constants.LAST_ID,
-                                        playedList.first().id
-                                    )
-                                }?.toMediaItem())
-                                updateLikeButton(playedList.find {
-                                    it.id == preferences.getString(
-                                        Constants.LAST_ID,
-                                        playedList.first().id
-                                    )
-                                }?.toMediaItem())
-                                _mediaPosition.postValue(
-                                    preferences.getInt(
-                                        Constants.LAST_POSITION,
-                                        0
-                                    )
-                                )
-                                browser.setMediaItems(playedList.map { it.toMediaItem() },
-                                    playedList.map { it.toMediaItem() }
-                                        .indexOf(playedList.map { it.toMediaItem() }
-                                            .find { mediaItem ->
-                                                mediaItem.mediaId == preferences.getString(
-                                                    Constants.LAST_ID,
-                                                    playedList.map { it.toMediaItem() }
-                                                        .first().mediaId
-                                                )
-                                            }),
-                                    Integer.toUnsignedLong(
-                                        preferences.getInt(
-                                            Constants.LAST_POSITION,
-                                            0
-                                        )
-                                    )
-                                )*/
                                 playedRepository.recentlyPlayed.removeObserver(observer)
                             }
                             playedRepository.recentlyPlayed.observeForever(observer)
@@ -308,39 +297,6 @@ class PlaybackViewModel @Inject constructor(
                                                 startIndex,
                                                 Integer.toUnsignedLong(lastPosition)
                                             )
-
-                                            /*_mediaItems.postValue(children)
-                                            _currentItem.postValue(children.find {
-                                                it.mediaId == preferences.getString(
-                                                    Constants.LAST_ID,
-                                                    children.first().mediaId
-                                                )
-                                            })
-                                            updateLikeButton(children.find {
-                                                it.mediaId == preferences.getString(
-                                                    Constants.LAST_ID,
-                                                    children.first().mediaId
-                                                )
-                                            })
-                                            _mediaPosition.postValue(preferences.getInt(
-                                                Constants.LAST_POSITION,
-                                                0
-                                            ))
-                                            browser.setMediaItems(
-                                                children,
-                                                children.indexOf(children.find {
-                                                    it.mediaId == preferences.getString(
-                                                        Constants.LAST_ID,
-                                                        children.first().mediaId
-                                                    )
-                                                }),
-                                                Integer.toUnsignedLong(
-                                                    preferences.getInt(
-                                                        Constants.LAST_POSITION,
-                                                        0
-                                                    )
-                                                )
-                                            )*/
                                         }
                                     }, ContextCompat.getMainExecutor(application))
                                 }
@@ -373,11 +329,13 @@ class PlaybackViewModel @Inject constructor(
     private val playerListener = object : Player.Listener {
         override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
             super.onMediaItemTransition(mediaItem, reason)
+            updateLikeButton(mediaItem)
             val mediaList = mutableListOf<MediaItem>()
+            updateListen = true
             for (i in 0 until browser.mediaItemCount) {
                 mediaList.add(browser.getMediaItemAt(i))
             }
-            _mediaItems.postValue(mediaList)
+            /*_mediaItems.postValue(mediaList)*/
             nowPlaying.postValue(mediaItem)
             _currentItem.postValue(mediaItem)
             /*if (mediaItem != null) {
@@ -391,6 +349,9 @@ class PlaybackViewModel @Inject constructor(
             }
             if (browser.playbackState == STATE_READY || browser.playbackState == Player.STATE_BUFFERING) {
                 _contentLength.postValue(browser.duration.toInt())
+            }
+            if (mediaItems.value != null && browser.currentMediaItem != null) {
+                currentIndex = mediaItems.value!!.indexOf(mediaItems.value!!.find { it.mediaId == browser.getMediaItemAt(0).mediaId })
             }
         }
 
@@ -539,6 +500,8 @@ class PlaybackViewModel @Inject constructor(
     }*/
 
     fun updateLikeButton(mediaItem: MediaItem?) {
+        Log.e("CURRENT ITEM LIKE BUTTON", mediaItem?.mediaMetadata?.title.toString())
+        job?.cancel()
         mediaItem?.let { item ->
             val key = item.mediaId.replace("[item]", "")
             val tag = "ViewModel Observe Current Item Query"
@@ -547,12 +510,19 @@ class PlaybackViewModel @Inject constructor(
                 Log.d(tag, "number of songs: " + value.items.size)
                 Log.d(tag, "sync status: " + value.isSynced)
                 val song: Song? = value.items.find { song -> song.key == key }
-                currentUser?.let { authUser ->
-                    val exists = song?.listOfUidUpVotes?.find { upVoteKey -> upVoteKey == authUser.userId }
-                    if (exists != null) {
-                        _userHaslikedSong.postValue(true)
-                    } else {
-                        _userHaslikedSong.postValue(false)
+                if (song != null && song.key == (nowPlaying.value?.mediaId?.replace("[item]", "")
+                        ?: "")
+                ) {
+                    _upVotesCount.postValue(song.listOfUidUpVotes.size.toStreamCount())
+                    _listensCount.postValue(song.listens.size.toStreamCount())
+
+                    currentUser?.let { authUser ->
+                        val exists = song.listOfUidUpVotes?.find { upVoteKey -> upVoteKey == authUser.userId }
+                        if (exists != null) {
+                            _userHaslikedSong.postValue(true)
+                        } else {
+                            _userHaslikedSong.postValue(false)
+                        }
                     }
                 }
             }
@@ -569,14 +539,17 @@ class PlaybackViewModel @Inject constructor(
             val querySortBy = QuerySortBy("song", "listofuidupvotes", QuerySortOrder.ASCENDING)
             val options = ObserveQueryOptions(predicate, listOf(querySortBy))
 
-            Amplify.DataStore.observeQuery(
-                Song::class.java,
-                options,
-                observationStarted,
-                onQuerySnapshot,
-                onObservationError,
-                onObservationComplete
-            )
+            job = CoroutineScope(Dispatchers.Main + Job()).launch {
+                Amplify.DataStore.observeQuery(
+                    Song::class.java,
+                    options,
+                    observationStarted,
+                    onQuerySnapshot,
+                    onObservationError,
+                    onObservationComplete
+                )
+            }
+            job?.start()
         }
     }
 
@@ -645,7 +618,74 @@ class PlaybackViewModel @Inject constructor(
         }
     }
 
+    fun asyncLoadPreviousPlaylistItems() {
+        if (browser.currentMediaItem == null) return
+        if (mediaItems.value == null) return
+        if (browser.currentMediaItemIndex > 2) return
+        Log.e("current item id", browser.currentMediaItem!!.mediaId)
+        Log.e("media item id of first item", mediaItems.value!![0].mediaId)
+        if (browser.currentMediaItem!!.mediaId != mediaItems.value!![0].mediaId) {
+            if ((currentIndex - 3) >= 0) {
+                browser.addMediaItems(0, mediaItems.value!!.subList(currentIndex - 3, currentIndex))
+            } else if ((currentIndex - 2) >= 0) {
+                browser.addMediaItems(0, mediaItems.value!!.subList(currentIndex - 2, currentIndex))
+            } else {
+                if (currentIndex > 0) {
+                    browser.addMediaItem(
+                        0,
+                        mediaItems.value!![currentIndex-1]
+                    )
+                } else return
+
+            }
+        }
+    }
+
+    fun asyncLoadNextPlaylistItems() {
+        if (browser.currentMediaItem == null) return
+        if (mediaItems.value == null) return
+        if ((browser.mediaItemCount - browser.currentMediaItemIndex) > 3) return
+
+        if (browser.currentMediaItem!!.mediaId != mediaItems.value!![mediaItems.value!!.size-1].mediaId) {
+            val lastPos = mediaItems.value!!.indexOf(mediaItems.value!!.find { it.mediaId == browser.getMediaItemAt(browser.mediaItemCount-1).mediaId })
+            if (lastPos < mediaItems.value!!.size - 1) {
+                browser.addMediaItem(mediaItems.value!![lastPos + 1])
+            } else return
+        }
+    }
+
     fun playAll(playId: String = Constants.PLAY_RANDOM, list: List<MediaItem>? = mediaItems.value) {
+        if (list == null) return
+        _mediaItems.postValue(list!!)
+        val chunkSize = 50
+        val totalItemsCount = list.size
+        var job: Job? = null
+
+        job = CoroutineScope(Dispatchers.IO + Job()).launch {
+            val pos = list.indexOf(list.find { it.mediaId == playId })
+            currentIndex = pos
+            withContext(Dispatchers.Main) {
+                Log.e("PLAY ALL START INDEX", (if (pos > 0) pos-1 else pos).toString())
+                Log.e("PLAY ALL TO INDEX", (if (((list.size-1)-pos) > 3) pos+3 else list.size).toString())
+                Log.e("PLAY ALL SEEK POSITION", (if (pos > 0 && pos != (list.size - 1)) 1 else 0).toString())
+                browser.setMediaItems(list.subList(if (pos > 0 && pos != (list.size-1)) pos-1 else pos, if (((list.size-1)-pos) > 3) pos+3 else list.size), if (pos > 0 && pos != (list.size - 1)) 1 else 0, C.TIME_UNSET)
+                browser.prepare()
+                browser.playWhenReady = true
+            }
+            /*for (startIndex in 0 until totalItemsCount step chunkSize) {
+                val endIndex = minOf(startIndex + chunkSize, totalItemsCount)
+                val currentChunk = list.subList(startIndex, endIndex)
+                withContext(Dispatchers.Main) {
+                    browser.addMediaItems(currentChunk)
+                }
+            }
+            withContext(Dispatchers.Main) {
+                browser.removeMediaItem(pos+1)
+                browser.moveMediaItem(0, pos)
+            }*/
+        }
+
+        /*var job: Job? = null
         kotlin.run {
             Log.e("LAST_PARENT_ID", preferences.getString(Constants.LAST_PARENT_ID, "NOT FOUND")!!)
 
@@ -658,6 +698,11 @@ class PlaybackViewModel @Inject constructor(
                     browser.seekTo(list!!.indexOf(list.find { it.mediaId == playId }), 0)
                 } catch (e: Exception) {
                     viewModelScope.launch {
+                        *//*job = CoroutineScope(Dispatchers.Main + Job()).launch {
+                            if (list!!.size > 5) {
+
+                            }
+                        }*//*
                         browser.setMediaItems(
                             list!!,
                             list.indexOf(list.find { it.mediaId == playId }),
@@ -683,7 +728,7 @@ class PlaybackViewModel @Inject constructor(
 
             Log.e("CURRENT ITEM", browser.currentMediaItem?.mediaId ?: "None")
 
-        }
+        }*/
     }
 
     fun seek(time: Long) {
@@ -708,6 +753,7 @@ class PlaybackViewModel @Inject constructor(
     }
 
     fun skipToNext() {
+        asyncLoadNextPlaylistItems()
         if (browser.playbackState == STATE_READY) {
             browser.seekToNextMediaItem()
             /*browser.playWhenReady = true*/
@@ -721,6 +767,7 @@ class PlaybackViewModel @Inject constructor(
     }
 
     fun skipToPrevious() {
+        asyncLoadPreviousPlaylistItems()
         if (browser.playbackState == STATE_READY) {
             browser.seekToPreviousMediaItem() //.skipToPrevious()
             /*browser.playWhenReady = true*/
@@ -774,6 +821,7 @@ class PlaybackViewModel @Inject constructor(
                                         dataStoreException.message,
                                         Toast.LENGTH_LONG
                                     ).show()
+                                    Log.e("UPVOTE EXCEPTION", dataStoreException.message.toString())
                                 }
                             )
 
@@ -802,7 +850,7 @@ class PlaybackViewModel @Inject constructor(
     private val playbackStateObserver = Observer<Int> {
         val state = it
         val metadata = browser.currentMediaItem ?: NOTHING_PLAYING
-        _mediaItems.postValue(updateState(state, metadata))
+        /*_mediaItems.postValue(updateState(state, metadata))*/
     }
 
     // When the session's [MediaMetadataCompat] changes, the [mediaItems] needs to be updated
@@ -892,8 +940,10 @@ class PlaybackViewModel @Inject constructor(
         if (isPlaying) {
             serviceScope.launch {
                 val played = RecentlyPlayed(metadata)
-                playedRepository.insert(played)
-                playedRepository.trim()
+                recentlyPlayedDatabase.withTransaction {
+                    playedRepository.insert(played)
+                    playedRepository.trim()
+                }
                 preferences.edit().putString(Constants.LAST_ID, metadata.mediaId).apply()
             }
 
@@ -903,6 +953,77 @@ class PlaybackViewModel @Inject constructor(
     private fun persistPosition() {
         if (browser.playbackState == STATE_READY) {
             preferences.edit().putInt(Constants.LAST_POSITION, mediaPosition.value ?: 0).apply()
+        }
+    }
+
+    inner class ListenItemNode(var item: String) {
+        private val children: MutableList<String> = ArrayList()
+
+        fun addChild(childID: String) {
+            this.children.add(listensMap[childID]!!.item)
+        }
+
+        fun getChildren(): List<String> {
+            return ImmutableList.copyOf(children)
+        }
+
+    }
+    private fun updateListens() {
+        val currentKey = browser.currentMediaItem?.mediaId?.replace("[item]", "")
+        currentKey?.let { key ->
+            Amplify.DataStore.query(
+                Song::class.java,
+                Where.identifier(Song::class.java, key),
+                {
+                    if (it.hasNext()) {
+                        val original = it.next()
+                        val listens = original.listens
+                        val listen = currentUser?.userId ?: "Anonymous${UUID.randomUUID().toString().substring(0,3)}"
+                        if (!listensMap.containsKey("listens")) {
+                            listensMap["listens"] = ListenItemNode("listens")
+                            listensMap[session_id]!!.addChild("listens")
+                        }
+//                        listensMap["listens"]!!.addChild(listen)
+                        val listensList = listensMap[listensMap[session_id]!!.getChildren().find { l -> l == "listens" }]!!.getChildren()
+                        if (listensList.contains(listen)) {
+                            Log.e("ALREADY LISTENED", "ALREADY LISTENED")
+                        } else {
+                            Log.e("SHOULD LISTEN", "SHOULD LISTEN")
+                        }
+                        listens.add(listen)
+                        val modifiedSong = original.copyOfBuilder()
+                            .listens(listens)
+                            .build()
+                        Amplify.DataStore.save(
+                            modifiedSong,
+                            { updatedSong ->
+                                Log.e(
+                                    "LISTEN ADD SUCCESS",
+                                    "Successfully added listen to ${updatedSong.item().name}"
+                                )
+                                updateListen = false
+                            },
+                            { dataStoreException ->
+                                Toast.makeText(
+                                    application.applicationContext,
+                                    dataStoreException.message,
+                                    Toast.LENGTH_LONG
+                                ).show()
+                                Log.e("LISTEN ADD EXCEPTION", dataStoreException.message.toString())
+                                updateListen = false
+                            }
+                        )
+
+                    }
+                },
+                {
+                    Toast.makeText(
+                        application.applicationContext,
+                        it.message,
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+            )
         }
     }
 
@@ -917,6 +1038,13 @@ class PlaybackViewModel @Inject constructor(
         if (_mediaPosition.value != currPosition) {
             _mediaPosition.postValue(currPosition)
 //            _mediaPosition.postValue(currPosition)
+        }
+        if ((browser.duration - currPosition) < 1000) {
+            asyncLoadNextPlaylistItems()
+        }
+        if (updateListen && currPosition > 3000) {
+            updateListens()
+            updateListen = false
         }
         if (updatePosition) updatePlaybackPosition() else Log.e(
             "CONTROLLER POSITION",
@@ -948,6 +1076,7 @@ class PlaybackViewModel @Inject constructor(
         browser.release()
         controller.release()
         timer.cancel()
+        preferences.unregisterOnSharedPreferenceChangeListener(sharedPreferencesListener)
         super.onCleared()
     }
 

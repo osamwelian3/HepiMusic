@@ -1,6 +1,5 @@
 package com.hepimusic.main.playlist
 
-import android.net.Uri
 import android.os.Parcel
 import android.os.Parcelable
 import androidx.compose.ui.unit.dp
@@ -11,7 +10,6 @@ import androidx.room.PrimaryKey
 import com.hepimusic.common.Constants
 import com.hepimusic.main.common.data.Model
 import kotlinx.serialization.Serializable
-import java.util.Date
 
 @Serializable
 @Entity(tableName = "playlist")

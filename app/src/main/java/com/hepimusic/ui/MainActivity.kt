@@ -4,32 +4,21 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
-import android.os.AsyncTask
+import android.content.SharedPreferences
 import android.os.Bundle
 import android.os.IBinder
-import android.util.AttributeSet
-import android.util.Log
 import android.view.LayoutInflater
-import android.view.View
-import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
-import androidx.navigation.findNavController
 import androidx.navigation.fragment.NavHostFragment
-import com.amplifyframework.core.Amplify
-import com.amplifyframework.core.model.query.ObserveQueryOptions
 import com.hepimusic.R
 import com.hepimusic.common.Constants
 import com.hepimusic.databinding.ActivityMainBinding
 import com.hepimusic.main.albums.AlbumSongsViewModel
 import com.hepimusic.main.artists.ArtistAlbumsViewModel
 import com.hepimusic.main.artists.ArtistsViewModel
-import com.hepimusic.main.common.view.BaseAdapter
 import com.hepimusic.main.explore.ExploreViewModel
 import com.hepimusic.main.playlist.AddSongsToPlaylistsViewModel
 import com.hepimusic.main.playlist.PlaylistSongsEditorViewModel
@@ -41,25 +30,19 @@ import com.hepimusic.main.songs.Song
 import com.hepimusic.main.songs.SongsViewModel
 import com.hepimusic.playback.MusicService
 import com.hepimusic.playback.PlaybackViewModel
-import com.hepimusic.viewmodels.SongViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.async
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withContext
+import java.util.UUID
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
 
     lateinit var binding: ActivityMainBinding
 
-    lateinit var songViewModel: SongViewModel
+    lateinit var preferences: SharedPreferences
 
     lateinit var playbackViewModel: PlaybackViewModel // by viewModels()
     lateinit var songsViewModel: SongsViewModel
@@ -92,11 +75,13 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        lifecycleScope.launch(Dispatchers.IO) {
+        preferences = this.getSharedPreferences("main", MODE_PRIVATE)
+        preferences.edit().putString(Constants.SESSION_ID, UUID.randomUUID().toString()).apply()
+
+        CoroutineScope(Dispatchers.IO).launch(Dispatchers.IO) {
             playbackViewModel = ViewModelProvider(this@MainActivity)[PlaybackViewModel::class.java]
             exploreViewModel = ViewModelProvider(this@MainActivity)[ExploreViewModel::class.java]
             songsViewModel = ViewModelProvider(this@MainActivity)[SongsViewModel::class.java]
-            songViewModel = ViewModelProvider(this@MainActivity)[SongViewModel::class.java]
             albumSongsViewModel = ViewModelProvider(this@MainActivity)[AlbumSongsViewModel::class.java]
             playlistViewModel = ViewModelProvider(this@MainActivity)[PlaylistViewModel::class.java]
             writePlaylistViewModel = ViewModelProvider(this@MainActivity)[WritePlaylistViewModel::class.java]
@@ -184,11 +169,11 @@ class MainActivity : AppCompatActivity() {
                 }
             }
 
-            viewModel.isBrowserConnected.observe(requireActivity()){ connected ->
+            viewModel.isBrowserConnected.observe(viewLifecycleOwner){ connected ->
                 if (connected) {
 //                    playbackViewModel.browser = viewModel.browser
                     viewModel.init()
-                    viewModel.items.observe(requireActivity()) { list ->
+                    viewModel.items.observe(viewLifecycleOwner) { list ->
                         if (list.isNotEmpty()) {
                             viewModel.items.value?.first()?.id?.let {
                                 if (it.toString().contains("[album]")) {
@@ -202,7 +187,7 @@ class MainActivity : AppCompatActivity() {
                 }
             }
 
-            viewModel.isControllerConnected.observe(requireActivity()){ connected ->
+            viewModel.isControllerConnected.observe(viewLifecycleOwner){ connected ->
                 if (connected) {
                     playbackViewModel.controller = viewModel.controller
                 }

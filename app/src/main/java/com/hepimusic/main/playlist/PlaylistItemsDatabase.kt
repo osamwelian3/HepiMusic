@@ -1,7 +1,5 @@
 package com.hepimusic.main.playlist
 
-import com.hepimusic.main.explore.RecentlyPlayed
-import com.hepimusic.main.explore.RecentlyPlayedDao
 import android.content.Context
 import androidx.room.Database
 import androidx.room.Room

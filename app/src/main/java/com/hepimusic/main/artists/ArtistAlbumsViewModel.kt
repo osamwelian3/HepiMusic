@@ -1,7 +1,6 @@
 package com.hepimusic.main.artists
 
 import android.app.Application
-import com.hepimusic.main.albums.Album
 import com.hepimusic.main.albums.AlbumsViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject

@@ -1,7 +1,6 @@
 package com.hepimusic.models.mappers
 
 import com.hepimusic.datasource.local.entities.ArtistEntity
-import com.hepimusic.main.artists.Artist
 import com.hepimusic.models.Creator
 
 fun Creator.toArtistEntity(): ArtistEntity {

@@ -89,7 +89,7 @@ class PlaybackFragment : /*BaseFragment()*/ BaseFullscreenDialogFragment(), View
         binding = DataBindingUtil.inflate(inflater, R.layout.fragment_playback, container, false)
         // Inflate the layout for this fragment
         binding.let {
-            viewModel.isBrowserConnected.observe(requireActivity()) { connected ->
+            viewModel.isBrowserConnected.observe(viewLifecycleOwner) { connected ->
                 if (connected) {
                     it.viewModel = viewModel
                     it.lifecycleOwner = requireActivity()
@@ -107,7 +107,7 @@ class PlaybackFragment : /*BaseFragment()*/ BaseFullscreenDialogFragment(), View
     }
 
     private fun updatePlayerColors() {
-        val bmp: Bitmap = binding.albumArt.drawable.toBitmap()
+        val bmp: Bitmap = binding.albumArt.drawable?.toBitmap() ?: R.drawable.album_art.toDrawable().toBitmap(24, 24)
         binding.blurImageView.setImageBitmap(bmp)
         binding.blurImageView.setBlur(4)
 

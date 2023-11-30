@@ -6,30 +6,21 @@ import android.content.SharedPreferences
 import android.net.Uri
 import android.util.Log
 import androidx.annotation.WorkerThread
-import androidx.core.content.ContextCompat
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
 import androidx.media3.session.MediaBrowser
-import com.amplifyframework.core.Amplify
-import com.amplifyframework.core.model.query.Where
-import com.amplifyframework.datastore.generated.model.Song
 import com.hepimusic.datasource.repositories.MediaItemTree
-import com.hepimusic.models.mappers.toMediaItem
-import com.hepimusic.ui.MainActivity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import kotlin.coroutines.resume
-import kotlin.coroutines.suspendCoroutine
 
 abstract class BaseMediaStoreRepository(private val application: Application, val browser: MediaBrowser) {
 
     val preferences: SharedPreferences = application.getSharedPreferences("main", Context.MODE_PRIVATE)
 
     private val job = Job()
-    private val backgroundScope = CoroutineScope(Dispatchers.IO + job)
+    private val backgroundScope = CoroutineScope(Dispatchers.Default + job)
 
     @WorkerThread
     suspend fun<T> loadData(parentId: String = "[albumID]", transform: (data: MediaItem) -> T): List<T> {
@@ -111,7 +102,7 @@ abstract class BaseMediaStoreRepository(private val application: Application, va
 //        return list
     }*/
 
-    suspend fun query(parentId: String = "[albumID]"): List<MediaItem> = withContext(Dispatchers.IO) {
+    suspend fun query(parentId: String = "[albumID]"): List<MediaItem> = withContext(Dispatchers.Default) {
         val list = mutableListOf<MediaItem>()
         val albums = MediaItemTree.albums
         val artists = MediaItemTree.artists
@@ -121,7 +112,9 @@ abstract class BaseMediaStoreRepository(private val application: Application, va
         val children = withContext(Dispatchers.Main) {
             browser.getChildren(parentId, 0, Int.MAX_VALUE, null)
         }
-        val childrenResult = children.get()
+        val childrenResult = withContext(Dispatchers.IO) {
+            children.get()
+        }
 
         // Process the result on the background thread
         childrenResult.value?.forEach { mediaItem ->
@@ -131,7 +124,9 @@ abstract class BaseMediaStoreRepository(private val application: Application, va
                     val itCnt = withContext(Dispatchers.Main) {
                         browser.getChildren(mediaItem.mediaId, 0, Int.MAX_VALUE, null)
                     }
-                    val itCount = itCnt.get()
+                    val itCount = withContext(Dispatchers.IO) {
+                        itCnt.get()
+                    }
                     val artist = itCount.value?.firstNotNullOfOrNull { it.mediaMetadata.artist }
 
                     val data = mediaItem.mediaMetadata.buildUpon()
@@ -151,7 +146,9 @@ abstract class BaseMediaStoreRepository(private val application: Application, va
                     val itCnt = withContext(Dispatchers.Main) {
                         browser.getChildren(mediaItem.mediaId, 0, Int.MAX_VALUE, null)
                     }
-                    val itCount = itCnt.get()
+                    val itCount = withContext(Dispatchers.IO) {
+                        itCnt.get()
+                    }
                     val discCount = itCount.value?.distinctBy { it.mediaMetadata.albumTitle }?.count()
 
                     val data = mediaItem.mediaMetadata.buildUpon()

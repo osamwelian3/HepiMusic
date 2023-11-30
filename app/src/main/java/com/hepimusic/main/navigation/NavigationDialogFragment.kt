@@ -207,6 +207,7 @@ class NavigationDialogFragment : BaseFullscreenDialogFragment(), OnStartDragList
             Constants.NAV_PLAYLIST -> R.id.action_navigationDialogFragment_to_playlistFragment
             Constants.NAV_ARTISTS -> R.id.action_navigationDialogFragment_to_artistsFragment
             Constants.NAV_GENRES -> R.id.action_navigationDialogFragment_to_genresFragment
+            Constants.NAV_PROFILE -> R.id.action_navigationDialogFragment_to_profileFragment
             else -> null
         }
 

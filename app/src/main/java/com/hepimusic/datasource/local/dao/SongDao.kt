@@ -3,7 +3,6 @@ package com.hepimusic.datasource.local.dao
 import androidx.room.Dao
 import androidx.room.Query
 import androidx.room.Upsert
-import com.hepimusic.datasource.local.entities.AlbumEntity
 import com.hepimusic.datasource.local.entities.SongEntity
 import kotlinx.coroutines.flow.Flow
 

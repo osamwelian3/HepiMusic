@@ -1,33 +1,14 @@
 package com.hepimusic.ui
 
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
-import android.util.Log
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.activity.viewModels
-import androidx.fragment.app.activityViewModels
-import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.get
-import androidx.navigation.NavHost
-import androidx.navigation.Navigation
+import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.setupWithNavController
-import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.hepimusic.R
 import com.hepimusic.databinding.FragmentMainBinding
-import com.hepimusic.main.explore.ExploreFragment
-import com.hepimusic.main.explore.ExploreViewModel
-import com.hepimusic.main.songs.SongsViewModel
-import com.hepimusic.playback.BottomPlaybackFragment
-import com.hepimusic.playback.PlaybackViewModel
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
 
 // TODO: Rename parameter arguments, choose names that match
 // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER

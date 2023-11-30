@@ -3,27 +3,11 @@ package com.hepimusic.main.songs
 import android.net.Uri
 import android.os.Parcel
 import android.os.Parcelable
-import android.util.Log
 import androidx.media3.common.MediaItem
-import androidx.media3.common.MediaMetadata
-import aws.smithy.kotlin.runtime.util.asyncLazy
-import com.amplifyframework.core.Amplify
-import com.amplifyframework.core.model.query.Where
-import com.amplifyframework.datastore.DataStoreException
-import com.amplifyframework.datastore.generated.model.Creator
-import com.hepimusic.datasource.repositories.MediaItemTree
 import com.hepimusic.main.albums.Album
 import com.hepimusic.main.common.data.Model
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.jsonObject
 
 @Serializable
 class Song(
@@ -42,6 +26,8 @@ class Song(
     var isCurrent: Boolean = false,
     var selected: Boolean = false,
     var audioId: Long? = null,
+    @Contextual
+    val song: Song? = null
 ): Model(), Parcelable {
 
     constructor(parcel: Parcel) : this(
@@ -57,7 +43,8 @@ class Song(
         parcel.readString()!!,
         parcel.readByte() != 0.toByte(),
         parcel.readByte() != 0.toByte(),
-        parcel.readValue(Long::class.java.classLoader) as? Long
+        parcel.readValue(Long::class.java.classLoader) as? Long,
+        parcel.readParcelable(com.amplifyframework.datastore.generated.model.Song::class.java.classLoader)
     ) {
     }
 

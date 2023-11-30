@@ -1,12 +1,10 @@
 package com.hepimusic.models
 
-import com.amplifyframework.core.model.temporal.Temporal
-
 import com.amplifyframework.core.model.Model
 import com.amplifyframework.core.model.annotations.Index
 import com.amplifyframework.core.model.annotations.ModelConfig
 import com.amplifyframework.core.model.annotations.ModelField
-import com.amplifyframework.core.model.query.predicate.QueryField
+import com.amplifyframework.core.model.temporal.Temporal
 
 @ModelConfig(pluralName = "Categories", type = Model.Type.USER, version = 1)
 @Index(name = "undefined", fields = ["key"])

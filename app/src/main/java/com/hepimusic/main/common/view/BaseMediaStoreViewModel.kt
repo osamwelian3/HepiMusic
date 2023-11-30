@@ -3,7 +3,6 @@ package com.hepimusic.main.common.view
 import android.app.Application
 import android.content.ComponentName
 import android.content.Context
-import android.util.Log
 import androidx.annotation.CallSuper
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.LiveData
@@ -11,18 +10,15 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.media3.common.MediaItem
-import androidx.media3.session.LibraryResult
 import androidx.media3.session.MediaBrowser
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
 import com.google.common.util.concurrent.ListenableFuture
 import com.google.common.util.concurrent.MoreExecutors
 import com.hepimusic.main.common.data.MediaStoreRepository
-import com.hepimusic.main.common.data.Model
 import com.hepimusic.main.songs.Song
 import com.hepimusic.playback.MusicService
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 

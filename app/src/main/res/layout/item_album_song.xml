@@ -55,20 +55,40 @@
             app:layout_constraintTop_toTopOf="parent"
             tools:text="Said" />
 
+        <ImageView
+            android:id="@+id/playIcon"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:contentDescription="@string/stream_icon"
+            android:src="@drawable/stream_icon"
+            app:layout_constraintStart_toStartOf="@+id/songTitle"
+            app:layout_constraintTop_toBottomOf="@+id/guideLine" />
+
         <TextView
             android:id="@+id/songArtist"
-            android:layout_width="0dp"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:ellipsize="end"
             android:maxLines="1"
-            android:text="@{song.artist}"
+            app:setListens="@{song}"
             android:textAppearance="@style/TextAppearance.AppCompat.Caption"
             android:textSize="@dimen/text_size_small"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintLeft_toLeftOf="@+id/songTitle"
             app:layout_constraintRight_toRightOf="@+id/songTitle"
+            app:layout_constraintStart_toEndOf="@+id/playIcon"
             app:layout_constraintTop_toBottomOf="@+id/guideLine"
             tools:text="Nasty C" />
+
+<!--        <ImageView-->
+<!--            android:id="@+id/playIcon"-->
+<!--            android:layout_width="20dp"-->
+<!--            android:layout_height="20dp"-->
+<!--            android:contentDescription="@string/stream_icon"-->
+<!--            android:src="@drawable/stream_icon"-->
+<!--            app:layout_constraintRight_toLeftOf="@id/songDuration"-->
+<!--            app:layout_constraintBottom_toBottomOf="parent"-->
+<!--            app:layout_constraintLeft_toRightOf="@+id/songTitle"-->
+<!--            app:layout_constraintTop_toTopOf="parent" />-->
 
         <TextView
             android:id="@+id/songDuration"

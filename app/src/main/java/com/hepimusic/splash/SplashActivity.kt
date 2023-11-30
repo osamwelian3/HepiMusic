@@ -15,9 +15,24 @@ import com.hepimusic.common.BaseActivity
 import com.hepimusic.common.Constants
 import com.hepimusic.common.Constants.INITIALIZATION_COMPLETE
 import com.hepimusic.getStarted.GetStartedActivity
+import com.hepimusic.main.albums.AlbumSongsViewModel
+import com.hepimusic.main.artists.ArtistAlbumsViewModel
+import com.hepimusic.main.artists.ArtistsViewModel
+import com.hepimusic.main.explore.ExploreViewModel
+import com.hepimusic.main.playlist.AddSongsToPlaylistsViewModel
+import com.hepimusic.main.playlist.PlaylistSongsEditorViewModel
+import com.hepimusic.main.playlist.PlaylistSongsViewModel
+import com.hepimusic.main.playlist.PlaylistViewModel
+import com.hepimusic.main.playlist.WritePlaylistViewModel
+import com.hepimusic.main.search.SearchViewModel
+import com.hepimusic.main.songs.SongsViewModel
 import com.hepimusic.onBoarding.OnBoardingActivity
+import com.hepimusic.playback.PlaybackViewModel
 import com.hepimusic.ui.MainActivity
 import com.hepimusic.viewmodels.SongViewModel
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 class SplashActivity : BaseActivity() {
 
@@ -52,6 +67,7 @@ class SplashActivity : BaseActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_splash)
+
         Amplify.Auth.getCurrentUser(
             {
                 Log.e("AUTH USER", it.username)

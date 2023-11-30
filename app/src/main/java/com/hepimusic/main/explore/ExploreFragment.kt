@@ -2,32 +2,22 @@ package com.hepimusic.main.explore
 
 import android.content.Context
 import android.content.SharedPreferences
-import android.net.Uri
 import android.os.Bundle
 import android.util.Log
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ImageView
 import androidx.core.view.ViewCompat
-import androidx.databinding.BindingAdapter
+import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
-import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.viewModelScope
-import androidx.media3.common.MediaItem
 import androidx.navigation.Navigation
 import androidx.navigation.fragment.FragmentNavigator
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.bumptech.glide.Glide
 import com.bumptech.glide.RequestManager
-import com.bumptech.glide.load.engine.DiskCacheStrategy
-import com.bumptech.glide.request.RequestOptions
 import com.hepimusic.BR
 import com.hepimusic.R
 import com.hepimusic.common.Constants
@@ -36,19 +26,11 @@ import com.hepimusic.databinding.FragmentExploreBinding
 import com.hepimusic.main.albums.Album
 import com.hepimusic.main.common.callbacks.OnItemClickListener
 import com.hepimusic.main.common.view.BaseAdapter
-import com.hepimusic.main.songs.SongsViewModel
-import com.hepimusic.models.mappers.toAlbum
 import com.hepimusic.models.mappers.toMediaItem
+import com.hepimusic.models.mappers.toSong
 import com.hepimusic.playback.PlaybackViewModel
-import com.hepimusic.ui.MainActivity
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import javax.inject.Inject
-import kotlin.coroutines.coroutineContext
 
 // TODO: Rename parameter arguments, choose names that match
 // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
@@ -67,6 +49,7 @@ class ExploreFragment : Fragment(), OnItemClickListener {
 
     private var albums: List<Album> = emptyList()
     private var playedList: List<RecentlyPlayed> = emptyList()
+    private var trendingList: List<com.hepimusic.main.songs.Song> = emptyList()
     private val viewModel  by activityViewModels<ExploreViewModel>() //
     lateinit var playbackViewModel: PlaybackViewModel
 
@@ -125,10 +108,6 @@ class ExploreFragment : Fragment(), OnItemClickListener {
         )
     }
 
-    override fun onStart() {
-        super.onStart()
-    }
-
     companion object {
         /**
          * Use this factory method to create a new instance of
@@ -152,8 +131,15 @@ class ExploreFragment : Fragment(), OnItemClickListener {
 
     @Suppress("UNCHECKED_CAST")
     private fun observeViewModel() {
-        // We want to load the random albums before the recently played
+        viewModel.trendingSongs.observe(viewLifecycleOwner, Observer { trendingSongs ->
+            if (trendingSongs.isNotEmpty()) {
+                binding.trending.visibility = View.VISIBLE
+            }
+            trendingList = trendingSongs.map { it.toSong() }
+            (binding.trendingRV.adapter as BaseAdapter<com.hepimusic.main.songs.Song>).updateItems(trendingList)
 
+        })
+        // We want to load the random albums before the recently played
         fun observePlayed() {
             viewModel.recentlyPlayed.observe(viewLifecycleOwner, Observer {
                 if (playedList.isEmpty()) {
@@ -192,15 +178,16 @@ class ExploreFragment : Fragment(), OnItemClickListener {
                     }
                 }
             }*/
-            /*viewModel.items.observe(requireActivity()) { list ->
+            /*viewModel.items.observe(viewLifecycleOwner) { list ->
                 if (list.isEmpty()) {
-                    viewModel.isBrowserConnected.observe(requireActivity()) { connected ->
+                    viewModel.isBrowserConnected.observe(viewLifecycleOwner) { connected ->
                         if (connected) {
                             viewModel.loadData("[albumID]")
                         }
                     }
                 }
             }*/
+
             viewModel.items.observe(viewLifecycleOwner, Observer {
                 albums = it
                 (binding.randomAlbumsRV.adapter as BaseAdapter<Album>).updateItems(albums)
@@ -246,7 +233,14 @@ class ExploreFragment : Fragment(), OnItemClickListener {
             BaseAdapter(playedList,
                 requireActivity(), R.layout.item_recently, BR.recentlyPlayed, mediaitemClicked = ::mediaitemClicked, animSet = null)
         binding.playedRV.adapter = playedAdapter
-        binding.playedRV.layoutManager = LinearLayoutManager(activity)
+        binding.playedRV.layoutManager = LinearLayoutManager(activity, RecyclerView.HORIZONTAL, false)
+        binding.scrollView.isNestedScrollingEnabled = true
+
+        val trendingAdapter =
+            BaseAdapter(trendingList,
+                requireActivity(), R.layout.item_trending, BR.trending, mediaitemClicked = ::trendingitemClicked, animSet = null)
+        binding.trendingRV.adapter = trendingAdapter
+        binding.trendingRV.layoutManager = LinearLayoutManager(activity, RecyclerView.HORIZONTAL, false)
         binding.scrollView.isNestedScrollingEnabled = true
     }
 
@@ -254,6 +248,12 @@ class ExploreFragment : Fragment(), OnItemClickListener {
         Log.e("RECENT PLAY CLICKED", "POSITION: "+position.toString()+" ITEM: "+playedList[position].title)
         preferences.edit().putString(Constants.LAST_PARENT_ID, "[recentlyPlayedId]").apply()
         playbackViewModel.playAll(playedList[position].id, playedList.map { it.toMediaItem() })
+    }
+
+    fun trendingitemClicked(position: Int, sharableView: View?) {
+        Log.e("TRENDING ITEM CLICKED", "POSITION: "+position.toString()+" ITEM: "+trendingList[position].artWork.toString())
+        preferences.edit().putString(Constants.LAST_PARENT_ID, "[trending]").apply()
+        playbackViewModel.playAll(trendingList[position].id, trendingList.map { it.toMediaItem() })
     }
 
     override fun onItemClick(position: Int, sharableView: View?) {

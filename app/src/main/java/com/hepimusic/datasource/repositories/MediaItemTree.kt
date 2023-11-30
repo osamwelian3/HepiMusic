@@ -2,6 +2,7 @@ package com.hepimusic.datasource.repositories
 
 import android.content.Context
 import android.net.Uri
+import android.os.Bundle
 import android.util.Log
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaItem.SubtitleConfiguration
@@ -22,13 +23,16 @@ import com.hepimusic.models.Creator
 import com.hepimusic.models.Song*/
 import com.hepimusic.models.mappers.toAlbum
 import com.hepimusic.models.mappers.toCreator
+import com.hepimusic.models.mappers.toMediaItem
 import com.hepimusic.models.mappers.toSong
 import com.hepimusic.models.mappers.toSongEntity
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonObject
@@ -164,7 +168,8 @@ object MediaItemTree {
         month: Int? = null,
         day: Int? = null,
         trackCount: Int? = null,
-        totalDiscCount: Int? = null
+        totalDiscCount: Int? = null,
+        bundle: Bundle? = null
     ): MediaItem {
         val metadata =
             MediaMetadata.Builder()
@@ -181,6 +186,7 @@ object MediaItemTree {
                 .setReleaseDay(day)
                 .setTotalTrackCount(trackCount)
                 .setTotalDiscCount(totalDiscCount)
+                .setExtras(bundle)
                 .build()
 
         return MediaItem.Builder()
@@ -191,10 +197,7 @@ object MediaItemTree {
             .build()
     }
 
-    @OptIn(ExperimentalCoroutinesApi::class)
-    suspend fun initialize(context: Context, songRepository: SongRepository) = withContext(Dispatchers.IO) {
-        if (isInitialized) return@withContext
-        isInitialized = true
+    fun createRootFolders() {
         treeNodes.clear()
         // create root and folders for album/artist/genre.
         treeNodes[ROOT_ID] =
@@ -273,6 +276,13 @@ object MediaItemTree {
         treeNodes[ROOT_ID]!!.addChild(CATEGORY_ID)
         treeNodes[ROOT_ID]!!.addChild(LATEST_ID)
         treeNodes[ROOT_ID]!!.addChild(ALL_SONGS_ID)
+    }
+
+    suspend fun initialize(context: Context, songRepository: SongRepository) = withContext(Dispatchers.Default) {
+        if (isInitialized) return@withContext
+        isInitialized = true
+
+        createRootFolders()
 
         Amplify.DataStore.observe(
             com.amplifyframework.datastore.generated.model.Song::class.java,
@@ -283,12 +293,30 @@ object MediaItemTree {
                 if (it.type() == DataStoreItemChange.Type.CREATE) {
                     songs.add(it.item() /*.toSongEntity().toSong()*/)
                     Log.e("CHANGE TYPE: CREATE", "song: ${it.item().name}")
+                    createRootFolders()
+                    CoroutineScope(Dispatchers.Default).launch {
+                        songs.forEach { song ->
+                            addNodeToTree(song, albums, artists)
+                        }
+                    }
                 } else if (it.type() == DataStoreItemChange.Type.UPDATE) {
                     songs.map { song -> if (song.key == it.item().key) it.item() else song }
                     Log.e("CHANGE TYPE: UPDATE", "song: ${it.item().name}")
+                    createRootFolders()
+                    CoroutineScope(Dispatchers.Default).launch {
+                        songs.forEach { song ->
+                            addNodeToTree(song, albums, artists)
+                        }
+                    }
                 } else if (it.type() == DataStoreItemChange.Type.DELETE) {
                     songs.removeIf { song -> song.key == it.item().key }
                     Log.e("CHANGE TYPE: DELETE", "song: ${it.item().name}")
+                    createRootFolders()
+                    CoroutineScope(Dispatchers.Default).launch {
+                        songs.forEach { song ->
+                            addNodeToTree(song, albums, artists)
+                        }
+                    }
                 }
             },
             {
@@ -394,7 +422,7 @@ object MediaItemTree {
         song: Song,
         albums: List<Album>,
         artists: MutableList<Creator>
-    ) = withContext(Dispatchers.IO) {
+    ) = withContext(Dispatchers.Default) {
 
         val id = song.key
         val albm = song.partOf.let {
@@ -429,6 +457,11 @@ object MediaItemTree {
         val dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
         dateFormat.timeZone = TimeZone.getDefault() // Use the device's default timezone
 
+        val bundle = Bundle()
+        bundle.putStringArrayList("trendingListens", song.trendingListens as java.util.ArrayList<String>?)
+        bundle.putStringArrayList("listOfUidUpVotes", song.listOfUidUpVotes as java.util.ArrayList<String>?)
+        bundle.putStringArrayList("listOfUidDownVotes", song.listOfUidDownVotes as java.util.ArrayList<String>?)
+
         treeNodes[idInTree] =
             MediaItemNode(
                 buildMediaItem(
@@ -446,7 +479,8 @@ object MediaItemTree {
                     year = song.createdAt?.toDate()?.year,
                     month = song.createdAt?.toDate()?.month,
                     day = song.createdAt?.toDate()?.day,
-                    trackCount = null
+                    trackCount = null,
+                    bundle = bundle
                 )
             )
 

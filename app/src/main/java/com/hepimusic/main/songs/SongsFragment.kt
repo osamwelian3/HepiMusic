@@ -60,10 +60,10 @@ class SongsFragment : BasePlayerFragment<Song>() {
         }
         viewModel = vm*/ // ViewModelProvider(this).get(SongsViewModel::class.java)
 
-        /*viewModel.isBrowserConnected.observe(requireActivity()){ connected ->
+        /*viewModel.isBrowserConnected.observe(viewLifecycleOwner){ connected ->
                 if (connected) {
                     viewModel.loadData("[allSongsID]")
-                    viewModel.items.observe(requireActivity()){ songList ->
+                    viewModel.items.observe(viewLifecycleOwner){ songList ->
                         viewModel.overrideCurrentItems(songList)
                     }
                 }
@@ -71,7 +71,7 @@ class SongsFragment : BasePlayerFragment<Song>() {
         /*lifecycleScope.launch(Dispatchers.IO) {
             suspend fun load() {
                 if (playbackViewModel.isBrowserInitialized()) {
-                    *//*playbackViewModel.mediaItems.observe(requireActivity()){ mediaList ->
+                    *//*playbackViewModel.mediaItems.observe(viewLifecycleOwner){ mediaList ->
                         mediaList.map {
                             Log.e("MEDIA ITEM: ", it.mediaMetadata.title.toString())
                         }

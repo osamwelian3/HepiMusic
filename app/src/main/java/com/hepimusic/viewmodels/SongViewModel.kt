@@ -4,7 +4,6 @@ import android.app.Application
 import android.content.ComponentName
 import android.content.Context
 import android.util.Log
-import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.MutableLiveData
@@ -15,14 +14,9 @@ import androidx.media3.session.MediaBrowser
 import androidx.media3.session.SessionToken
 import com.google.common.util.concurrent.ListenableFuture
 import com.hepimusic.playback.MusicService
-import com.hepimusic.ui.MainActivity
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
-import kotlin.coroutines.resume
-import kotlin.coroutines.suspendCoroutine
 
 class SongViewModel(application: Application) : AndroidViewModel(application) {
 

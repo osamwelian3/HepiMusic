@@ -1,6 +1,7 @@
 package com.hepimusic.common
 
 object Constants {
+    val SESSION_ID: String = "com.hepimusic.playback.SESSION_ID"
     const val NOTIFICATION_ID = 1
     const val NOTIFICATION_CHANNEL_ID = "music"
 
@@ -37,6 +38,7 @@ object Constants {
     const val NAV_PLAYLIST = "com.hepimusic.nav.playlist"
     const val NAV_RADIO = "com.hepimusic.nav.radio"
     const val NAV_SETTINGS = "com.hepimusic.nav.settings"
+    const val NAV_PROFILE = "com.hepimusic.nav.profile"
     const val NAV_VIDEOS = "com.hepimusic.nav.videos"
     const val LOGOUT = "com.hepimusic.logout"
 

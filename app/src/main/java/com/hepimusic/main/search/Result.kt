@@ -3,7 +3,6 @@ package com.hepimusic.main.search
 import android.os.Parcel
 import android.os.Parcelable
 import androidx.annotation.StringRes
-import com.hepimusic.main.albums.Album
 import kotlinx.serialization.Serializable
 
 @Serializable

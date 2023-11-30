@@ -135,6 +135,19 @@
                 android:name="popUpTo" />
         </action>
     </fragment>
+    <fragment
+        android:id="@+id/profileFragement"
+        android:name="com.hepimusic.main.profile.ProfileFragment"
+        android:label="fragment_profile"
+        tools:layout="@layout/fragment_profile">
+        <action
+            android:id="@+id/action_profileFragment_to_navigationDialogFragment"
+            app:destination="@id/navigationDialogFragment">
+            <argument
+                android:name="origin"
+                android:defaultValue="7" />
+        </action>
+    </fragment>
     <dialog
         android:id="@+id/navigationDialogFragment"
         android:name="com.hepimusic.main.navigation.NavigationDialogFragment"
@@ -162,6 +175,12 @@
         <action
             android:id="@+id/action_navigationDialogFragment_to_artistsFragment"
             app:destination="@id/artistsFragment"
+            app:launchSingleTop="false"
+            app:popUpTo="@+id/navigationDialogFragment"
+            app:popUpToInclusive="true" />
+        <action
+            android:id="@+id/action_navigationDialogFragment_to_profileFragment"
+            app:destination="@id/profileFragement"
             app:launchSingleTop="false"
             app:popUpTo="@+id/navigationDialogFragment"
             app:popUpToInclusive="true" />

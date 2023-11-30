@@ -1,7 +1,6 @@
 package com.hepimusic.main.playlist
 
 import androidx.lifecycle.LiveData
-import com.hepimusic.main.explore.RecentlyPlayed
 
 class PlaylistRepository(private val playlistDao: PlaylistDao) {
 

@@ -1,12 +1,10 @@
 package com.hepimusic.main.playlist
 
-import com.hepimusic.main.explore.RecentlyPlayed
 import androidx.lifecycle.LiveData
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
-import com.hepimusic.common.Constants
 
 @Dao
 interface PlaylistItemsDao {

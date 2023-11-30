@@ -2,29 +2,21 @@ package com.hepimusic
 
 import android.app.Application
 import android.util.Log
+import android.widget.Toast
 import com.amplifyframework.AmplifyException
 import com.amplifyframework.api.aws.AWSApiPlugin
 import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin
-import com.amplifyframework.auth.plugins.core.data.AWSCognitoIdentityPoolConfiguration
-import com.amplifyframework.core.AmplifyConfiguration
-import com.amplifyframework.core.category.CategoryConfiguration
-import com.amplifyframework.core.category.CategoryType
 import com.amplifyframework.core.Amplify
-import com.amplifyframework.core.model.query.ObserveQueryOptions
-import com.amplifyframework.core.model.query.Where
 import com.amplifyframework.datastore.AWSDataStorePlugin
+import com.amplifyframework.datastore.DataStoreChannelEventName
+import com.amplifyframework.datastore.events.NetworkStatusEvent
 import com.amplifyframework.datastore.generated.model.AmplifyModelProvider
 import com.amplifyframework.datastore.generated.model.Song
-import com.amplifyframework.logging.AndroidLoggingPlugin
-import com.amplifyframework.logging.LogLevel
+import com.amplifyframework.hub.HubChannel
 import dagger.hilt.android.HiltAndroidApp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
-import org.json.JSONObject
 import javax.inject.Inject
 
 @HiltAndroidApp
@@ -32,9 +24,9 @@ class HepiApplication: Application() {
 
     @Inject lateinit var application: Application
 
-    @OptIn(ExperimentalCoroutinesApi::class)
     override fun onCreate() {
         super.onCreate()
+        var initialConnectionEstablished = false
         try {
             /*Amplify.addPlugin(AndroidLoggingPlugin(LogLevel.VERBOSE))*/
             Amplify.addPlugin(AWSCognitoAuthPlugin())
@@ -49,7 +41,41 @@ class HepiApplication: Application() {
             val configuration = AmplifyConfiguration.fromJson(jsonObject)
             Amplify.configure(configuration, applicationContext)*/
             Log.i("MyAmplifyApp", "Initialized Amplify")
-            Amplify.Auth.getPlugin(Amplify.Auth.plugins.joinToString { it.pluginKey }).initialize(applicationContext)
+            Amplify.Hub.subscribe(
+                HubChannel.DATASTORE,
+                {
+                    it.name.equals(DataStoreChannelEventName.NETWORK_STATUS.toString())
+                },
+                {
+                    val networkStatus = it.data as NetworkStatusEvent
+                    CoroutineScope(Dispatchers.Main).launch {
+                        if (initialConnectionEstablished) {
+                            Toast.makeText(
+                                applicationContext,
+                                "Network connection ${if (networkStatus.active) "restored" else "lost"}",
+                                Toast.LENGTH_LONG
+                            ).show()
+                            Log.e(
+                                "Amplify Network Status",
+                                "Network connection ${if (networkStatus.active) "restored" else "lost"}"
+                            )
+                        } else {
+                            initialConnectionEstablished = true
+                            if (!networkStatus.active) {
+                                Toast.makeText(
+                                    applicationContext,
+                                    "Network connection ${if (networkStatus.active) "restored" else "lost"}",
+                                    Toast.LENGTH_LONG
+                                ).show()
+                                Log.e(
+                                    "Amplify Network Status",
+                                    "Network connection ${if (networkStatus.active) "restored" else "lost"}"
+                                )
+                            }
+                        }
+                    }
+                }
+            )
 
             /*Amplify.API.query(
                 ModelQuery.list(Song::class.java),

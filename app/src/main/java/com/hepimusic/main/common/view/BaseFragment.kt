@@ -2,7 +2,6 @@ package com.hepimusic.main.common.view
 
 import androidx.fragment.app.Fragment
 import androidx.navigation.findNavController
-import androidx.navigation.fragment.findNavController
 import com.hepimusic.R
 import com.hepimusic.main.common.utils.TimeUtils
 import com.hepimusic.main.common.utils.Utils

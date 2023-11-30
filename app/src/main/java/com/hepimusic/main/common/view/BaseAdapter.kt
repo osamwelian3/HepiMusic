@@ -1,6 +1,7 @@
 package com.hepimusic.main.common.view
 
 import android.content.Context
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -10,10 +11,15 @@ import androidx.databinding.DataBindingUtil
 import androidx.databinding.ViewDataBinding
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
+import com.amplifyframework.core.Amplify
+import com.amplifyframework.core.model.query.Where
+import com.amplifyframework.datastore.DataStoreException
+import com.amplifyframework.datastore.generated.model.Song
 import com.hepimusic.R
 import com.hepimusic.main.common.callbacks.BaseDiffCallback
 import com.hepimusic.main.common.callbacks.OnItemClickListener
 import com.hepimusic.main.common.data.Model
+import com.hepimusic.models.mappers.toSong
 
 class BaseAdapter<T: Model>(
     private var items: List<T>,
@@ -42,7 +48,35 @@ class BaseAdapter<T: Model>(
 
     override fun getItemCount(): Int = items.size
 
-    override fun onBindViewHolder(holder: BaseViewHolder<T>, position: Int) = holder.bind(items[position])
+    override fun onBindViewHolder(holder: BaseViewHolder<T>, position: Int) {
+        try {
+            val itm = items[position] as com.hepimusic.main.songs.Song
+            Amplify.DataStore.observe(
+                Song::class.java,
+                Where.identifier(Song::class.java, itm.id.replace("[item]", "")).queryPredicate,
+                {
+                    Log.e("ADAPTER OBSERVATION", "Observation started")
+                },
+                {
+                    notifyItemChanged(position)
+                    Log.e("ADAPTER OBSERVATION", "Changed ${it.item().name}")
+                    holder.bind(it.item().toSong() as T)
+                    Log.e("ADAPTER OBSERVATION", "Changed ${it.item().name}")
+                    notifyItemChanged(position)
+                },
+                {
+                    Log.e("ADAPTER DATASTORE EXCEPTION", it.message.toString())
+                },
+                {
+
+                }
+            )
+        } catch (e: Exception) {
+            Log.e("ADAPTER OBSERVATION EXCEPTION", e.message.toString())
+        }
+
+        holder.bind(items[position])
+    }
 
     override fun onBindViewHolder(holder: BaseViewHolder<T>, position: Int, payloads: MutableList<Any>) {
         super.onBindViewHolder(holder, position, payloads)
@@ -51,8 +85,8 @@ class BaseAdapter<T: Model>(
 
     fun updateItems(items: List<T>, diffCallback: BaseDiffCallback<T> = BaseDiffCallback(this.items, items)) {
         val diffResult = DiffUtil.calculateDiff(diffCallback, false)
-        diffResult.dispatchUpdatesTo(this)
-        this.items = items
+        diffResult.dispatchUpdatesTo(this@BaseAdapter)
+        this@BaseAdapter.items = items
     }
 
     override fun onViewDetachedFromWindow(holder: BaseViewHolder<T>) {

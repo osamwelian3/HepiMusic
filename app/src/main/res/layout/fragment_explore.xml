@@ -48,6 +48,7 @@
             android:id="@+id/recentlyPlayed"
             style="@style/Theme.HepiMusic.SectionTitle"
             android:text="@string/recentlyPlayed"
+            android:clickable="true"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/randomAlbumsRV" />
 
@@ -61,7 +62,7 @@
             android:visibility="invisible"
             tools:visibility="visible"
             android:textAppearance="@style/TextAppearance.AppCompat.Caption"
-            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintBottom_toTopOf="@id/trending"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintRight_toRightOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/recentlyPlayed" />
@@ -81,10 +82,27 @@
             android:id="@+id/playedRV"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintRight_toRightOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/recentlyPlayed"
+            tools:listitem="@layout/item_recently"/>
+
+        <TextView
+            android:id="@+id/trending"
+            style="@style/Theme.HepiMusic.SectionTitle"
+            android:text="@string/trending_on_hepi_music"
+            android:visibility="gone"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/playedRV" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/trendingRV"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/trending"
             tools:listitem="@layout/item_recently"/>
     </androidx.constraintlayout.widget.ConstraintLayout>
 </androidx.core.widget.NestedScrollView>

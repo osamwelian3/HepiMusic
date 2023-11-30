@@ -1,18 +1,10 @@
 package com.hepimusic.di
 
-import android.app.Application
-import android.content.ComponentName
 import android.content.Context
 import android.content.SharedPreferences
-import androidx.media3.session.MediaBrowser
-import androidx.media3.session.MediaController
-import androidx.media3.session.MediaSession
-import androidx.media3.session.SessionToken
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.request.RequestOptions
-import com.google.common.util.concurrent.ListenableFuture
-import com.google.common.util.concurrent.MoreExecutors
 import com.hepimusic.R
 import com.hepimusic.datasource.local.databases.AlbumDatabase
 import com.hepimusic.datasource.local.databases.ArtistDatabase
@@ -22,19 +14,12 @@ import com.hepimusic.datasource.repositories.SongRepository
 import com.hepimusic.main.explore.RecentlyPlayedDatabase
 import com.hepimusic.main.playlist.PlaylistDatabase
 import com.hepimusic.main.playlist.PlaylistItemsDatabase
-import com.hepimusic.models.mappers.toAlbum
-import com.hepimusic.playback.MusicService
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
-import dagger.hilt.android.scopes.ServiceScoped
 import dagger.hilt.components.SingletonComponent
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.runBlocking
 import javax.inject.Singleton
-import kotlin.coroutines.resume
-import kotlin.coroutines.suspendCoroutine
 
 @Module
 @InstallIn(SingletonComponent::class)

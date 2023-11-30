@@ -65,9 +65,9 @@ abstract class BasePlayerFragment<T : Model> : BaseFragment(), View.OnClickListe
                 playbackViewModel.initializeController(requireContext().applicationContext)
             }
         }*/
-        /*playbackViewModel.isBrowserConnected.observe(requireActivity()){ connected ->
+        /*playbackViewModel.isBrowserConnected.observe(viewLifecycleOwner){ connected ->
             if (connected){
-                playbackViewModel.mediaItems.observe(requireActivity()){ mediaList ->
+                playbackViewModel.mediaItems.observe(viewLifecycleOwner){ mediaList ->
                     mediaList.map {
                         Log.e("PLAYBACK VIEWMODEL: ", it.mediaMetadata.title.toString())
                     }
@@ -83,9 +83,9 @@ abstract class BasePlayerFragment<T : Model> : BaseFragment(), View.OnClickListe
         playbackViewModel = ViewModelProvider(requireActivity()).get(PlaybackViewModel::class.java)
         setupView()
         observeViewModel()
-        /*playbackViewModel.isBrowserConnected.observe(requireActivity()) { connected ->
+        /*playbackViewModel.isBrowserConnected.observe(viewLifecycleOwner) { connected ->
             if (connected) {
-                playbackViewModel.currentItem.observe(requireActivity()) {
+                playbackViewModel.currentItem.observe(viewLifecycleOwner) {
 
                 }
             }
@@ -117,11 +117,11 @@ abstract class BasePlayerFragment<T : Model> : BaseFragment(), View.OnClickListe
                 }
             }
 
-            viewModel.isBrowserConnected.observe(requireActivity()){ connected ->
+            viewModel.isBrowserConnected.observe(viewLifecycleOwner){ connected ->
                 if (connected) {
 //                    playbackViewModel.browser = viewModel.browser
                     viewModel.init()
-                    viewModel.items.observe(requireActivity()) { list ->
+                    viewModel.items.observe(viewLifecycleOwner) { list ->
                         if (list.isNotEmpty()) {
                             viewModel.items.value?.first()?.id?.let {
                                 if (parentId != "[albumID]" && it.toString().contains("[album]")) {
@@ -131,11 +131,11 @@ abstract class BasePlayerFragment<T : Model> : BaseFragment(), View.OnClickListe
                             }
                         }
                     }
-                    viewModel.items.observe(requireActivity(), Observer(::updateViews))
+                    viewModel.items.observe(viewLifecycleOwner, Observer(::updateViews))
                 }
             }
 
-            viewModel.isControllerConnected.observe(requireActivity()){ connected ->
+            viewModel.isControllerConnected.observe(viewLifecycleOwner){ connected ->
                 if (connected) {
                     playbackViewModel.controller = viewModel.controller
                 }

@@ -1,7 +1,6 @@
 package com.hepimusic.main.navigation
 
 import android.util.TypedValue
-import android.view.LayoutInflater
 import android.view.MotionEvent
 import androidx.recyclerview.widget.RecyclerView
 import com.hepimusic.R

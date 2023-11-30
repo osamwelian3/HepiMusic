@@ -16,13 +16,14 @@ import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
 import com.amplifyframework.datastore.generated.model.Album
 import com.amplifyframework.datastore.generated.model.Song
+import com.hepimusic.datasource.remote.State.STATE_CREATED
+import com.hepimusic.datasource.remote.State.STATE_ERROR
+import com.hepimusic.datasource.remote.State.STATE_INITIALIZED
+import com.hepimusic.datasource.remote.State.STATE_INITIALIZING
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import com.hepimusic.datasource.remote.State.*
-import kotlinx.coroutines.flow.collect
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonObject
-import javax.inject.Inject
 
 class AmplifyMusicSource {
 

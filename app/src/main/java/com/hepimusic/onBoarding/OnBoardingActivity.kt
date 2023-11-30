@@ -3,7 +3,6 @@ package com.hepimusic.onBoarding
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -21,8 +20,6 @@ import com.hepimusic.databinding.ActivityOnBoardingBinding
 import com.hepimusic.getStarted.GetStartedActivity
 import com.hepimusic.main.common.callbacks.OnPageChangeListener
 import com.hepimusic.ui.MainActivity
-import dagger.hilt.android.AndroidEntryPoint
-import javax.inject.Inject
 
 class OnBoardingActivity : BaseActivity(), OnPageChangeListener, View.OnClickListener {
 
