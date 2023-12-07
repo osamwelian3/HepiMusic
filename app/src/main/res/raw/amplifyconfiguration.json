@@ -29,6 +29,12 @@
                         "AuthMode": "API_KEY",
                         "ApiKey": "da2-ohly5lzbszb2tdnssnxgmzwqcy",
                         "ClientDatabasePrefix": "hepimusic_API_KEY"
+                    },
+                    "hepimusic_AMAZON_COGNITO_USER_POOLS": {
+                        "ApiUrl": "https://6ft45frm3jenboatz3o4tiatci.appsync-api.ap-south-1.amazonaws.com/graphql",
+                        "Region": "ap-south-1",
+                        "AuthMode": "AMAZON_COGNITO_USER_POOLS",
+                        "ClientDatabasePrefix": "hepimusic_AMAZON_COGNITO_USER_POOLS"
                     }
                 },
                 "CredentialsProvider": {
@@ -51,8 +57,8 @@
                         "OAuth": {
                             "WebDomain": "hsncomj0befx-dev.auth.ap-south-1.amazoncognito.com",
                             "AppClientId": "7447th3l5fmmkl6la4haj283m1",
-                            "SignInRedirectURI": "https://hepimusic.com/",
-                            "SignOutRedirectURI": "https://hepimusic.com/",
+                            "SignInRedirectURI": "gettingstarted://",
+                            "SignOutRedirectURI": "gettingstarted://",
                             "Scopes": [
                                 "phone",
                                 "email",

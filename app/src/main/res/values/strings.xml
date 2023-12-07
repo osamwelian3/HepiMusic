@@ -187,4 +187,17 @@
     <string name="upvote_button">Upvote Button</string>
     <string name="trending_on_hepi_music">Trending On Hepi Music</string>
     <string name="stream_icon">stream icon</string>
+    <string name="reaction">Reaction</string>
+    <string name="edit_profile_button">edit profile button</string>
+    <string name="view_more_button">view more button</string>
+    <string name="update_your_profile">Update Your Profile</string>
+    <string name="profile_picture_upload">Upload your profile picture</string>
+    <string name="display_name">Display name</string>
+    <string name="email_field">Email</string>
+    <string name="phone_number_input">Phone Number (+254 7xx xxx xxx)</string>
+    <string name="update_profile">Update Profile</string>
+    <string name="profile_empty_message">Profile cannot be empty</string>
+    <string name="profile_empty_thumb_message">Change Profile details or select image</string>
+    <string name="profile_saved">Profile saved succesfully</string>
+    <string name="profile_save_error">Error occured while saving profile</string>
 </resources>

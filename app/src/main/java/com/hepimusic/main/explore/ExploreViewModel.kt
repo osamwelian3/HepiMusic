@@ -119,20 +119,20 @@ class ExploreViewModel @Inject constructor(
         val threeDaysAgo = LocalDateTime.now().minusDays(30)
 
         val filteredListens = listenCount.reversed().map { json ->
-            Log.e("LISTEN JSON", Json.parseToJsonElement(json).jsonObject["timestamp"].toString().removeSurrounding("\""))
+            /*Log.e("LISTEN JSON", Json.parseToJsonElement(json).jsonObject["timestamp"].toString().removeSurrounding("\""))*/
             Json.parseToJsonElement(json)
         }.filter { listen ->
             val listenTimeStamp = LocalDateTime.parse(listen.jsonObject["timestamp"].toString().removeSurrounding("\""), DateTimeFormatter.ISO_DATE_TIME)
-            if (listenTimeStamp.isAfter(threeDaysAgo)) {
+            /*if (listenTimeStamp.isAfter(threeDaysAgo)) {
                 Log.e("LISTEN TIMESTAMP", listenTimeStamp.toString())
                 Log.e("THREE DAYS AGO TIMESTAMP", threeDaysAgo.toString())
                 Log.e("IS AFTER THREE DAYS AGO", listenTimeStamp.isAfter(threeDaysAgo).toString())
-            }
+            }*/
             listenTimeStamp.isAfter(threeDaysAgo)
         }
 
         return filteredListens.map { listen ->
-            Log.e("Filtered listens", listen.jsonObject.toString())
+            /*Log.e("Filtered listens", listen.jsonObject.toString())*/
             listen.jsonObject.toString()
         }
     }

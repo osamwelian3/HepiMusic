@@ -260,10 +260,25 @@
             android:layout_width="match_parent"
             android:layout_height="48dp"
             android:layout_marginTop="8dp"
+            android:background="#00000000"
+            android:scaleType="centerCrop"
             android:src="@drawable/login_with_google"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/loginLink"
+            android:contentDescription="@string/google_login_button" />
+
+        <ImageButton
+            android:id="@+id/facebookLogin"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_marginTop="8dp"
+            android:background="#00000000"
+            android:scaleType="centerCrop"
+            android:src="@drawable/facebook_login_button"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/googleLogin"
             android:contentDescription="@string/google_login_button" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>

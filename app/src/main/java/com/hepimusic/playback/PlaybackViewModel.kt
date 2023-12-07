@@ -781,6 +781,11 @@ class PlaybackViewModel @Inject constructor(
     }
 
     fun upVoteSong() {
+        if (!userHasLikedSong.value!!) {
+            _userHaslikedSong.postValue(true)
+        } else {
+            _userHaslikedSong.postValue(false)
+        }
         if (currentUser != null) {
             val currentKey = browser.currentMediaItem?.mediaId?.replace("[item]", "")
             currentKey?.let { key ->
@@ -816,6 +821,11 @@ class PlaybackViewModel @Inject constructor(
                                     }
                                 },
                                 { dataStoreException ->
+                                    if (!userHasLikedSong.value!!) {
+                                        _userHaslikedSong.postValue(false)
+                                    } else {
+                                        _userHaslikedSong.postValue(true)
+                                    }
                                     Toast.makeText(
                                         application.applicationContext,
                                         dataStoreException.message,

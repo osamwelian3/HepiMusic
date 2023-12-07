@@ -19,6 +19,7 @@ import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
+import java.io.InputStream
 import java.lang.Double.min
 import java.lang.ref.WeakReference
 import java.util.Locale
@@ -251,6 +252,24 @@ object ImageUtils {
         drawable.draw(canvas)
 
         return bitmap
+    }
+
+
+    // IAN
+    fun copyStreamToFile(inputStream: InputStream, outputFile: File) {
+        inputStream.use { input ->
+            val outputStream = FileOutputStream(outputFile)
+            outputStream.use { output ->
+                val buffer = ByteArray(4 * 1024) // buffer size
+                while (true) {
+                    val byteCount = input.read(buffer)
+                    if (byteCount < 0) break
+                    output.write(buffer, 0, byteCount)
+                }
+                output.flush()
+                output.close()
+            }
+        }
     }
 
 

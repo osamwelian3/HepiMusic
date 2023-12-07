@@ -38,7 +38,7 @@ class SongViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    private suspend fun initializeBrowser(context: Context) {
+    suspend fun initializeBrowser(context: Context) {
         withContext(Dispatchers.Default) {
             browserFuture =
                 MediaBrowser.Builder(

@@ -6,14 +6,19 @@ import android.content.SharedPreferences
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewModelScope
 import com.amplifyframework.core.Amplify
 import com.hepimusic.R
 import com.hepimusic.auth.LoginActivity
 import com.hepimusic.common.BaseActivity
 import com.hepimusic.common.Constants
 import com.hepimusic.common.Constants.INITIALIZATION_COMPLETE
+import com.hepimusic.datasource.repositories.MediaItemTree
+import com.hepimusic.datasource.repositories.SongRepository
 import com.hepimusic.getStarted.GetStartedActivity
 import com.hepimusic.main.albums.AlbumSongsViewModel
 import com.hepimusic.main.artists.ArtistAlbumsViewModel
@@ -30,10 +35,14 @@ import com.hepimusic.onBoarding.OnBoardingActivity
 import com.hepimusic.playback.PlaybackViewModel
 import com.hepimusic.ui.MainActivity
 import com.hepimusic.viewmodels.SongViewModel
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class SplashActivity : BaseActivity() {
 
     /*private lateinit var browserFuture: ListenableFuture<MediaBrowser>
@@ -42,6 +51,10 @@ class SplashActivity : BaseActivity() {
         get() = if (browserFuture.isDone && !browserFuture.isCancelled) browserFuture.get() else null
 
     @Inject lateinit var browser: MediaBrowser*/
+
+
+    @Inject
+    lateinit var songRepository: SongRepository
 
     private lateinit var viewModel: SongViewModel
 
@@ -53,13 +66,32 @@ class SplashActivity : BaseActivity() {
 
     var conditionThree: Boolean = false
 
+    var isAuthenticated = false
+
     private val preferencesListener: SharedPreferences.OnSharedPreferenceChangeListener =
         SharedPreferences.OnSharedPreferenceChangeListener { sharedPreferences, key ->
             Log.e("CHANGED KEY", key!!)
             when (key) {
                 Constants.INITIALIZATION_COMPLETE -> {
                     Log.e("PREFERENCE CHANGED", sharedPreferences.getBoolean(Constants.INITIALIZATION_COMPLETE, false).toString())
-                    goToNextScreen()
+                    if (sharedPreferences.getBoolean(INITIALIZATION_COMPLETE, false) && isAuthenticated){
+                        viewModel.mediaItemList.observe(this) { mediaItemsList ->
+                            mediaItemsList.map {
+                                Log.e("MEDIA ITEM: ", it.mediaMetadata.title.toString())
+                            }
+                            if (mediaItemsList.isNotEmpty()) {
+                                goToNextScreen()
+                            }
+                        }
+                    }
+                }
+                Constants.DATASTORE_READY -> {
+                    if (isAuthenticated) {
+                        CoroutineScope(Dispatchers.Main + Job()).launch {
+                            MediaItemTree.initialize(this@SplashActivity.applicationContext, songRepository)
+                            goToNextScreen()
+                        }
+                    }
                 }
             }
         }
@@ -68,9 +100,38 @@ class SplashActivity : BaseActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_splash)
 
+//        val browserInstance = BrowserInstance(this.applicationContext, this)
+//        browserInstance.run()
+
+//        MediaBrowserManager.initialize(this.applicationContext)
+//        browser = MediaBrowserManager.getMediaBrowser() // browserInstance.getBrowserInstance()
+
         Amplify.Auth.getCurrentUser(
-            {
-                Log.e("AUTH USER", it.username)
+            { authUser ->
+                Log.e("AUTH USER", authUser.username)
+                isAuthenticated = true
+
+                CoroutineScope(Dispatchers.Main + Job()).launch {
+                    viewModel = ViewModelProvider(this@SplashActivity)[SongViewModel::class.java]
+                    viewModel.mediaItemList.observe(this@SplashActivity) { mediaItemsList ->
+                        mediaItemsList.map {
+                            Log.e("MEDIA ITEM: ", it.mediaMetadata.title.toString())
+                        }
+                        if (mediaItemsList.isNotEmpty()) {
+                            goToNextScreen()
+                        } else {
+                            viewModel?.let {
+                                it.viewModelScope.launch {
+                                    MediaItemTree.initialize(this@SplashActivity, songRepository)
+                                    it.initializeBrowser(this@SplashActivity.applicationContext)
+                                }
+                            }
+                        }
+                    }
+                    Log.e("PRE INITIALIZE", authUser.username)
+                    MediaItemTree.initialize(this@SplashActivity.applicationContext, songRepository)
+                    Log.e("POST INITIALIZE", authUser.username)
+                }
             },
             {
                 Log.e("AUTH USER Exception", it.stackTraceToString())
@@ -78,19 +139,13 @@ class SplashActivity : BaseActivity() {
 
                 if (it.message.toString().contains("You are currently signed out.", true)) {
                     startActivity(Intent(this, LoginActivity::class.java))
-                    finish()
+                    /*finish()*/
                 }
             }
         )
 
-//        val browserInstance = BrowserInstance(this.applicationContext, this)
-//        browserInstance.run()
-
-//        MediaBrowserManager.initialize(this.applicationContext)
-//        browser = MediaBrowserManager.getMediaBrowser() // browserInstance.getBrowserInstance()
-
         preferences = application.getSharedPreferences("main", Context.MODE_PRIVATE)
-
+        preferences.edit().putBoolean(Constants.INITIALIZATION_COMPLETE, false).apply()
 
         // conditions
         conditionOne = preferences.getBoolean(OnBoardingActivity.HAS_SEEN_ON_BOARDING, false)
@@ -110,15 +165,7 @@ class SplashActivity : BaseActivity() {
                 }
             }
         }*/
-        viewModel = ViewModelProvider(this).get(SongViewModel::class.java)
-        viewModel.mediaItemList.observe(this) { mediaItemsList ->
-            mediaItemsList.map {
-                Log.e("MEDIA ITEM: ", it.mediaMetadata.title.toString())
-            }
-            if (mediaItemsList.isNotEmpty()) {
-                goToNextScreen()
-            }
-        }
+        //////
         preferences.edit().putBoolean(INITIALIZATION_COMPLETE, false).apply()
 //        initializeBrowser()
         preferences.registerOnSharedPreferenceChangeListener(preferencesListener)
@@ -192,6 +239,21 @@ class SplashActivity : BaseActivity() {
         }
         super.onResume()
         preferences.registerOnSharedPreferenceChangeListener(preferencesListener)
+        viewModel = ViewModelProvider(this)[SongViewModel::class.java]
+        viewModel.mediaItemList.observe(this) { mediaItemsList ->
+            mediaItemsList.map {
+                Log.e("MEDIA ITEM: ", it.mediaMetadata.title.toString())
+            }
+            if (mediaItemsList.isNotEmpty()) {
+                goToNextScreen()
+            } else {
+                viewModel?.let {
+                    it.viewModelScope.launch {
+                        it.initializeBrowser(this@SplashActivity.applicationContext)
+                    }
+                }
+            }
+        }
     }
 
     override fun onPause() {

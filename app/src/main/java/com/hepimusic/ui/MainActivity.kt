@@ -7,12 +7,16 @@ import android.content.ServiceConnection
 import android.content.SharedPreferences
 import android.os.Bundle
 import android.os.IBinder
+import android.util.Log
 import android.view.LayoutInflater
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
+import com.amplifyframework.core.Amplify
+import com.amplifyframework.core.model.query.Where
 import com.hepimusic.R
 import com.hepimusic.common.Constants
 import com.hepimusic.databinding.ActivityMainBinding
@@ -25,6 +29,9 @@ import com.hepimusic.main.playlist.PlaylistSongsEditorViewModel
 import com.hepimusic.main.playlist.PlaylistSongsViewModel
 import com.hepimusic.main.playlist.PlaylistViewModel
 import com.hepimusic.main.playlist.WritePlaylistViewModel
+import com.hepimusic.main.profile.Profile
+import com.hepimusic.main.profile.ProfileViewModel
+import com.hepimusic.main.profile.WriteProfileViewModel
 import com.hepimusic.main.search.SearchViewModel
 import com.hepimusic.main.songs.Song
 import com.hepimusic.main.songs.SongsViewModel
@@ -56,6 +63,8 @@ class MainActivity : AppCompatActivity() {
     lateinit var searchViewModel: SearchViewModel
     lateinit var artistsViewModel: ArtistsViewModel
     lateinit var artistAlbumsViewModel: ArtistAlbumsViewModel
+    lateinit var profileViewModel: ProfileViewModel
+    lateinit var writeProfileViewModel: WriteProfileViewModel
     lateinit var navHostFragment: NavHostFragment
     lateinit var navController: NavController
     var items = emptyList<Song>()
@@ -93,8 +102,69 @@ class MainActivity : AppCompatActivity() {
             searchViewModel = ViewModelProvider(this@MainActivity)[SearchViewModel::class.java]
             artistsViewModel = ViewModelProvider(this@MainActivity)[ArtistsViewModel::class.java]
             artistAlbumsViewModel = ViewModelProvider(this@MainActivity)[ArtistAlbumsViewModel::class.java]
+            profileViewModel = ViewModelProvider(this@MainActivity)[ProfileViewModel::class.java]
+            writeProfileViewModel = ViewModelProvider(this@MainActivity)[WriteProfileViewModel::class.java]
         }
         startMusicService()
+
+        Amplify.Auth.getCurrentUser(
+            { user ->
+                if (!preferences.getBoolean(Constants.AUTH_TYPE_SOCIAL, false)) {
+                    Amplify.DataStore.query(
+                        com.amplifyframework.datastore.generated.model.Profile::class.java,
+                        Where.matches(com.amplifyframework.datastore.generated.model.Profile.NAME.eq(user.username)),
+                        { profileMutableIterator ->
+                            if (!profileMutableIterator.hasNext()) {
+                                Amplify.DataStore.save(
+                                    com.amplifyframework.datastore.generated.model.Profile.builder()
+                                        .key(UUID.randomUUID().toString())
+                                        .name(user.username)
+                                        .build(),
+                                    {
+                                        Log.e("INITIALIZE PROFILE", it.item().name)
+                                    },
+                                    {
+                                        Log.e("INITIALIZE PROFILE", it.cause?.message.toString())
+                                    }
+                                )
+                            }
+                        },
+                        {
+
+                        }
+                    )
+                } else {
+                    Amplify.DataStore.query(
+                        com.amplifyframework.datastore.generated.model.Profile::class.java,
+                        Where.matches(com.amplifyframework.datastore.generated.model.Profile.EMAIL.eq(preferences.getString(Constants.USERNAME, ""))),
+                        { profileMutableIterator ->
+                            if (!profileMutableIterator.hasNext()) {
+                                Amplify.DataStore.save(
+                                    com.amplifyframework.datastore.generated.model.Profile.builder()
+                                        .key(UUID.randomUUID().toString())
+                                        .email(preferences.getString(Constants.USERNAME, ""))
+                                        .build(),
+                                    {
+                                        Log.e("INITIALIZE PROFILE", it.item().name)
+                                    },
+                                    {
+                                        Log.e("INITIALIZE PROFILE", it.cause?.message.toString())
+                                    }
+                                )
+                            }
+                        },
+                        {
+
+                        }
+                    )
+                }
+            },
+            {
+                CoroutineScope(Dispatchers.Main).launch {
+                    Toast.makeText(application.applicationContext, it.message.toString(), Toast.LENGTH_LONG).show()
+                }
+            }
+        )
 
 //        Amplify.DataStore.observeQuery(
 //            com.amplifyframework.datastore.generated.model.Song::class.java,

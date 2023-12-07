@@ -47,10 +47,12 @@ object Constants {
     const val USER_EMAIL: String = "com.hepimusic.auth.USER.EMAIL"
     const val USER_PHONE: String = "com.hepimusic.auth.USER.PHONE"
     const val USER_PASSWORD: String = "com.hepimusic.auth.USER.PASSWORD"
+    const val AUTH_TYPE_SOCIAL = "com.hepimusic.auth.AUTH_TYPE_SOCIAL"
 
     // Other constants
     const val MAX_RECENTLY_PLAYED = 50
     const val BASE_URL = "https://dn1i8z7909ivj.cloudfront.net/public/"
     const val INITIALIZATION_COMPLETE = "com.hepimusic.INITIALIZATION_COMPLETE"
+    const val DATASTORE_READY = "com.hepimusic.DATASTORE_READY"
     const val MAX_MODEL_IMAGE_THUMB_WIDTH = 100
 }

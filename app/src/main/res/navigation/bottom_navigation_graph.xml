@@ -147,6 +147,10 @@
                 android:name="origin"
                 android:defaultValue="7" />
         </action>
+        <action
+            android:id="@+id/action_profileFragment_to_writeProfieDialogFragment"
+            app:destination="@id/writeProfieDialogFragment"
+            app:launchSingleTop="true"/>
     </fragment>
     <dialog
         android:id="@+id/navigationDialogFragment"
@@ -435,5 +439,16 @@
         <argument
             android:name="album"
             app:argType="com.hepimusic.main.albums.Album" />
+    </dialog>
+    <dialog
+        android:id="@+id/writeProfieDialogFragment"
+        android:name="com.hepimusic.main.profile.WriteProfieDialogFragment"
+        android:label="fragment_write_profie_dialog"
+        tools:layout="@layout/fragment_write_profie_dialog" >
+        <argument
+            android:name="profile"
+            android:defaultValue="@null"
+            app:argType="com.hepimusic.main.profile.Profile"
+            app:nullable="true" />
     </dialog>
 </navigation>

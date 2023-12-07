@@ -12,6 +12,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.viewModelScope
 import com.amplifyframework.auth.AuthException
 import com.amplifyframework.auth.AuthProvider
 import com.amplifyframework.auth.AuthUserAttribute
@@ -20,6 +21,8 @@ import com.amplifyframework.auth.options.AuthSignUpOptions
 import com.amplifyframework.auth.result.AuthSignUpResult
 import com.amplifyframework.auth.result.step.AuthSignUpStep
 import com.amplifyframework.core.Amplify
+import com.amplifyframework.datastore.generated.model.Profile
+import com.hepimusic.common.Constants
 import com.hepimusic.common.Constants.USERNAME
 import com.hepimusic.common.Constants.USER_EMAIL
 import com.hepimusic.common.Constants.USER_PASSWORD
@@ -29,6 +32,7 @@ import com.hepimusic.databinding.ActivityJoinBinding
 import com.hepimusic.splash.SplashActivity
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
+import java.util.UUID
 
 @AndroidEntryPoint
 class JoinActivity : AppCompatActivity(), View.OnClickListener {
@@ -50,6 +54,7 @@ class JoinActivity : AppCompatActivity(), View.OnClickListener {
         binding.resendVerificationLink.setOnClickListener(this)
         binding.backToSignUp.setOnClickListener(this)
         binding.googleLogin.setOnClickListener(this)
+        binding.facebookLogin.setOnClickListener(this)
         binding.usernameField.addTextChangedListener(textWatcher)
         binding.passwordField.addTextChangedListener(textWatcher)
         binding.emailField.addTextChangedListener(textWatcher)
@@ -69,6 +74,7 @@ class JoinActivity : AppCompatActivity(), View.OnClickListener {
             viewModel.setPhone(userPhone)
             viewModel.setPassword(userPassword)
 
+            binding.verificationTitle.text = "Enter Verification Code From your email or Click the verification link sent to your email \n $userEmail"
             binding.verificationForm.crossFadeWidth(binding.signUpForm, 100)
         }
     }
@@ -122,18 +128,39 @@ class JoinActivity : AppCompatActivity(), View.OnClickListener {
             binding.backToSignUp.id -> clearPrefs()
             binding.verifyButton.id -> verifyAccount()
             binding.googleLogin.id -> googleLogin()
+            binding.facebookLogin.id -> facebookLogin()
         }
     }
 
     private fun googleLogin() {
+        binding.registerSpinner.crossFadeWidth(binding.joinButton, 500)
         Amplify.Auth.signInWithSocialWebUI(
             AuthProvider.google(),
             this@JoinActivity,
             {
+                preferences.edit().putBoolean(Constants.AUTH_TYPE_SOCIAL, true).apply()
                 startActivity(Intent(this@JoinActivity, SplashActivity::class.java))
                 finish()
             },
             {
+                binding.joinButton.crossFadeWidth(binding.registerSpinner, 500)
+                Toast.makeText(this@JoinActivity, it.message, Toast.LENGTH_LONG).show()
+            }
+        )
+    }
+
+    private fun facebookLogin() {
+        binding.registerSpinner.crossFadeWidth(binding.joinButton, 500)
+        Amplify.Auth.signInWithSocialWebUI(
+            AuthProvider.facebook(),
+            this@JoinActivity,
+            {
+                preferences.edit().putBoolean(Constants.AUTH_TYPE_SOCIAL, true).apply()
+                startActivity(Intent(this@JoinActivity, SplashActivity::class.java))
+                finish()
+            },
+            {
+                binding.joinButton.crossFadeWidth(binding.registerSpinner, 500)
                 Toast.makeText(this@JoinActivity, it.message, Toast.LENGTH_LONG).show()
             }
         )
@@ -170,17 +197,19 @@ class JoinActivity : AppCompatActivity(), View.OnClickListener {
             preferences.edit().putString(USER_PASSWORD, binding.passwordField.text.toString()).apply()
             /*startActivity(Intent(this@JoinActivity, LoginActivity::class.java))
             finish()*/
+            binding.verificationTitle.text = "Enter Verification Code From your email or Click the verification link sent to your email \n ${binding.emailField.text.toString()}"
             binding.verificationForm.crossFadeWidth(binding.signUpForm, 500)
         }
     }
 
     private fun onSignUpError(authException: AuthException) {
         runOnUiThread {
+            authException.printStackTrace()
             Toast.makeText(this@JoinActivity, authException.message, Toast.LENGTH_LONG).show()
-            Log.e("JOIN ERROR", authException.message.toString())
+            Log.e("JOIN ERROR", authException.cause?.message.toString())
             binding.joinButton.crossFadeWidth(binding.registerSpinner, 500)
         }
-        binding.joinButton.crossFadeWidth(binding.registerSpinner, 500)
+        /*binding.joinButton.crossFadeWidth(binding.registerSpinner, 500)*/
     }
 
     private fun verifyAccount() {
@@ -193,7 +222,9 @@ class JoinActivity : AppCompatActivity(), View.OnClickListener {
                 }
             },
             {
-                Toast.makeText(this@JoinActivity, it.message, Toast.LENGTH_LONG).show()
+                runOnUiThread {
+                    Toast.makeText(this@JoinActivity, it.cause?.message.toString(), Toast.LENGTH_LONG).show()
+                }
             }
         )
     }
@@ -203,11 +234,38 @@ class JoinActivity : AppCompatActivity(), View.OnClickListener {
             viewModel.username.value!!,
             viewModel.password.value!!,
             {
-                startActivity(Intent(this@JoinActivity, SplashActivity::class.java))
-                finish()
+                if (it.isSignedIn) {
+                    val profile = Profile.builder()
+                        .key(UUID.randomUUID().toString())
+                        .name(viewModel.username.value)
+                        .email(viewModel.emailAddr.value)
+                        .phoneNumber(viewModel.phone.value)
+                        .build()
+
+                    Amplify.DataStore.save(
+                        profile,
+                        {
+                            Log.e("PROFILE SAVED TO OWNER", it.item().owner)
+                        },
+                        {
+                            Log.e("PROFILE SAVE EXCEPTION", it.message.toString())
+                            Toast.makeText(application.applicationContext, "User created without profile, you can create profile later in the profile menu. ErrMessage: "+it.cause?.message.toString(), Toast.LENGTH_LONG).show()
+                        }
+                    )
+                    preferences.edit().putBoolean(Constants.AUTH_TYPE_SOCIAL, false).apply()
+                    preferences.edit().remove(USERNAME).apply()
+                    preferences.edit().remove(USER_EMAIL).apply()
+                    preferences.edit().remove(USER_PHONE).apply()
+                    preferences.edit().remove(USER_PASSWORD).apply()
+                    startActivity(Intent(this@JoinActivity, SplashActivity::class.java))
+                    finish()
+                }
+
             },
             {
-                Toast.makeText(this@JoinActivity, it.message, Toast.LENGTH_LONG).show()
+                runOnUiThread {
+                    Toast.makeText(this@JoinActivity, it.cause?.message.toString(), Toast.LENGTH_LONG).show()
+                }
             }
         )
     }
@@ -264,5 +322,14 @@ class JoinActivity : AppCompatActivity(), View.OnClickListener {
             }
         }
         return username != "" && password != "" && emailAddr != "" && phone != ""
+    }
+
+    fun saveToUserModel() {
+
+    }
+
+    override fun onNewIntent(intent: Intent?) {
+        super.onNewIntent(intent)
+        Amplify.Auth.handleWebUISignInResponse(intent)
     }
 }

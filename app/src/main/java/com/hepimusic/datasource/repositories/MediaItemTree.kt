@@ -4,15 +4,23 @@ import android.content.Context
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
+import android.widget.Toast
+import androidx.lifecycle.MutableLiveData
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaItem.SubtitleConfiguration
 import androidx.media3.common.MediaMetadata
 import com.amplifyframework.core.Amplify
+import com.amplifyframework.core.model.query.Where
+import com.amplifyframework.datastore.DataStoreChannelEventName
 import com.amplifyframework.datastore.DataStoreItemChange
+import com.amplifyframework.datastore.events.ModelSyncedEvent
+import com.amplifyframework.datastore.events.NetworkStatusEvent
 import com.amplifyframework.datastore.generated.model.Album
 import com.amplifyframework.datastore.generated.model.Creator
 import com.amplifyframework.datastore.generated.model.Song
+import com.amplifyframework.hub.HubChannel
 import com.google.common.collect.ImmutableList
+import com.hepimusic.common.Constants
 import com.hepimusic.common.Constants.INITIALIZATION_COMPLETE
 import com.hepimusic.common.Resource
 import com.hepimusic.datasource.local.entities.AlbumEntity
@@ -26,6 +34,7 @@ import com.hepimusic.models.mappers.toCreator
 import com.hepimusic.models.mappers.toMediaItem
 import com.hepimusic.models.mappers.toSong
 import com.hepimusic.models.mappers.toSongEntity
+import com.hepimusic.playback.MusicService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -71,6 +80,8 @@ object MediaItemTree {
     val songs: MutableList<Song> = mutableListOf()
     val albums: MutableList<Album> = mutableListOf()
     val artists: MutableList<Creator> = mutableListOf()
+    private var firstAttempt = true
+    var initialConnectionEstablished = false
 
     private class MediaItemNode(var item: MediaItem) {
         private val children: MutableList<MediaItem> = ArrayList()
@@ -291,30 +302,36 @@ object MediaItemTree {
             },
             {
                 if (it.type() == DataStoreItemChange.Type.CREATE) {
-                    songs.add(it.item() /*.toSongEntity().toSong()*/)
-                    Log.e("CHANGE TYPE: CREATE", "song: ${it.item().name}")
-                    createRootFolders()
-                    CoroutineScope(Dispatchers.Default).launch {
-                        songs.forEach { song ->
-                            addNodeToTree(song, albums, artists)
+                    if (!songs.isEmpty()) {
+                        songs.add(it.item() /*.toSongEntity().toSong()*/)
+                        Log.e("CHANGE TYPE: CREATE", "song: ${it.item().name}")
+                        createRootFolders()
+                        CoroutineScope(Dispatchers.Default).launch {
+                            songs.map { song ->
+                                addNodeToTree(song, albums, artists)
+                            }
                         }
                     }
                 } else if (it.type() == DataStoreItemChange.Type.UPDATE) {
-                    songs.map { song -> if (song.key == it.item().key) it.item() else song }
-                    Log.e("CHANGE TYPE: UPDATE", "song: ${it.item().name}")
-                    createRootFolders()
-                    CoroutineScope(Dispatchers.Default).launch {
-                        songs.forEach { song ->
-                            addNodeToTree(song, albums, artists)
+                    if (!songs.isEmpty()) {
+                        songs.map { song -> if (song.key == it.item().key) it.item() else song }
+                        Log.e("CHANGE TYPE: UPDATE", "song: ${it.item().name}")
+                        createRootFolders()
+                        CoroutineScope(Dispatchers.Default).launch {
+                            songs.map { song ->
+                                addNodeToTree(song, albums, artists)
+                            }
                         }
                     }
                 } else if (it.type() == DataStoreItemChange.Type.DELETE) {
-                    songs.removeIf { song -> song.key == it.item().key }
-                    Log.e("CHANGE TYPE: DELETE", "song: ${it.item().name}")
-                    createRootFolders()
-                    CoroutineScope(Dispatchers.Default).launch {
-                        songs.forEach { song ->
-                            addNodeToTree(song, albums, artists)
+                    if (!songs.isEmpty()) {
+                        songs.removeIf { song -> song.key == it.item().key }
+                        Log.e("CHANGE TYPE: DELETE", "song: ${it.item().name}")
+                        createRootFolders()
+                        CoroutineScope(Dispatchers.Default).launch {
+                            songs.map { song ->
+                                addNodeToTree(song, albums, artists)
+                            }
                         }
                     }
                 }
@@ -327,35 +344,236 @@ object MediaItemTree {
             }
         )
 
-        val albumsFlow = songRepository.getAllAlbums()
-        val songsFlow = songRepository.getAllSongs()
-        val artistFlow = songRepository.getAllArtists()
+        Amplify.DataStore.query(
+            Song::class.java,
+            { songIterator ->
+                var count = 0
+                while (songIterator.hasNext()) {
+                    val item = songIterator.next()
+                    Log.i("Amplify", "Queried item: " + item.name)
+                    count++
+                }
+                if (count > 0) {
+                    CoroutineScope(Dispatchers.Default).launch {
+                        val albumsFlow = songRepository.getAllAlbums()
+                        val songsFlow = songRepository.getAllSongs()
+                        val artistFlow = songRepository.getAllArtists()
 
-        val combinedFlow = combine(albumsFlow, songsFlow, artistFlow) { albumsResource, songsResource, artistsResource ->
-            if (albumsResource is Resource.Success && songsResource is Resource.Success && artistsResource is Resource.Success) {
-                return@combine MusicData(songsResource.data, albumsResource.data, artistsResource.data)
-            }
-            return@combine null
-        }
+                        val combinedFlow = combine(
+                            albumsFlow,
+                            songsFlow,
+                            artistFlow
+                        ) { albumsResource, songsResource, artistsResource ->
+                            if (albumsResource is Resource.Success && songsResource is Resource.Success && artistsResource is Resource.Success) {
+                                return@combine MusicData(
+                                    songsResource.data,
+                                    albumsResource.data,
+                                    artistsResource.data
+                                )
+                            }
+                            return@combine null
+                        }
 
-        combinedFlow.collect { musicData ->
-            if (musicData != null){
-                musicData.albums?.map {
-                    albums.add(it /*.toAlbum()*/)
-                    Log.e("ALBUM", it.name)
+                        combinedFlow.collect { musicData ->
+                            if (musicData != null) {
+                                musicData.albums?.map {
+                                    albums.add(it /*.toAlbum()*/)
+                                    Log.e("ALBUM", it.name)
+                                }
+                                musicData.artists?.map {
+                                    artists.add(it /*.toCreator()*/)
+                                }
+                                musicData.songs?.map {
+                                    Log.e("MEDIA ITEM TREE", "ALBUM SIZE: " + albums.size)
+                                    songs.add(it /*.toSong()*/)
+                                    addNodeToTree(it /*.toSong()*/, albums, artists)
+                                }
+                                context.applicationContext.getSharedPreferences(
+                                    "main",
+                                    Context.MODE_PRIVATE
+                                ).edit().putBoolean(Constants.DATASTORE_READY, true).apply()
+                                context.applicationContext.getSharedPreferences(
+                                    "main",
+                                    Context.MODE_PRIVATE
+                                ).edit().putBoolean(INITIALIZATION_COMPLETE, true).apply()
+                                Log.e("PREFERENCES ADDED", "TRUE")
+                            }
+                        }
+                    }
+                } else {
+                    Amplify.Hub.subscribe(
+                        HubChannel.DATASTORE,
+                        {
+                            it.name.equals(DataStoreChannelEventName.READY.toString())
+                        },
+                        {
+                            val isReady = it.data
+                            Log.e("hub data MIT", it.data.toString())
+                            Log.e("hub name MIT", it.name.toString())
+                            if (it.name.equals("ready")) {
+                                CoroutineScope(Dispatchers.Default).launch {
+                                    val albumsFlow = songRepository.getAllAlbums()
+                                    val songsFlow = songRepository.getAllSongs()
+                                    val artistFlow = songRepository.getAllArtists()
+
+                                    val combinedFlow = combine(
+                                        albumsFlow,
+                                        songsFlow,
+                                        artistFlow
+                                    ) { albumsResource, songsResource, artistsResource ->
+                                        if (albumsResource is Resource.Success && songsResource is Resource.Success && artistsResource is Resource.Success) {
+                                            return@combine MusicData(
+                                                songsResource.data,
+                                                albumsResource.data,
+                                                artistsResource.data
+                                            )
+                                        }
+                                        return@combine null
+                                    }
+
+                                    combinedFlow.collect { musicData ->
+                                        if (musicData != null) {
+                                            musicData.albums?.map {
+                                                albums.add(it)
+                                                        Log.e("ALBUM", it.name)
+                                            }
+                                            musicData.artists?.map {
+                                                artists.add(it)
+                                            }
+                                            musicData.songs?.map {
+                                                Log.e("MEDIA ITEM TREE", "ALBUM SIZE: " + albums.size)
+                                                songs.add(it )
+                                                        addNodeToTree(it, albums, artists)
+                                            }
+                                            context.applicationContext.getSharedPreferences(
+                                                "main",
+                                                Context.MODE_PRIVATE
+                                            ).edit().putBoolean(Constants.DATASTORE_READY, true).apply()
+                                            context.applicationContext.getSharedPreferences(
+                                                "main",
+                                                Context.MODE_PRIVATE
+                                            ).edit().putBoolean(INITIALIZATION_COMPLETE, true).apply()
+                                            Log.e("PREFERENCES ADDED", "TRUE")
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    )
                 }
-                musicData.artists?.map {
-                    artists.add(it /*.toCreator()*/)
-                }
-                musicData.songs?.map {
-                    Log.e("MEDIA ITEM TREE", "ALBUM SIZE: "+albums.size)
-                    songs.add(it /*.toSong()*/)
-                    addNodeToTree(it /*.toSong()*/, albums, artists)
-                }
-                context.applicationContext.getSharedPreferences("main", Context.MODE_PRIVATE).edit().putBoolean(INITIALIZATION_COMPLETE, true).apply()
-                Log.e("PREFERENCES ADDED", "TRUE")
+            },
+            {
+                Log.e("DataStore Exception MIT", it.message.toString())
             }
-        }
+        )
+
+        /*if (!initialConnectionEstablished) {
+            val albumsFlow = songRepository.getAllAlbums()
+            val songsFlow = songRepository.getAllSongs()
+            val artistFlow = songRepository.getAllArtists()
+
+            val combinedFlow = combine(
+                albumsFlow,
+                songsFlow,
+                artistFlow
+            ) { albumsResource, songsResource, artistsResource ->
+                if (albumsResource is Resource.Success && songsResource is Resource.Success && artistsResource is Resource.Success) {
+                    return@combine MusicData(
+                        songsResource.data,
+                        albumsResource.data,
+                        artistsResource.data
+                    )
+                }
+                return@combine null
+            }
+
+            combinedFlow.collect { musicData ->
+                if (musicData != null) {
+                    musicData.albums?.map {
+                        albums.add(it *//*.toAlbum()*//*)
+                        Log.e("ALBUM", it.name)
+                    }
+                    musicData.artists?.map {
+                        artists.add(it *//*.toCreator()*//*)
+                    }
+                    musicData.songs?.map {
+                        Log.e("MEDIA ITEM TREE", "ALBUM SIZE: " + albums.size)
+                        songs.add(it *//*.toSong()*//*)
+                        addNodeToTree(it *//*.toSong()*//*, albums, artists)
+                    }
+                    context.applicationContext.getSharedPreferences(
+                        "main",
+                        Context.MODE_PRIVATE
+                    ).edit().putBoolean(Constants.DATASTORE_READY, true).apply()
+                    context.applicationContext.getSharedPreferences(
+                        "main",
+                        Context.MODE_PRIVATE
+                    ).edit().putBoolean(INITIALIZATION_COMPLETE, true).apply()
+                    Log.e("PREFERENCES ADDED", "TRUE")
+                }
+            }
+        } else {
+            Amplify.Hub.subscribe(
+                HubChannel.DATASTORE,
+                {
+                    it.name.equals(DataStoreChannelEventName.READY.toString())
+                },
+                {
+                    val isReady = it.data
+                    Log.e("hub data MIT", it.data.toString())
+                    Log.e("hub name MIT", it.name.toString())
+                    if (it.name.equals("ready")) {
+                        CoroutineScope(Dispatchers.Default).launch {
+                            val albumsFlow = songRepository.getAllAlbums()
+                            val songsFlow = songRepository.getAllSongs()
+                            val artistFlow = songRepository.getAllArtists()
+
+                            val combinedFlow = combine(
+                                albumsFlow,
+                                songsFlow,
+                                artistFlow
+                            ) { albumsResource, songsResource, artistsResource ->
+                                if (albumsResource is Resource.Success && songsResource is Resource.Success && artistsResource is Resource.Success) {
+                                    return@combine MusicData(
+                                        songsResource.data,
+                                        albumsResource.data,
+                                        artistsResource.data
+                                    )
+                                }
+                                return@combine null
+                            }
+
+                            combinedFlow.collect { musicData ->
+                                if (musicData != null) {
+                                    musicData.albums?.map {
+                                        albums.add(it *//*.toAlbum()*//*)
+                                        Log.e("ALBUM", it.name)
+                                    }
+                                    musicData.artists?.map {
+                                        artists.add(it *//*.toCreator()*//*)
+                                    }
+                                    musicData.songs?.map {
+                                        Log.e("MEDIA ITEM TREE", "ALBUM SIZE: " + albums.size)
+                                        songs.add(it *//*.toSong()*//*)
+                                        addNodeToTree(it *//*.toSong()*//*, albums, artists)
+                                    }
+                                    context.applicationContext.getSharedPreferences(
+                                        "main",
+                                        Context.MODE_PRIVATE
+                                    ).edit().putBoolean(Constants.DATASTORE_READY, true).apply()
+                                    context.applicationContext.getSharedPreferences(
+                                        "main",
+                                        Context.MODE_PRIVATE
+                                    ).edit().putBoolean(INITIALIZATION_COMPLETE, true).apply()
+                                    Log.e("PREFERENCES ADDED", "TRUE")
+                                }
+                            }
+                        }
+                    }
+                }
+            )
+        }*/
+
 
         /*albumsFlow.combine(songsFlow){ albumsResource, songsResource ->
             if (albumsResource is Resource.Success && songsResource is Resource.Success) {

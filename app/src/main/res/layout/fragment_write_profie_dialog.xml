@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:background="@color/black"
-    android:padding="@dimen/padding_large"
-    tools:context=".main.playlist.WritePlaylistDialogFragment">
+    android:padding="15dp"
+    tools:context=".main.profile.WriteProfieDialogFragment">
+
 
     <ImageButton
         android:id="@+id/closeButton"
@@ -24,7 +25,7 @@
         android:id="@+id/createAPlaylist"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:text="@string/create_a_playlist"
+        android:text="@string/update_your_profile"
         android:textAppearance="@style/TextAppearance.AppCompat.Body1"
         android:textStyle="bold"
         app:layout_constraintEnd_toStartOf="@+id/closeButton"
@@ -50,7 +51,7 @@
             app:layout_constraintTop_toTopOf="parent" />
 
         <ImageView
-            android:id="@+id/playlistImage"
+            android:id="@+id/profileImage"
             android:layout_width="0dp"
             android:layout_height="0dp"
             android:contentDescription="@string/track_album_art"
@@ -59,7 +60,8 @@
             app:layout_constraintEnd_toEndOf="@id/thumbBackground"
             app:layout_constraintStart_toStartOf="@+id/thumbBackground"
             app:layout_constraintTop_toTopOf="@+id/thumbBackground"
-            app:srcCompat="@drawable/thumb_circular_default" />
+            app:srcCompat="@drawable/profile_person"
+            app:tint="@color/black" />
 
         <TextView
             android:id="@+id/thumbText"
@@ -85,7 +87,7 @@
         android:layout_height="wrap_content"
         android:paddingStart="@dimen/padding_x_large"
         android:paddingEnd="@dimen/padding_x_large"
-        android:text="@string/upload_playlist_image"
+        android:text="@string/profile_picture_upload"
         android:textSize="@dimen/text_size_x_small"
         app:layout_constraintBottom_toBottomOf="@+id/unselectedImageGroup"
         app:layout_constraintEnd_toEndOf="parent"
@@ -112,7 +114,7 @@
         app:layout_constraintTop_toTopOf="@+id/unselectedImageGroup" />
 
     <ImageView
-        android:id="@+id/playlistArt"
+        android:id="@+id/profilePictureArt"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:contentDescription="@string/playlist_image"
@@ -133,13 +135,14 @@
 
 
     <com.google.android.material.textfield.TextInputEditText
-        android:id="@+id/playlistNameField"
+        android:id="@+id/displayNameField"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/margin_xx_large"
         android:background="@drawable/edit_text_background"
-        android:hint="@string/playlist_name"
-        android:imeOptions="actionDone"
+        android:textColor="@color/black"
+        android:hint="@string/display_name"
+        android:imeOptions="actionNext"
         android:inputType="text"
         android:maxLines="1"
         android:paddingStart="@dimen/padding_x_large"
@@ -152,8 +155,50 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/unselectedImageGroup" />
 
+    <com.google.android.material.textfield.TextInputEditText
+        android:id="@+id/emailField"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/margin_xx_large"
+        android:background="@drawable/edit_text_background"
+        android:textColor="@color/black"
+        android:hint="@string/email_field"
+        android:imeOptions="actionNext"
+        android:inputType="textEmailAddress"
+        android:maxLines="1"
+        android:paddingStart="@dimen/padding_x_large"
+        android:paddingTop="@dimen/padding_medium"
+        android:paddingEnd="@dimen/padding_x_large"
+        android:paddingBottom="@dimen/padding_medium"
+        app:hintAnimationEnabled="false"
+        app:hintTextAppearance="@style/TextAppearance.AppCompat.Subhead"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/displayNameField" />
+
+    <com.google.android.material.textfield.TextInputEditText
+        android:id="@+id/phoneField"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/margin_xx_large"
+        android:background="@drawable/edit_text_background"
+        android:textColor="@color/black"
+        android:hint="@string/phone_number_input"
+        android:imeOptions="actionDone"
+        android:inputType="phone"
+        android:maxLines="1"
+        android:paddingStart="@dimen/padding_x_large"
+        android:paddingTop="@dimen/padding_medium"
+        android:paddingEnd="@dimen/padding_x_large"
+        android:paddingBottom="@dimen/padding_medium"
+        app:hintAnimationEnabled="false"
+        app:hintTextAppearance="@style/TextAppearance.AppCompat.Subhead"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/emailField" />
+
     <Button
-        android:id="@+id/writePlaylist"
+        android:id="@+id/writeProfile"
         style="@style/Widget.AppCompat.Button.Colored"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
@@ -161,11 +206,33 @@
         android:enabled="false"
         android:paddingTop="@dimen/button_padding"
         android:paddingBottom="18dp"
-        android:text="@string/create_playlist"
+        android:text="@string/update_profile"
         android:textAppearance="@style/TextAppearance.AppCompat.Body1"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/playlistNameField" />
+        app:layout_constraintTop_toBottomOf="@+id/phoneField" />
 
+    <ProgressBar
+        android:id="@+id/progressBar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        app:layout_constraintTop_toTopOf="@id/writeProfile"
+        app:layout_constraintStart_toStartOf="@id/writeProfile"
+        app:layout_constraintEnd_toEndOf="@id/writeProfile"
+        app:layout_constraintBottom_toBottomOf="@id/writeProfile" />
+
+    <TextView
+        android:id="@+id/progressCount"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="1%"
+        android:textColor="@color/white"
+        android:textSize="12sp"
+        android:visibility="gone"
+        app:layout_constraintTop_toTopOf="@id/writeProfile"
+        app:layout_constraintStart_toStartOf="@id/writeProfile"
+        app:layout_constraintEnd_toEndOf="@id/writeProfile"
+        app:layout_constraintBottom_toBottomOf="@id/writeProfile" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

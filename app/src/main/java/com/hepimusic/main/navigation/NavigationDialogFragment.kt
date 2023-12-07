@@ -1,6 +1,8 @@
 package com.hepimusic.main.navigation
 
+import android.content.Context.MODE_PRIVATE
 import android.content.Intent
+import android.content.SharedPreferences
 import android.graphics.Bitmap
 import android.graphics.drawable.BitmapDrawable
 import android.os.Bundle
@@ -51,6 +53,7 @@ class NavigationDialogFragment : BaseFullscreenDialogFragment(), OnStartDragList
     OnItemClickListener {
 
     lateinit var binding: FragmentNavigationDialogBinding
+    lateinit var preferences: SharedPreferences
 
     private var origin: Int? = null
     private lateinit var itemTouchHelper: ItemTouchHelper
@@ -66,6 +69,7 @@ class NavigationDialogFragment : BaseFullscreenDialogFragment(), OnStartDragList
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        preferences = requireActivity().getSharedPreferences("main", MODE_PRIVATE)
         binding = FragmentNavigationDialogBinding.inflate(LayoutInflater.from(requireContext()))
         arguments?.let {
             origin = it.getInt("origin")
@@ -196,6 +200,7 @@ class NavigationDialogFragment : BaseFullscreenDialogFragment(), OnStartDragList
                             e.printStackTrace()
                             navController.navigate(R.id.action_navigationDialogFragment_to_exploreFragment)
                         }
+                        preferences.edit().putBoolean(Constants.AUTH_TYPE_SOCIAL, false).apply()
                         startActivity(Intent(requireActivity(), LoginActivity::class.java))
                         requireActivity().finish()
                     }

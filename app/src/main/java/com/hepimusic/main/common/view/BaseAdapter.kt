@@ -49,7 +49,7 @@ class BaseAdapter<T: Model>(
     override fun getItemCount(): Int = items.size
 
     override fun onBindViewHolder(holder: BaseViewHolder<T>, position: Int) {
-        try {
+        /*try {
             val itm = items[position] as com.hepimusic.main.songs.Song
             Amplify.DataStore.observe(
                 Song::class.java,
@@ -74,7 +74,7 @@ class BaseAdapter<T: Model>(
         } catch (e: Exception) {
             Log.e("ADAPTER OBSERVATION EXCEPTION", e.message.toString())
         }
-
+*/
         holder.bind(items[position])
     }
 

@@ -23,6 +23,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.HepiMusic"
         tools:targetApi="tiramisu">
+
         <activity
             android:name="com.amplifyframework.auth.cognito.activities.HostedUIRedirectActivity"
             android:exported="true">
@@ -30,9 +31,10 @@
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="myapp" />
+                <data android:scheme="gettingstarted" />
             </intent-filter>
         </activity>
+
         <activity
             android:name=".auth.JoinActivity"
             android:exported="false" />

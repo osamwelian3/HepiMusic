@@ -8,4 +8,6 @@ interface OnItemClickListener {
     fun onOverflowMenuClick(position: Int) {}
 
     fun onItemLongClick(position: Int) {}
+
+    fun onReactionButtonLongClick(position: Int, rawX: Float, rawY: Float) {}
 }
