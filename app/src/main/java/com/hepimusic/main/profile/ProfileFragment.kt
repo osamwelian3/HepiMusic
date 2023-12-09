@@ -144,6 +144,7 @@ class ProfileFragment : Fragment(), OnItemClickListener, View.OnClickListener {
         binding.scrollView.isNestedScrollingEnabled = true
 
         binding.editProfile.setOnClickListener(this)
+        binding.viewMore.setOnClickListener(this)
         if (profileViewModel.profile.value != null) {
             binding.userNameDisplay.text = profileViewModel.profile.value!!.originalProfile.name ?: binding.userNameDisplay.text
 
@@ -194,6 +195,9 @@ class ProfileFragment : Fragment(), OnItemClickListener, View.OnClickListener {
             binding.backButton.id -> findNavController().popBackStack()
             binding.editProfile.id -> findNavController().navigate(
                 ProfileFragmentDirections.actionProfileFragmentToWriteProfieDialogFragment(profileViewModel.profile.value)
+            )
+            binding.viewMore.id -> findNavController().navigate(
+                ProfileFragmentDirections.actionProfileFragmentToProfileMenuBottomSheetDialogFragment(profileViewModel.profile.value!!)
             )
         }
     }

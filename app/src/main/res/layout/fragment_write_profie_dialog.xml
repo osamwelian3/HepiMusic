@@ -164,7 +164,7 @@
         android:textColor="@color/black"
         android:hint="@string/email_field"
         android:imeOptions="actionNext"
-        android:inputType="textEmailAddress"
+        android:inputType="none"
         android:maxLines="1"
         android:paddingStart="@dimen/padding_x_large"
         android:paddingTop="@dimen/padding_medium"

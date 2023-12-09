@@ -200,4 +200,16 @@
     <string name="profile_empty_thumb_message">Change Profile details or select image</string>
     <string name="profile_saved">Profile saved succesfully</string>
     <string name="profile_save_error">Error occured while saving profile</string>
+    <string name="user_avator">user avator</string>
+    <string name="about_hepi">Hepi Music is a Kenyan music streaming plartform specifically designed to promote Kenyan content and content creators. Visit https://hepimusic.com/about to learn more.</string>
+    <string name="song_saved">New Song added succesfully</string>
+    <string name="album_saved">New album added successfully</string>
+    <string name="category_saved">New category added successfully</string>
+    <string name="songs_admin">Add Songs</string>
+    <string name="albums_admin">Add Albums</string>
+    <string name="categories_admin">Add Categories</string>
+    <string name="creators_admin">Edit Your Creator Profile</string>
+    <string name="admin_dashboard">Dashboard</string>
+    <string name="admin_songs">Songs You have uploaded</string>
+    <string name="edit_song">Edit Song</string>
 </resources>

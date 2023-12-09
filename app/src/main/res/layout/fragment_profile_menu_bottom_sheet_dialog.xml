@@ -3,12 +3,268 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:background="@android:color/transparent"
+    android:padding="@dimen/padding_medium"
     tools:context=".main.profile.ProfileMenuBottomSheetDialogFragment">
 
-    <!-- TODO: Update blank fragment layout -->
-    <TextView
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:text="@string/hello_blank_fragment" />
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:background="@drawable/bottom_sheet_round_bg"
+        android:paddingTop="@dimen/padding_x_large"
+        android:paddingBottom="@dimen/padding_x_large">
 
+        <LinearLayout
+            android:id="@+id/userAvatorGroup"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:paddingStart="20dp"
+            android:paddingEnd="20dp"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:baselineAligned="false">
+
+            <LinearLayout
+                android:layout_width="48dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:gravity="end"
+                android:layout_weight="1">
+                <ImageView
+                    android:id="@+id/userAvator"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:contentDescription="@string/user_avator"
+                    tools:src="@drawable/profile_person" />
+            </LinearLayout>
+            <LinearLayout
+                android:layout_width="180dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="start"
+                android:orientation="vertical"
+                android:gravity="start"
+                android:layout_weight="1">
+                <TextView
+                    android:id="@+id/userName"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/black"
+                    android:maxLines="1"
+                    android:ellipsize="end"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    tools:text="samian" />
+                <TextView
+                    android:id="@+id/userEmail"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/black"
+                    android:maxLines="1"
+                    android:ellipsize="marquee"
+                    android:marqueeRepeatLimit="marquee_forever"
+                    android:scrollHorizontally="true"
+                    android:textSize="12sp"
+                    android:textStyle="italic"
+                    tools:text="osamwelian3@gmail.com" />
+            </LinearLayout>
+
+        </LinearLayout>
+
+
+        <LinearLayout
+            android:id="@+id/personalMetrics"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:paddingStart="20dp"
+            android:paddingEnd="20dp"
+            android:orientation="horizontal"
+            app:layout_constraintTop_toBottomOf="@id/userAvatorGroup"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:baselineAligned="false">
+
+            <LinearLayout
+                android:id="@+id/mySongs"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/mySongsCount"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="18sp"
+                    android:padding="0dp"
+                    android:textStyle="bold"
+                    android:textColor="@color/black"
+                    tools:text="63"
+                    android:layout_gravity="center_horizontal"
+                    android:gravity="center" />
+
+                <TextView
+                    android:id="@+id/mySongsTitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="12sp"
+                    android:textColor="@color/black"
+                    android:text="My Songs"
+                    android:layout_gravity="center_horizontal"
+                    android:gravity="center" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/myFollows"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="20dp"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/myFollowsCount"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="18sp"
+                    android:padding="0dp"
+                    android:textStyle="bold"
+                    android:textColor="@color/black"
+                    tools:text="63"
+                    android:layout_gravity="center_horizontal"
+                    android:gravity="center" />
+
+                <TextView
+                    android:id="@+id/myFollowsTitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="12sp"
+                    android:textColor="@color/black"
+                    android:text="Following"
+                    android:layout_gravity="center_horizontal"
+                    android:gravity="center" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/myFollowers"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="20dp"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/myFollowersCount"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="18sp"
+                    android:padding="0dp"
+                    android:textStyle="bold"
+                    android:textColor="@color/black"
+                    tools:text="63"
+                    android:layout_gravity="center_horizontal"
+                    android:gravity="center" />
+
+                <TextView
+                    android:id="@+id/myFollowersTitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="12sp"
+                    android:textColor="@color/black"
+                    android:text="Following"
+                    android:layout_gravity="center_horizontal"
+                    android:gravity="center" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/borderLine1"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="5dp"
+            android:padding="1dp"
+            android:background="@color/black_overlay"
+            android:orientation="horizontal"
+            app:layout_constraintTop_toBottomOf="@id/personalMetrics"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"/>
+
+        <LinearLayout
+            android:id="@+id/buttonsContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:layout_constraintTop_toBottomOf="@id/borderLine1"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:paddingStart="20dp"
+            android:paddingEnd="20dp"
+            android:layout_marginTop="10dp"
+            android:orientation="vertical" >
+
+            <TextView
+                android:id="@+id/editProfile"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="@color/black"
+                android:paddingStart="20dp"
+                android:paddingEnd="20dp"
+                android:layout_marginBottom="5dp"
+                android:textStyle="bold"
+                android:clickable="true"
+                android:text="Edit Profile" />
+
+            <LinearLayout
+                android:id="@+id/borderLine2"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="1dp"
+                android:background="@color/black_overlay"
+                android:orientation="horizontal"/>
+
+            <TextView
+                android:id="@+id/aboutHepi"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="@color/black"
+                android:paddingStart="20dp"
+                android:paddingEnd="20dp"
+                android:layout_marginBottom="5dp"
+                android:textStyle="bold"
+                android:clickable="true"
+                android:text="About Hepi Music" />
+
+            <LinearLayout
+                android:id="@+id/borderLine3"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="1dp"
+                android:background="@color/black_overlay"
+                android:orientation="horizontal"/>
+
+            <TextView
+                android:id="@+id/logout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="@color/black"
+                android:paddingStart="20dp"
+                android:paddingEnd="20dp"
+                android:layout_marginBottom="5dp"
+                android:textStyle="bold"
+                android:clickable="true"
+                android:text="Logout" />
+
+            <LinearLayout
+                android:id="@+id/borderLine4"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="1dp"
+                android:background="@color/black_overlay"
+                android:orientation="horizontal"/>
+        </LinearLayout>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
 </FrameLayout>

@@ -62,6 +62,24 @@ object DataBindingAdapters {
             .into(view)
     }
 
+    @BindingAdapter("android:srca")
+    @JvmStatic
+    fun setAdminAlbumCover(view: ImageView, song: Song?) {
+        Glide.with(view)
+            .setDefaultRequestOptions(
+                RequestOptions()
+                    .placeholder(R.drawable.album_art)
+                    .error(R.drawable.album_art)
+                    .diskCacheStrategy(DiskCacheStrategy.DATA)
+            )
+            .load(song?.artWork)
+            .transform(
+                MultiTransformation(centerCrop, RoundedCorners(10))
+            )
+            .placeholder(R.drawable.thumb_circular_default)
+            .into(view)
+    }
+
     @BindingAdapter("trending")
     @JvmStatic
     fun setTrendingCover(view: ImageView, trending: Song?) {

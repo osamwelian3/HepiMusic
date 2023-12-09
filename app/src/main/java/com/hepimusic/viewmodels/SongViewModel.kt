@@ -111,9 +111,11 @@ class SongViewModel(application: Application) : AndroidViewModel(application) {
             {
                 val result = childrenFuture.get()!!
                 result?.let {
-                    val children = result.value!!
+                    val children = result.value
 
-                    subItemMediaList.addAll(children)
+                    if (children != null) {
+                        subItemMediaList.addAll(children)
+                    }
                     mediaItemList.postValue(subItemMediaList)
 //                continuation.resume(mediaItemList)
                 }

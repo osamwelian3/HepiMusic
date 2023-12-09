@@ -29,8 +29,9 @@ class NavRepository(private var origin: Int?, private val preferences: SharedPre
             NavItem(Constants.NAV_SETTINGS, R.string.settings, R.drawable.ic_settings, isFrom(7))*/
         items[preferences.getInt(Constants.NAV_PROFILE, 7)] =
             NavItem(Constants.NAV_PROFILE, R.string.profile, R.drawable.profile_person, isFrom(7))
-        /*items[preferences.getInt(Constants.NAV_VIDEOS, 8)] =
-            NavItem(Constants.NAV_VIDEOS, R.string.videos, R.drawable.ic_video, isFrom(8))*/
+        items[preferences.getInt(Constants.NAV_CREATORS_DASHBOARD, 8)] =
+            NavItem(Constants.NAV_CREATORS_DASHBOARD, R.string.admin_dashboard,
+                R.drawable.baseline_dashboard_customize_24, isFrom(8))
         if (userExists) {
             items[preferences.getInt(Constants.LOGOUT, 9)] =
                 NavItem(Constants.LOGOUT, R.string.logout, R.drawable.logout_24, isFrom(9))

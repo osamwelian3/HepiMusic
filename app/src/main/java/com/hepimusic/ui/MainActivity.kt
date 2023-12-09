@@ -20,6 +20,11 @@ import com.amplifyframework.core.model.query.Where
 import com.hepimusic.R
 import com.hepimusic.common.Constants
 import com.hepimusic.databinding.ActivityMainBinding
+import com.hepimusic.main.admin.albums.AdminAlbumsViewModel
+import com.hepimusic.main.admin.categories.AdminCategoriesViewModel
+import com.hepimusic.main.admin.common.BaseAdminViewModel
+import com.hepimusic.main.admin.dashboard.AdminNavViewModel
+import com.hepimusic.main.admin.songs.AdminSongsViewModel
 import com.hepimusic.main.albums.AlbumSongsViewModel
 import com.hepimusic.main.artists.ArtistAlbumsViewModel
 import com.hepimusic.main.artists.ArtistsViewModel
@@ -65,6 +70,13 @@ class MainActivity : AppCompatActivity() {
     lateinit var artistAlbumsViewModel: ArtistAlbumsViewModel
     lateinit var profileViewModel: ProfileViewModel
     lateinit var writeProfileViewModel: WriteProfileViewModel
+
+    //admin
+    lateinit var adminNavViewModel: AdminNavViewModel
+    lateinit var songsAdminViewModel: AdminSongsViewModel
+    lateinit var albumsAdminViewModel: AdminAlbumsViewModel
+    lateinit var categoriesAdminViewModel: AdminCategoriesViewModel
+
     lateinit var navHostFragment: NavHostFragment
     lateinit var navController: NavController
     var items = emptyList<Song>()
@@ -104,6 +116,10 @@ class MainActivity : AppCompatActivity() {
             artistAlbumsViewModel = ViewModelProvider(this@MainActivity)[ArtistAlbumsViewModel::class.java]
             profileViewModel = ViewModelProvider(this@MainActivity)[ProfileViewModel::class.java]
             writeProfileViewModel = ViewModelProvider(this@MainActivity)[WriteProfileViewModel::class.java]
+            songsAdminViewModel = ViewModelProvider(this@MainActivity)[AdminSongsViewModel::class.java]
+            albumsAdminViewModel = ViewModelProvider(this@MainActivity)[AdminAlbumsViewModel::class.java]
+            categoriesAdminViewModel = ViewModelProvider(this@MainActivity)[AdminCategoriesViewModel::class.java]
+            adminNavViewModel = ViewModelProvider(this@MainActivity)[AdminNavViewModel::class.java]
         }
         startMusicService()
 

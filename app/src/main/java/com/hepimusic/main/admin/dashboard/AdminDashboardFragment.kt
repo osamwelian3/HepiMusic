@@ -1,7 +1,6 @@
-package com.hepimusic.main.navigation
+package com.hepimusic.main.admin.dashboard
 
-import android.content.Context.MODE_PRIVATE
-import android.content.Intent
+import android.content.Context
 import android.content.SharedPreferences
 import android.graphics.Bitmap
 import android.graphics.drawable.BitmapDrawable
@@ -12,25 +11,24 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
-import androidx.lifecycle.lifecycleScope
-import androidx.navigation.Navigation
+import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
-import com.amplifyframework.core.Amplify
+import com.google.android.flexbox.FlexDirection
+import com.google.android.flexbox.FlexboxLayoutManager
+import com.google.android.flexbox.JustifyContent
 import com.hepimusic.R
-import com.hepimusic.auth.LoginActivity
 import com.hepimusic.common.Constants
-import com.hepimusic.databinding.FragmentNavigationDialogBinding
+import com.hepimusic.databinding.FragmentAdminDasboardBinding
 import com.hepimusic.main.common.callbacks.OnItemClickListener
 import com.hepimusic.main.common.view.BaseFullscreenDialogFragment
 import com.hepimusic.main.dragSwipe.ItemTouchHelperAdapter
 import com.hepimusic.main.dragSwipe.OnStartDragListener
 import com.hepimusic.main.dragSwipe.SimpleItemTouchHelperCallback
 import com.hepimusic.utils.BlurKit
-import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -45,22 +43,21 @@ private const val ARG_PARAM2 = "param2"
 
 /**
  * A simple [Fragment] subclass.
- * Use the [NavigationDialogFragment.newInstance] factory method to
+ * Use the [AdminDashboardFragment.newInstance] factory method to
  * create an instance of this fragment.
  */
-@AndroidEntryPoint
-class NavigationDialogFragment : BaseFullscreenDialogFragment(), OnStartDragListener,
+class AdminDashboardFragment : BaseFullscreenDialogFragment(), OnStartDragListener,
     ItemTouchHelperAdapter,
     OnItemClickListener {
 
-    lateinit var binding: FragmentNavigationDialogBinding
+    lateinit var binding: FragmentAdminDasboardBinding
     lateinit var preferences: SharedPreferences
 
     private var origin: Int? = null
     private lateinit var itemTouchHelper: ItemTouchHelper
-    private lateinit var adapter: NavAdapter
-    private val viewModel: NavViewModel by viewModels()
-    private var items: List<NavItem> = emptyList()
+    private lateinit var adapter: AdminNavAdapter
+    private lateinit var viewModel: AdminNavViewModel // by viewModels()
+    private var items: List<AdminNavItem> = emptyList()
     private val job = Job()
     private val scope = CoroutineScope(job + Dispatchers.Main)
 
@@ -70,8 +67,9 @@ class NavigationDialogFragment : BaseFullscreenDialogFragment(), OnStartDragList
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        preferences = requireActivity().getSharedPreferences("main", MODE_PRIVATE)
-        binding = FragmentNavigationDialogBinding.inflate(LayoutInflater.from(requireContext()))
+        preferences = requireActivity().getSharedPreferences("main", Context.MODE_PRIVATE)
+        binding = FragmentAdminDasboardBinding.inflate(LayoutInflater.from(requireContext()))
+        viewModel = ViewModelProvider(requireActivity())[AdminNavViewModel::class.java]
         arguments?.let {
             origin = it.getInt("origin")
         }
@@ -101,7 +99,7 @@ class NavigationDialogFragment : BaseFullscreenDialogFragment(), OnStartDragList
         // TODO: Rename and change types and number of parameters
         @JvmStatic
         fun newInstance(param1: String, param2: String) =
-            NavigationDialogFragment().apply {
+            AdminDashboardFragment().apply {
                 arguments = Bundle().apply {
                     putString(ARG_PARAM1, param1)
                     putString(ARG_PARAM2, param2)
@@ -134,16 +132,23 @@ class NavigationDialogFragment : BaseFullscreenDialogFragment(), OnStartDragList
     }
 
     private fun setupRecyclerView() {
-        adapter = NavAdapter(items, this, this)
+        adapter = AdminNavAdapter(items, this, this)
         binding.recyclerView.setHasFixedSize(true)
         binding.recyclerView.adapter = adapter
 
-        val layoutManager = GridLayoutManager(activity, 3)
+        val layoutManager = layoutManager() // GridLayoutManager(activity, 3)
         binding.recyclerView.layoutManager = layoutManager
 
         val callback = SimpleItemTouchHelperCallback(this)
         itemTouchHelper = ItemTouchHelper(callback)
         itemTouchHelper.attachToRecyclerView(binding.recyclerView)
+    }
+
+    fun layoutManager(): RecyclerView.LayoutManager {
+        return FlexboxLayoutManager(activity).apply {
+            flexDirection = FlexDirection.ROW
+            justifyContent = JustifyContent.SPACE_EVENLY
+        }
     }
 
 
@@ -188,36 +193,12 @@ class NavigationDialogFragment : BaseFullscreenDialogFragment(), OnStartDragList
     override fun onItemClick(position: Int, sharableView: View?) {
         val navHostFragment = requireActivity().supportFragmentManager.findFragmentById(R.id.bottomNavHostFragment) as NavHostFragment
         val navController = navHostFragment.navController
-        when (items[position].id) {
-            Constants.LOGOUT -> {
-                if (sharableView != null) {
-                    sharableView.visibility = View.GONE
-                }
-                Amplify.Auth.signOut {
-                    lifecycleScope.launch(Dispatchers.Main) {
-                        try {
-                            findNavController().popBackStack()
-                        } catch (e: Exception) {
-                            e.printStackTrace()
-                            navController.navigate(R.id.action_navigationDialogFragment_to_exploreFragment)
-                        }
-                        preferences.edit().putBoolean(Constants.AUTH_TYPE_SOCIAL, false).apply()
-                        startActivity(Intent(requireActivity(), LoginActivity::class.java))
-                        requireActivity().finish()
-                    }
-                }
-            }
-            /*Constants.NAV_CREATORS_DASHBOARD -> {
-                findNavController().navigate(R.id.action_navigationDialogFragment_to_adminDashboardFragment)
-            }*/
-        }
+
         val navId = when (items[position].id) {
-            Constants.NAV_SONGS -> R.id.action_navigationDialogFragment_to_songsFragment
-            Constants.NAV_PLAYLIST -> R.id.action_navigationDialogFragment_to_playlistFragment
-            Constants.NAV_ARTISTS -> R.id.action_navigationDialogFragment_to_artistsFragment
-            Constants.NAV_GENRES -> R.id.action_navigationDialogFragment_to_genresFragment
-            Constants.NAV_PROFILE -> R.id.action_navigationDialogFragment_to_profileFragment
-            Constants.NAV_CREATORS_DASHBOARD -> R.id.action_navigationDialogFragment_to_adminDashboardFragment
+            Constants.ADMIN_NAV_SONGS -> R.id.action_adminDashboardFragment_to_adminSongsFragment
+            Constants.ADMIN_NAV_ALBUMS -> R.id.action_navigationDialogFragment_to_playlistFragment
+            Constants.ADMIN_NAV_CATEGORIES -> R.id.action_navigationDialogFragment_to_artistsFragment
+            Constants.ADMIN_NAV_CREATORS -> R.id.action_navigationDialogFragment_to_genresFragment
             else -> null
         }
 
@@ -245,5 +226,4 @@ class NavigationDialogFragment : BaseFullscreenDialogFragment(), OnStartDragList
         itemTouchHelper.attachToRecyclerView(null)
         binding.recyclerView?.adapter = null
     }
-
 }

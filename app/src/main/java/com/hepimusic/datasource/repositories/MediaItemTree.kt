@@ -411,52 +411,77 @@ object MediaItemTree {
                             Log.e("hub data MIT", it.data.toString())
                             Log.e("hub name MIT", it.name.toString())
                             if (it.name.equals("ready")) {
-                                CoroutineScope(Dispatchers.Default).launch {
-                                    val albumsFlow = songRepository.getAllAlbums()
-                                    val songsFlow = songRepository.getAllSongs()
-                                    val artistFlow = songRepository.getAllArtists()
-
-                                    val combinedFlow = combine(
-                                        albumsFlow,
-                                        songsFlow,
-                                        artistFlow
-                                    ) { albumsResource, songsResource, artistsResource ->
-                                        if (albumsResource is Resource.Success && songsResource is Resource.Success && artistsResource is Resource.Success) {
-                                            return@combine MusicData(
-                                                songsResource.data,
-                                                albumsResource.data,
-                                                artistsResource.data
-                                            )
+                                Amplify.DataStore.query(
+                                    Song::class.java,
+                                    { songIterator ->
+                                        var count = 0
+                                        while (songIterator.hasNext()) {
+                                            val item = songIterator.next()
+                                            Log.i("Amplify", "Queried item: " + item.name)
+                                            count++
                                         }
-                                        return@combine null
-                                    }
+                                        if (count > 0) {
+                                            CoroutineScope(Dispatchers.Default).launch {
+                                                val albumsFlow = songRepository.getAllAlbums()
+                                                val songsFlow = songRepository.getAllSongs()
+                                                val artistFlow = songRepository.getAllArtists()
 
-                                    combinedFlow.collect { musicData ->
-                                        if (musicData != null) {
-                                            musicData.albums?.map {
-                                                albums.add(it)
-                                                        Log.e("ALBUM", it.name)
-                                            }
-                                            musicData.artists?.map {
-                                                artists.add(it)
-                                            }
-                                            musicData.songs?.map {
-                                                Log.e("MEDIA ITEM TREE", "ALBUM SIZE: " + albums.size)
-                                                songs.add(it )
-                                                        addNodeToTree(it, albums, artists)
-                                            }
-                                            context.applicationContext.getSharedPreferences(
-                                                "main",
-                                                Context.MODE_PRIVATE
-                                            ).edit().putBoolean(Constants.DATASTORE_READY, true).apply()
-                                            context.applicationContext.getSharedPreferences(
-                                                "main",
-                                                Context.MODE_PRIVATE
-                                            ).edit().putBoolean(INITIALIZATION_COMPLETE, true).apply()
-                                            Log.e("PREFERENCES ADDED", "TRUE")
+                                                val combinedFlow = combine(
+                                                    albumsFlow,
+                                                    songsFlow,
+                                                    artistFlow
+                                                ) { albumsResource, songsResource, artistsResource ->
+                                                    if (albumsResource is Resource.Success && songsResource is Resource.Success && artistsResource is Resource.Success) {
+                                                        return@combine MusicData(
+                                                            songsResource.data,
+                                                            albumsResource.data,
+                                                            artistsResource.data
+                                                        )
+                                                    }
+                                                    return@combine null
+                                                }
+
+                                                combinedFlow.collect { musicData ->
+                                                    if (musicData != null) {
+                                                        musicData.albums?.map {
+                                                            albums.add(it)
+                                                            Log.e("ALBUM", it.name)
+                                                        }
+                                                        musicData.artists?.map {
+                                                            artists.add(it)
+                                                        }
+                                                        musicData.songs?.map {
+                                                            Log.e(
+                                                                "MEDIA ITEM TREE",
+                                                                "ALBUM SIZE: " + albums.size
+                                                            )
+                                                            songs.add(it)
+                                                            addNodeToTree(it, albums, artists)
+                                                        }
+                                                        context.applicationContext.getSharedPreferences(
+                                                            "main",
+                                                            Context.MODE_PRIVATE
+                                                        ).edit().putBoolean(
+                                                            Constants.DATASTORE_READY,
+                                                            true
+                                                        ).apply()
+                                                        context.applicationContext.getSharedPreferences(
+                                                            "main",
+                                                            Context.MODE_PRIVATE
+                                                        ).edit().putBoolean(
+                                                            INITIALIZATION_COMPLETE,
+                                                            true
+                                                        ).apply()
+                                                        Log.e("PREFERENCES ADDED", "TRUE")
+                                                    }
+                                                }
+                                            }.start()
                                         }
+                                    },
+                                    {
+
                                     }
-                                }
+                                )
                             }
                         }
                     )

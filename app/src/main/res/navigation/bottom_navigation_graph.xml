@@ -151,6 +151,14 @@
             android:id="@+id/action_profileFragment_to_writeProfieDialogFragment"
             app:destination="@id/writeProfieDialogFragment"
             app:launchSingleTop="true"/>
+        <action
+            android:id="@+id/action_profileFragment_to_profileMenuBottomSheetDialogFragment"
+            app:destination="@id/profileMenuBottomSheetDialogFragment"
+            app:launchSingleTop="true">
+            <argument
+                android:name="popUpTo"
+                android:defaultValue="@+id/profileFragement" />
+        </action>
     </fragment>
     <dialog
         android:id="@+id/navigationDialogFragment"
@@ -191,6 +199,10 @@
         <action
             android:id="@+id/action_navigationDialogFragment_to_genresFragment"
             app:destination="@id/genresFragment" />
+        <action
+            android:id="@+id/action_navigationDialogFragment_to_adminDashboardFragment"
+            app:destination="@id/adminDashboardFragment">
+        </action>
     </dialog>
     <fragment
         android:id="@+id/albumSongsFragment"
@@ -450,5 +462,75 @@
             android:defaultValue="@null"
             app:argType="com.hepimusic.main.profile.Profile"
             app:nullable="true" />
+    </dialog>
+    <dialog
+        android:id="@+id/profileMenuBottomSheetDialogFragment"
+        android:name="com.hepimusic.main.profile.ProfileMenuBottomSheetDialogFragment"
+        android:label="fragment_profile_menu_bottom_sheet_dialog"
+        tools:layout="@layout/fragment_profile_menu_bottom_sheet_dialog" >
+        <argument
+            android:name="profile"
+            app:argType="com.hepimusic.main.profile.Profile" />
+        <argument
+            android:name="popUpTo"
+            app:argType="reference" />
+        <action
+            android:id="@+id/action_profileMenuBottomSheetDialogFragment_to_writeProfieDialogFragment"
+            app:destination="@id/writeProfieDialogFragment"
+            app:launchSingleTop="true" />
+
+    </dialog>
+    <dialog
+        android:id="@+id/adminDashboardFragment"
+        android:name="com.hepimusic.main.admin.dashboard.AdminDashboardFragment"
+        android:label="fragment_admin_dasboard"
+        tools:layout="@layout/fragment_admin_dasboard" >
+        <argument
+            android:name="origin"
+            android:defaultValue="-1"
+            app:argType="integer" />
+        <action
+            android:id="@+id/action_adminDashboardFragment_to_adminSongsFragment"
+            app:destination="@id/adminSongsFragment"
+            app:popUpTo="@+id/adminDashboardFragment"
+            app:popUpToInclusive="true" />
+    </dialog>
+    <fragment
+        android:id="@+id/adminSongsFragment"
+        android:name="com.hepimusic.main.admin.songs.AdminSongsFragment"
+        android:label="fragment_admin_songs"
+        tools:layout="@layout/fragment_admin_songs" >
+        <action
+            android:id="@+id/action_adminSongsFragment_to_adminDashboardFragment"
+            app:destination="@id/adminDashboardFragment">
+            <argument
+                android:name="origin"
+                android:defaultValue="0" />
+        </action>
+        <action
+            android:id="@+id/action_adminSongsFragment_to_adminSongsMenuBottomSheetDialogFragment"
+            app:destination="@id/adminSongsMenuBottomSheetDialogFragment"
+            app:launchSingleTop="true">
+            <argument
+                android:name="popUpTo"
+                android:defaultValue="@id/adminSongsFragment" />
+        </action>
+    </fragment>
+    <dialog
+        android:id="@+id/adminSongsMenuBottomSheetDialogFragment"
+        android:name="com.hepimusic.main.admin.songs.AdminSongsMenuBottomSheetDialogFragment"
+        android:label="fragment_admin_songs_menu_bottom_sheet_dialog"
+        tools:layout="@layout/fragment_admin_songs_menu_bottom_sheet_dialog" >
+        <argument
+            android:name="mediaId"
+            app:argType="string" />
+        <argument
+            android:name="song"
+            app:argType="com.hepimusic.main.songs.Song"
+            app:nullable="true"
+            android:defaultValue="@null" />
+        <argument
+            android:name="popUpTo"
+            app:argType="reference" />
     </dialog>
 </navigation>

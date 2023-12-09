@@ -40,7 +40,15 @@ object Constants {
     const val NAV_SETTINGS = "com.hepimusic.nav.settings"
     const val NAV_PROFILE = "com.hepimusic.nav.profile"
     const val NAV_VIDEOS = "com.hepimusic.nav.videos"
+    const val NAV_CREATORS_DASHBOARD = "com.hepimusic.nav.admin"
     const val LOGOUT = "com.hepimusic.logout"
+
+
+    // Keys for items in AdminDashboardFragment
+    const val ADMIN_NAV_SONGS = "com.hepimusic.admin.nav.songs"
+    const val ADMIN_NAV_ALBUMS = "com.hepimusic.admin.nav.albums"
+    const val ADMIN_NAV_CATEGORIES = "com.hepimusic.admin.nav.categories"
+    const val ADMIN_NAV_CREATORS = "com.hepimusic.admin.nav.creators"
 
     // Auth Constants
     const val USERNAME: String = "com.hepimusic.auth.USERNAME"

@@ -66,6 +66,7 @@ class HepiApplication: Application() {
                                 { authUserAttrs ->
                                     if (preferences.getBoolean(Constants.AUTH_TYPE_SOCIAL, false)) {
                                         authUserAttrs.forEach {
+                                            Log.i("AUTH HUB AUTH USER ATTRIBUTE", "KEY: ${it.key.keyString} VALUE: ${it.value}")
                                             if (it.key.keyString.equals("email")) {
                                                 preferences.edit().putString(Constants.USERNAME, it.value).apply()
                                             }
@@ -76,6 +77,9 @@ class HepiApplication: Application() {
                                     Log.i("FETCH USER ATTRIBUTES EXCEPTION", it.message.toString())
                                 }
                             )
+                        }
+                        AuthChannelEventName.SIGNED_OUT.name -> {
+                            Log.i("AUTH HUB", "Auth sign out event success")
                         }
                     }
                 }

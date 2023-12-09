@@ -8,7 +8,10 @@ import java.util.Objects;
 
 import androidx.core.util.ObjectsCompat;
 
+import com.amplifyframework.core.model.AuthStrategy;
 import com.amplifyframework.core.model.Model;
+import com.amplifyframework.core.model.ModelOperation;
+import com.amplifyframework.core.model.annotations.AuthRule;
 import com.amplifyframework.core.model.annotations.Index;
 import com.amplifyframework.core.model.annotations.ModelConfig;
 import com.amplifyframework.core.model.annotations.ModelField;
@@ -18,7 +21,11 @@ import static com.amplifyframework.core.model.query.predicate.QueryField.field;
 
 /** This is an auto generated class representing the Song type in your schema. */
 @SuppressWarnings("all")
-@ModelConfig(pluralName = "Songs", type = Model.Type.USER, version = 1)
+@ModelConfig(pluralName = "Songs", type = Model.Type.USER, version = 1, authRules = {
+  @AuthRule(allow = AuthStrategy.OWNER, ownerField = "owner", identityClaim = "cognito:username", provider = "userPools", operations = { ModelOperation.CREATE, ModelOperation.UPDATE, ModelOperation.DELETE, ModelOperation.READ }),
+  @AuthRule(allow = AuthStrategy.PUBLIC, operations = { ModelOperation.READ }),
+  @AuthRule(allow = AuthStrategy.PRIVATE, operations = { ModelOperation.READ })
+})
 @Index(name = "undefined", fields = {"key"})
 public final class Song implements Model {
   public static final QueryField KEY = field("Song", "key");
@@ -34,19 +41,41 @@ public final class Song implements Model {
   public static final QueryField SELECTED_CREATOR = field("Song", "selectedCreator");
   public static final QueryField THUMBNAIL = field("Song", "thumbnail");
   public static final QueryField THUMBNAIL_KEY = field("Song", "thumbnailKey");
+  public static final QueryField OWNER = field("Song", "owner");
   private final @ModelField(targetType="String", isRequired = true) String key;
   private final @ModelField(targetType="String", isRequired = true) String fileUrl;
   private final @ModelField(targetType="String", isRequired = true) String fileKey;
-  private final @ModelField(targetType="String") List<String> listens;
-  private final @ModelField(targetType="String") List<String> trendingListens;
-  private final @ModelField(targetType="String") List<String> listOfUidDownVotes;
-  private final @ModelField(targetType="String") List<String> listOfUidUpVotes;
+  private final @ModelField(targetType="String", authRules = {
+    @AuthRule(allow = AuthStrategy.OWNER, ownerField = "owner", identityClaim = "cognito:username", provider = "userPools", operations = { ModelOperation.CREATE, ModelOperation.UPDATE, ModelOperation.DELETE, ModelOperation.READ }),
+    @AuthRule(allow = AuthStrategy.PUBLIC, operations = { ModelOperation.READ, ModelOperation.UPDATE }),
+    @AuthRule(allow = AuthStrategy.PRIVATE, operations = { ModelOperation.READ, ModelOperation.UPDATE })
+  }) List<String> listens;
+  private final @ModelField(targetType="String", authRules = {
+    @AuthRule(allow = AuthStrategy.OWNER, ownerField = "owner", identityClaim = "cognito:username", provider = "userPools", operations = { ModelOperation.CREATE, ModelOperation.UPDATE, ModelOperation.DELETE, ModelOperation.READ }),
+    @AuthRule(allow = AuthStrategy.PUBLIC, operations = { ModelOperation.READ, ModelOperation.UPDATE }),
+    @AuthRule(allow = AuthStrategy.PRIVATE, operations = { ModelOperation.READ, ModelOperation.UPDATE })
+  }) List<String> trendingListens;
+  private final @ModelField(targetType="String", authRules = {
+    @AuthRule(allow = AuthStrategy.OWNER, ownerField = "owner", identityClaim = "cognito:username", provider = "userPools", operations = { ModelOperation.CREATE, ModelOperation.UPDATE, ModelOperation.DELETE, ModelOperation.READ }),
+    @AuthRule(allow = AuthStrategy.PUBLIC, operations = { ModelOperation.READ, ModelOperation.UPDATE }),
+    @AuthRule(allow = AuthStrategy.PRIVATE, operations = { ModelOperation.READ, ModelOperation.UPDATE })
+  }) List<String> listOfUidDownVotes;
+  private final @ModelField(targetType="String", authRules = {
+    @AuthRule(allow = AuthStrategy.OWNER, ownerField = "owner", identityClaim = "cognito:username", provider = "userPools", operations = { ModelOperation.CREATE, ModelOperation.UPDATE, ModelOperation.DELETE, ModelOperation.READ }),
+    @AuthRule(allow = AuthStrategy.PUBLIC, operations = { ModelOperation.READ, ModelOperation.UPDATE }),
+    @AuthRule(allow = AuthStrategy.PRIVATE, operations = { ModelOperation.READ, ModelOperation.UPDATE })
+  }) List<String> listOfUidUpVotes;
   private final @ModelField(targetType="String", isRequired = true) String name;
   private final @ModelField(targetType="String") String partOf;
   private final @ModelField(targetType="String", isRequired = true) String selectedCategory;
   private final @ModelField(targetType="String") String selectedCreator;
   private final @ModelField(targetType="String", isRequired = true) String thumbnail;
   private final @ModelField(targetType="String", isRequired = true) String thumbnailKey;
+  private final @ModelField(targetType="String", authRules = {
+    @AuthRule(allow = AuthStrategy.OWNER, ownerField = "owner", identityClaim = "cognito:username", provider = "userPools", operations = { ModelOperation.CREATE, ModelOperation.READ, ModelOperation.DELETE }),
+    @AuthRule(allow = AuthStrategy.PUBLIC, operations = { ModelOperation.READ }),
+    @AuthRule(allow = AuthStrategy.PRIVATE, operations = { ModelOperation.READ })
+  }) String owner;
   private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime createdAt;
   private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime updatedAt;
   public String resolveIdentifier() {
@@ -105,6 +134,10 @@ public final class Song implements Model {
       return thumbnailKey;
   }
   
+  public String getOwner() {
+      return owner;
+  }
+  
   public Temporal.DateTime getCreatedAt() {
       return createdAt;
   }
@@ -113,7 +146,7 @@ public final class Song implements Model {
       return updatedAt;
   }
   
-  private Song(String key, String fileUrl, String fileKey, List<String> listens, List<String> trendingListens, List<String> listOfUidDownVotes, List<String> listOfUidUpVotes, String name, String partOf, String selectedCategory, String selectedCreator, String thumbnail, String thumbnailKey) {
+  private Song(String key, String fileUrl, String fileKey, List<String> listens, List<String> trendingListens, List<String> listOfUidDownVotes, List<String> listOfUidUpVotes, String name, String partOf, String selectedCategory, String selectedCreator, String thumbnail, String thumbnailKey, String owner) {
     this.key = key;
     this.fileUrl = fileUrl;
     this.fileKey = fileKey;
@@ -127,6 +160,7 @@ public final class Song implements Model {
     this.selectedCreator = selectedCreator;
     this.thumbnail = thumbnail;
     this.thumbnailKey = thumbnailKey;
+    this.owner = owner;
   }
   
   @Override
@@ -150,6 +184,7 @@ public final class Song implements Model {
               ObjectsCompat.equals(getSelectedCreator(), song.getSelectedCreator()) &&
               ObjectsCompat.equals(getThumbnail(), song.getThumbnail()) &&
               ObjectsCompat.equals(getThumbnailKey(), song.getThumbnailKey()) &&
+              ObjectsCompat.equals(getOwner(), song.getOwner()) &&
               ObjectsCompat.equals(getCreatedAt(), song.getCreatedAt()) &&
               ObjectsCompat.equals(getUpdatedAt(), song.getUpdatedAt());
       }
@@ -171,6 +206,7 @@ public final class Song implements Model {
       .append(getSelectedCreator())
       .append(getThumbnail())
       .append(getThumbnailKey())
+      .append(getOwner())
       .append(getCreatedAt())
       .append(getUpdatedAt())
       .toString()
@@ -194,6 +230,7 @@ public final class Song implements Model {
       .append("selectedCreator=" + String.valueOf(getSelectedCreator()) + ", ")
       .append("thumbnail=" + String.valueOf(getThumbnail()) + ", ")
       .append("thumbnailKey=" + String.valueOf(getThumbnailKey()) + ", ")
+      .append("owner=" + String.valueOf(getOwner()) + ", ")
       .append("createdAt=" + String.valueOf(getCreatedAt()) + ", ")
       .append("updatedAt=" + String.valueOf(getUpdatedAt()))
       .append("}")
@@ -217,7 +254,8 @@ public final class Song implements Model {
       selectedCategory,
       selectedCreator,
       thumbnail,
-      thumbnailKey);
+      thumbnailKey,
+      owner);
   }
   public interface KeyStep {
     FileUrlStep key(String key);
@@ -262,6 +300,7 @@ public final class Song implements Model {
     BuildStep listOfUidUpVotes(List<String> listOfUidUpVotes);
     BuildStep partOf(String partOf);
     BuildStep selectedCreator(String selectedCreator);
+    BuildStep owner(String owner);
   }
   
 
@@ -279,6 +318,7 @@ public final class Song implements Model {
     private List<String> listOfUidUpVotes;
     private String partOf;
     private String selectedCreator;
+    private String owner;
     @Override
      public Song build() {
         
@@ -295,7 +335,8 @@ public final class Song implements Model {
           selectedCategory,
           selectedCreator,
           thumbnail,
-          thumbnailKey);
+          thumbnailKey,
+          owner);
     }
     
     @Override
@@ -382,11 +423,17 @@ public final class Song implements Model {
         this.selectedCreator = selectedCreator;
         return this;
     }
+    
+    @Override
+     public BuildStep owner(String owner) {
+        this.owner = owner;
+        return this;
+    }
   }
   
 
   public final class CopyOfBuilder extends Builder {
-    private CopyOfBuilder(String key, String fileUrl, String fileKey, List<String> listens, List<String> trendingListens, List<String> listOfUidDownVotes, List<String> listOfUidUpVotes, String name, String partOf, String selectedCategory, String selectedCreator, String thumbnail, String thumbnailKey) {
+    private CopyOfBuilder(String key, String fileUrl, String fileKey, List<String> listens, List<String> trendingListens, List<String> listOfUidDownVotes, List<String> listOfUidUpVotes, String name, String partOf, String selectedCategory, String selectedCreator, String thumbnail, String thumbnailKey, String owner) {
       super.key(key)
         .fileUrl(fileUrl)
         .fileKey(fileKey)
@@ -399,7 +446,8 @@ public final class Song implements Model {
         .listOfUidDownVotes(listOfUidDownVotes)
         .listOfUidUpVotes(listOfUidUpVotes)
         .partOf(partOf)
-        .selectedCreator(selectedCreator);
+        .selectedCreator(selectedCreator)
+        .owner(owner);
     }
     
     @Override
@@ -465,6 +513,11 @@ public final class Song implements Model {
     @Override
      public CopyOfBuilder selectedCreator(String selectedCreator) {
       return (CopyOfBuilder) super.selectedCreator(selectedCreator);
+    }
+    
+    @Override
+     public CopyOfBuilder owner(String owner) {
+      return (CopyOfBuilder) super.owner(owner);
     }
   }
   

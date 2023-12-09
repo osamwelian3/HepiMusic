@@ -155,10 +155,11 @@ class ExploreFragment : Fragment(), OnItemClickListener {
                 playedList = it
                 playedList.forEachIndexed { index, played -> played.isPlaying = index == 0 }
                 (binding.playedRV.adapter as BaseAdapter<RecentlyPlayed>).updateItems(playedList)
+                binding.playedRV.scrollToPosition(0)
             })
         }
 
-        if (albums.isEmpty()) {
+        if (/*albums.isEmpty()*/true) {
 //            viewModel.init()
             /*if ((viewModel.items.value?.size ?: 0) == 0) {
                 suspend fun load() {

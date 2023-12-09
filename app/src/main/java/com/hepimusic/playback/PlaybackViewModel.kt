@@ -230,7 +230,8 @@ class PlaybackViewModel @Inject constructor(
                                 updateLikeButton(currentItem)
                                 _mediaPosition.postValue(lastPosition)
 
-                                browser.setMediaItems(songItems, startIndex, Integer.toUnsignedLong(lastPosition))
+                                playAll(lastMediaId ?: songItems.first().mediaId, songItems, false, Integer.toUnsignedLong(lastPosition))
+                                /*browser.setMediaItems(songItems, startIndex, Integer.toUnsignedLong(lastPosition))*/
 
                             }
                         } else if (lastParentId == "[recentlyPlayedId]") {
@@ -252,11 +253,12 @@ class PlaybackViewModel @Inject constructor(
                                 updateLikeButton(currentItem)
                                 _mediaPosition.postValue(lastPosition)
 
-                                browser.setMediaItems(
+                                playAll(lastMediaId ?: itemList.first().mediaId, itemList, false, Integer.toUnsignedLong(lastPosition))
+                                /*browser.setMediaItems(
                                     itemList,
                                     startIndex,
                                     Integer.toUnsignedLong(lastPosition)
-                                )
+                                )*/
 
                                 playedRepository.recentlyPlayed.removeObserver(observer)
                             }
@@ -292,11 +294,12 @@ class PlaybackViewModel @Inject constructor(
                                             updateLikeButton(currentItem)
                                             _mediaPosition.postValue(lastPosition)
 
-                                            browser.setMediaItems(
+                                            playAll(lastMediaId ?: children.first().mediaId, children, false, Integer.toUnsignedLong(lastPosition))
+                                            /*browser.setMediaItems(
                                                 children,
                                                 startIndex,
                                                 Integer.toUnsignedLong(lastPosition)
-                                            )
+                                            )*/
                                         }
                                     }, ContextCompat.getMainExecutor(application))
                                 }
@@ -618,7 +621,7 @@ class PlaybackViewModel @Inject constructor(
         }
     }
 
-    fun asyncLoadPreviousPlaylistItems() {
+    private fun asyncLoadPreviousPlaylistItems() {
         if (browser.currentMediaItem == null) return
         if (mediaItems.value == null) return
         if (browser.currentMediaItemIndex > 2) return
@@ -654,9 +657,9 @@ class PlaybackViewModel @Inject constructor(
         }
     }
 
-    fun playAll(playId: String = Constants.PLAY_RANDOM, list: List<MediaItem>? = mediaItems.value) {
+    fun playAll(playId: String = Constants.PLAY_RANDOM, list: List<MediaItem>? = mediaItems.value, playWhenReady: Boolean = true, lastPosition: Long = C.TIME_UNSET) {
         if (list == null) return
-        _mediaItems.postValue(list!!)
+        _mediaItems.postValue(list)
         val chunkSize = 50
         val totalItemsCount = list.size
         var job: Job? = null
@@ -668,9 +671,9 @@ class PlaybackViewModel @Inject constructor(
                 Log.e("PLAY ALL START INDEX", (if (pos > 0) pos-1 else pos).toString())
                 Log.e("PLAY ALL TO INDEX", (if (((list.size-1)-pos) > 3) pos+3 else list.size).toString())
                 Log.e("PLAY ALL SEEK POSITION", (if (pos > 0 && pos != (list.size - 1)) 1 else 0).toString())
-                browser.setMediaItems(list.subList(if (pos > 0 && pos != (list.size-1)) pos-1 else pos, if (((list.size-1)-pos) > 3) pos+3 else list.size), if (pos > 0 && pos != (list.size - 1)) 1 else 0, C.TIME_UNSET)
+                browser.setMediaItems(list.subList(if (pos > 0 && pos != (list.size-1)) pos-1 else pos, if (((list.size-1)-pos) > 3) pos+3 else list.size), if (pos > 0 && pos != (list.size - 1)) 1 else 0, lastPosition)
                 browser.prepare()
-                browser.playWhenReady = true
+                browser.playWhenReady = playWhenReady
             }
             /*for (startIndex in 0 until totalItemsCount step chunkSize) {
                 val endIndex = minOf(startIndex + chunkSize, totalItemsCount)

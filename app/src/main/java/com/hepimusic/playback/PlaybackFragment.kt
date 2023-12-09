@@ -4,6 +4,7 @@ import android.animation.Animator
 import android.animation.AnimatorInflater
 import android.animation.AnimatorSet
 import android.graphics.Bitmap
+import android.graphics.Color
 import android.graphics.drawable.Animatable
 import android.graphics.drawable.BitmapDrawable
 import android.os.Bundle
@@ -18,6 +19,7 @@ import android.widget.ImageView
 import android.widget.SeekBar
 import android.widget.TextView
 import androidx.core.content.ContextCompat
+import androidx.core.graphics.ColorUtils
 import androidx.core.graphics.drawable.toBitmap
 import androidx.core.graphics.drawable.toDrawable
 import androidx.core.view.children
@@ -103,7 +105,18 @@ class PlaybackFragment : /*BaseFragment()*/ BaseFullscreenDialogFragment(), View
         super.onViewCreated(view, savedInstanceState)
         setupView()
         observeViewData()
+        binding.albumArt.viewTreeObserver.addOnPreDrawListener {
+            updatePlayerColors()
+            return@addOnPreDrawListener true
+        }
         updatePlayerColors()
+    }
+
+    fun invertColor(color: Int): Int {
+        val red = 255 - Color.red(color)
+        val green = 255 - Color.green(color)
+        val blue = 255 - Color.blue(color)
+        return Color.rgb(red, green, blue)
     }
 
     private fun updatePlayerColors() {
@@ -124,9 +137,18 @@ class PlaybackFragment : /*BaseFragment()*/ BaseFullscreenDialogFragment(), View
 
                 assert(swatch != null)
                 // extract text colors
-                val titleTextColor: Int = swatch!!.titleTextColor
-                val bodyTextColor: Int = swatch.bodyTextColor
+                val titleTextColorMain: Int = swatch!!.titleTextColor
+                val bodyTextColorMain: Int = swatch.bodyTextColor
                 val rgbColor: Int = swatch.rgb
+
+                // calculate contrast between background and text colors
+                val titleContrast = ColorUtils.calculateContrast(titleTextColorMain, rgbColor)
+                val bodyContrast = ColorUtils.calculateContrast(bodyTextColorMain, rgbColor)
+                val backgroundLuminance = ColorUtils.calculateLuminance(rgbColor)
+
+
+                val titleTextColor: Int = invertColor(rgbColor) // if (titleContrast < 4.5) Color.BLACK else if (backgroundLuminance > 0.9) Color.WHITE else titleTextColorMain
+                val bodyTextColor: Int = invertColor(rgbColor) // if (bodyContrast < 4.5) Color.BLACK else if (backgroundLuminance > 0.9) Color.WHITE else bodyTextColorMain
 
                 // set color to player view
                 activity?.let {

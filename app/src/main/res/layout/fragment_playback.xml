@@ -310,7 +310,6 @@
             android:id="@+id/previousButton"
             android:layout_width="65dp"
             android:layout_height="45dp"
-            android:layout_marginStart="@dimen/margin_large"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="@string/previous_button"
             android:onClick="@{(v) -> viewModel.skipToPrevious()}"

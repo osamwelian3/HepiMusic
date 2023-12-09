@@ -1,19 +1,16 @@
-package com.hepimusic.main.navigation
+package com.hepimusic.main.admin.dashboard
 
 import android.util.TypedValue
 import android.view.MotionEvent
-import android.view.View
-import androidx.navigation.Navigation
 import androidx.recyclerview.widget.RecyclerView
 import com.hepimusic.R
-import com.hepimusic.common.Constants
-import com.hepimusic.databinding.ItemNavBinding
+import com.hepimusic.databinding.ItemAdminNavBinding
 import com.hepimusic.main.common.callbacks.OnItemClickListener
 import com.hepimusic.main.dragSwipe.ItemTouchHelperViewHolder
 import com.hepimusic.main.dragSwipe.OnStartDragListener
 
-class NavViewHolder(
-    private val itemBinding: ItemNavBinding,
+class AdminNavViewHolder(
+    private val itemBinding: ItemAdminNavBinding,
     private val dragStartListener: OnStartDragListener,
     private val onItemClickListener: OnItemClickListener
 ) :
@@ -33,7 +30,7 @@ class NavViewHolder(
         }
     }
 
-    fun bind(navItem: NavItem?) {
+    fun bind(navItem: AdminNavItem?) {
         itemBinding.item = navItem
         itemBinding.executePendingBindings()
     }
@@ -47,5 +44,4 @@ class NavViewHolder(
         itemView.context.theme.resolveAttribute(android.R.attr.selectableItemBackground, outValue, true)
         itemBinding.rippleView.setBackgroundResource(outValue.resourceId)
     }
-
 }
