@@ -6,6 +6,7 @@
     <color name="secondary_color_variant">#FFEB3B</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    <color name="red">#FF0000</color>
     <color name="colorPrimary">#070E21</color>
     <color name="colorPrimaryDark">#070E21</color>
     <color name="colorAccent">#FFEB3B</color>

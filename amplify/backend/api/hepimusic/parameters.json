@@ -1,0 +1,12 @@
+{
+  "AppSyncApiName": "hepimusic",
+  "DynamoDBBillingMode": "PAY_PER_REQUEST",
+  "DynamoDBEnableServerSideEncryption": false,
+  "AuthCognitoUserPoolId": {
+    "Fn::GetAtt": [
+      "authhepimusicd2e09eab",
+      "Outputs.UserPoolId"
+    ]
+  },
+  "AuthModeLastUpdated": "2023-12-13T22:33:21.515Z"
+}

@@ -3,6 +3,7 @@ package com.hepimusic.main.search
 import android.app.Application
 import android.net.Uri
 import androidx.annotation.WorkerThread
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.asFlow
 import androidx.media3.common.MediaItem
 import androidx.media3.session.MediaBrowser
@@ -21,7 +22,7 @@ import kotlinx.coroutines.withContext
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
-class SearchRepository(application: Application, browser: MediaBrowser, val playlistsDatabase: PlaylistDatabase) : BaseMediaStoreRepository(application, browser) {
+class SearchRepository(application: Application, browser: LiveData<MediaBrowser>, val playlistsDatabase: PlaylistDatabase) : BaseMediaStoreRepository(application, browser) {
 
     @WorkerThread
     suspend fun querySongs(query: String, ascend: Boolean): List<Song> {

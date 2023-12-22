@@ -49,7 +49,7 @@ class SearchViewModel @Inject constructor(val application: Application, val play
     private val playlistRepository = PlaylistRepository(playlistDatabase.dao)
     private val playlistItemsRepository = PlaylistItemsRepository(playlistItemsDatabase.dao)
 
-    fun init(browser: MediaBrowser) {
+    fun init(browser: LiveData<MediaBrowser>) {
         repository = SearchRepository(application, browser, playlistDatabase)
     }
 

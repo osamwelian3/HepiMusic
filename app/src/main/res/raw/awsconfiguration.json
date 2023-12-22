@@ -6,14 +6,14 @@
     },
     "AppSync": {
         "Default": {
-            "ApiUrl": "https://6ft45frm3jenboatz3o4tiatci.appsync-api.ap-south-1.amazonaws.com/graphql",
+            "ApiUrl": "https://37azpkkivze7zjl425mflmkxiu.appsync-api.ap-south-1.amazonaws.com/graphql",
             "Region": "ap-south-1",
             "AuthMode": "API_KEY",
-            "ApiKey": "da2-ohly5lzbszb2tdnssnxgmzwqcy",
+            "ApiKey": "da2-nexqmz2v5nflpbyxp2grzrtiiy",
             "ClientDatabasePrefix": "hepimusic_API_KEY"
         },
         "hepimusic_AMAZON_COGNITO_USER_POOLS": {
-            "ApiUrl": "https://6ft45frm3jenboatz3o4tiatci.appsync-api.ap-south-1.amazonaws.com/graphql",
+            "ApiUrl": "https://37azpkkivze7zjl425mflmkxiu.appsync-api.ap-south-1.amazonaws.com/graphql",
             "Region": "ap-south-1",
             "AuthMode": "AMAZON_COGNITO_USER_POOLS",
             "ClientDatabasePrefix": "hepimusic_AMAZON_COGNITO_USER_POOLS"
@@ -39,8 +39,8 @@
             "OAuth": {
                 "WebDomain": "hsncomj0befx-dev.auth.ap-south-1.amazoncognito.com",
                 "AppClientId": "7447th3l5fmmkl6la4haj283m1",
-                "SignInRedirectURI": "https://hepimusic.com/,gettingstarted://",
-                "SignOutRedirectURI": "https://hepimusic.com/,gettingstarted://",
+                "SignInRedirectURI": "gettingstarted://",
+                "SignOutRedirectURI": "gettingstarted://",
                 "Scopes": [
                     "phone",
                     "email",

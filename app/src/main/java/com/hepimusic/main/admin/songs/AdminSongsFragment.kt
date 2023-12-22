@@ -1,23 +1,22 @@
 package com.hepimusic.main.admin.songs
 
 import android.content.Context.MODE_PRIVATE
+import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
 import android.util.Log
 import androidx.fragment.app.Fragment
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import com.hepimusic.BR
 import com.hepimusic.R
 import com.hepimusic.common.Constants
+import com.hepimusic.main.admin.common.BaseAdminAdapter
 import com.hepimusic.main.admin.common.BaseAdminFragment
-import com.hepimusic.main.common.view.BasePlayerFragment
-import com.hepimusic.main.songs.SongsFragmentDirections
 import com.hepimusic.models.mappers.toMediaItem
-import com.hepimusic.models.mappers.toSong
 
 // TODO: Rename parameter arguments, choose names that match
 // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
@@ -48,20 +47,86 @@ class AdminSongsFragment() : BaseAdminFragment<Song>() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         viewModel = ViewModelProvider(requireActivity())[AdminSongsViewModel::class.java]
         super.onViewCreated(view, savedInstanceState)
+        (viewModel as AdminSongsViewModel).getObservable().editClicked.observe(viewLifecycleOwner) {
+            if (it) {
+                val songToEdit = (viewModel as AdminSongsViewModel).getObservable().songToEdit.value!!
+                findNavController().navigate(
+                    AdminSongsFragmentDirections.actionAdminSongsFragmentToAdminWriteSongDialogFragment(
+                        Song(songToEdit.key, songToEdit)
+                    )
+                )
+            }
+        }
+
+        binding.searchText.addTextChangedListener(textWatcher)
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    private val textWatcher = object : TextWatcher {
+        override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
+
+        }
+
+        override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+            val inputText = s.toString()
+            val songs = viewModel.songs.value
+            val filteredSongs = songs?.filter { it.originalSong.name?.contains(inputText, true) == true || it.originalSong.selectedCreator?.contains(inputText, true) == true || it.originalSong.selectedCategory?.contains(inputText, true) == true }
+            if (!filteredSongs.isNullOrEmpty()) {
+                (binding.dataRV.adapter as BaseAdminAdapter<Song>).updateItems(filteredSongs)
+                binding.dataNum.text = resources.getQuantityString(numberOfDataRes, filteredSongs.count(), filteredSongs.count())
+            }
+            if (inputText.isEmpty()) {
+                (binding.dataRV.adapter as BaseAdminAdapter<Song>).updateItems(songs!!)
+                binding.dataNum.text = resources.getQuantityString(numberOfDataRes, songs.count(), songs.count())
+            }
+        }
+
+        override fun afterTextChanged(s: Editable?) {
+
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        val vm = viewModel as AdminSongsViewModel
+        vm.getObservable()._songToEdit.postValue(null)
+        vm.getObservable().nname.postValue(null)
+        vm.getObservable().albumName = ""
+        vm.getObservable().creatorName = ""
+        vm.getObservable().categoryName = ""
+        vm.getObservable().sselectedCategory.postValue(null)
+        vm.getObservable()._selectedCreator.postValue(null)
+        vm.getObservable()._partOf.postValue(null)
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+    }
+
+    override fun onClick(v: View?) {
+        when (v?.id) {
+            R.id.addNewButton -> {
+                (viewModel as AdminSongsViewModel).getObservable()._songToEdit.postValue(null)
+                findNavController().navigate(
+                    AdminSongsFragmentDirections.actionAdminSongsFragmentToAdminWriteSongDialogFragment()
+                )
+            }
+        }
     }
 
     @Suppress("UNCHECKED_CAST")
     override fun onItemClick(position: Int, sharableView: View?) {
         preferences.edit().putString(Constants.LAST_PARENT_ID, "[allSongsID]").apply()
-        val songList = (items as List<com.hepimusic.main.songs.Song>).map { it.toMediaItem() }
-        playbackViewModel.playAll((items as List<com.hepimusic.main.songs.Song>)[position].id, songList)
+        val songList = items.map { it.originalSong.toMediaItem() }
+        playbackViewModel.playAll("[item]"+items[position].originalSong.key!!, songList)
     }
 
     @Suppress("UNCHECKED_CAST")
     override fun onOverflowMenuClick(position: Int) {
-        Log.e("MEDIA URI", (items as List<com.hepimusic.main.songs.Song>)[position].path)
+        Log.e("MEDIA URI", items[position].originalSong.fileKey)
         val action =
-            AdminSongsFragmentDirections.actionAdminSongsFragmentToAdminSongsMenuBottomSheetDialogFragment(mediaId = (items as List<com.hepimusic.main.songs.Song>)[position].id, song = (items as List<com.hepimusic.main.songs.Song>)[position])
+            AdminSongsFragmentDirections.actionAdminSongsFragmentToAdminSongsMenuBottomSheetDialogFragment(
+                mediaId = "[item]"+items[position].originalSong.key!!, song = items[position])
         findNavController().navigate(action)
     }
 

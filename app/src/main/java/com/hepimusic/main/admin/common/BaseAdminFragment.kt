@@ -118,7 +118,7 @@ abstract class BaseAdminFragment<T : Model> : BaseFragment(), View.OnClickListen
         viewModel.songs.observe(viewLifecycleOwner) {
             songItems = it
             if (clazz == com.hepimusic.main.admin.songs.Song::class.java) {
-                items = songItems.map { it.originalSong.toSong() } as List<T>
+                items = songItems as List<T> // .map { it.originalSong.toSong() } as List<T>
                 updateViews(items)
             }
         }
@@ -161,13 +161,7 @@ abstract class BaseAdminFragment<T : Model> : BaseFragment(), View.OnClickListen
     }
 
 
-    override fun onClick(v: View?) {
-        when (v?.id) {
-            R.id.addNewButton -> {
-                // open add song fragment
-            }
-        }
-    }
+    abstract override fun onClick(v: View?)
 
     // Derived classed will be forced to implemebt this
     abstract override fun onItemClick(position: Int, sharableView: View?)

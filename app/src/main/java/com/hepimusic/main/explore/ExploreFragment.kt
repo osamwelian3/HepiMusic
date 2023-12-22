@@ -22,6 +22,7 @@ import com.hepimusic.BR
 import com.hepimusic.R
 import com.hepimusic.common.Constants
 import com.hepimusic.common.crossFadeWidth
+import com.hepimusic.common.safeNavigationOnClickListener
 import com.hepimusic.databinding.FragmentExploreBinding
 import com.hepimusic.main.albums.Album
 import com.hepimusic.main.common.callbacks.OnItemClickListener
@@ -102,7 +103,8 @@ class ExploreFragment : Fragment(), OnItemClickListener {
         setupViews()
         observeViewModel()
         binding.navigationIcon.setOnClickListener(
-            Navigation.createNavigateOnClickListener(
+            Navigation.safeNavigationOnClickListener(
+                R.id.exploreFragment,
                 R.id.action_exploreFragment_to_navigationDialogFragment
             )
         )

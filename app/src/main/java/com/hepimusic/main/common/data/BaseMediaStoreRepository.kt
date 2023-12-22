@@ -6,6 +6,7 @@ import android.content.SharedPreferences
 import android.net.Uri
 import android.util.Log
 import androidx.annotation.WorkerThread
+import androidx.lifecycle.LiveData
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
 import androidx.media3.session.MediaBrowser
@@ -13,23 +14,53 @@ import com.hepimusic.datasource.repositories.MediaItemTree
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlin.coroutines.resume
+import kotlin.coroutines.suspendCoroutine
 
-abstract class BaseMediaStoreRepository(private val application: Application, val browser: MediaBrowser) {
+abstract class BaseMediaStoreRepository(private val application: Application, val liveBrowser: LiveData<MediaBrowser>) {
 
     val preferences: SharedPreferences = application.getSharedPreferences("main", Context.MODE_PRIVATE)
 
     private val job = Job()
     private val backgroundScope = CoroutineScope(Dispatchers.Default + job)
+    private val foregroundScope = CoroutineScope(Dispatchers.Main + job)
+    lateinit var browser: MediaBrowser
 
     @WorkerThread
-    suspend fun<T> loadData(parentId: String = "[albumID]", transform: (data: MediaItem) -> T): List<T> {
-        val results = mutableListOf<T>()
-        val data = query(parentId)/*if (Constants.LAST_PARENT_ID != "") Constants.LAST_PARENT_ID else Constants.SONGS_ROOT*/
-        data.map {
-            results.add(transform(it))
+    suspend fun<T> loadData(parentId: String = "[albumID]", transform: (data: MediaItem) -> T): List<T> = suspendCoroutine { continuation ->
+        if (liveBrowser.value != null) {
+            browser = liveBrowser.value!!
+
+            backgroundScope.launch {
+                val results = mutableListOf<T>()
+                val data = query(parentId)/*if (Constants.LAST_PARENT_ID != "") Constants.LAST_PARENT_ID else Constants.SONGS_ROOT*/
+                data.map {
+                    results.add(transform(it))
+                }
+                continuation.resume(results)
+            }
+
+        } else {
+            foregroundScope.launch {
+                liveBrowser.observeForever {
+                    if (it.isConnected) {
+                        browser = it
+
+                        backgroundScope.launch {
+                            val results = mutableListOf<T>()
+                            val data = query(parentId)/*if (Constants.LAST_PARENT_ID != "") Constants.LAST_PARENT_ID else Constants.SONGS_ROOT*/
+                            data.map {
+                                results.add(transform(it))
+                            }
+                            continuation.resume(results)
+                        }
+                    }
+                }
+            }
         }
-        return results
+
     }
 
     /*suspend fun query(parentId: String = "[albumID]"): List<MediaItem> = suspendCoroutine { continuation ->

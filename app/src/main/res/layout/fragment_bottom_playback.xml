@@ -69,26 +69,17 @@
             app:layout_constraintTop_toTopOf="@+id/sharableView"
             tools:text="Beyoncee" />
 
-        <ImageView
-            android:id="@+id/imageView"
-            android:layout_width="20dp"
-            android:layout_height="20dp"
-            app:layout_constraintBottom_toBottomOf="@+id/songTitle"
-            app:layout_constraintStart_toStartOf="@+id/songArtist"
-            app:layout_constraintTop_toTopOf="@+id/songTitle"
-            app:srcCompat="@drawable/stream_icon" />
-
         <TextView
             android:id="@+id/songTitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:ellipsize="end"
             android:maxLines="1"
-            android:text="@{viewModel.listensCount.toString()}"
+            android:text="@{viewModel.currentItem.mediaMetadata.title}"
             android:textAppearance="@style/TextAppearance.AppCompat.Caption"
             android:textColor="@color/white"
-            app:layout_constraintRight_toRightOf="@+id/songArtist"
-            app:layout_constraintStart_toEndOf="@+id/imageView"
+            app:layout_constraintRight_toLeftOf="@+id/upVoteButton"
+            app:layout_constraintStart_toStartOf="@+id/songArtist"
             app:layout_constraintTop_toBottomOf="@+id/songArtist"
             tools:text="Jumping over the roofs" />
         <!--String.valueOf(viewModel.browser.duration) + String.valueOf(' ') + viewModel.mediaPosition.toString() +-->
@@ -119,18 +110,6 @@
             app:layout_constraintEnd_toStartOf="@+id/playButton"
             app:layout_constraintStart_toEndOf="@+id/songArtist"
             app:layout_constraintTop_toTopOf="@+id/nextButton" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:paddingTop="-12dp"
-            android:text="@{viewModel.upVotesCount.toString()}"
-            android:textColor="@color/white"
-            android:textSize="9sp"
-            app:layout_constraintBottom_toBottomOf="@+id/songTitle"
-            app:layout_constraintLeft_toLeftOf="@id/upVoteButton"
-            app:layout_constraintRight_toRightOf="@id/upVoteButton"
-            app:layout_constraintTop_toBottomOf="@+id/songArtist" />
 
         <ImageButton
             android:id="@+id/playButton"

@@ -3,13 +3,14 @@ package com.hepimusic.main.songs
 import android.annotation.SuppressLint
 import android.app.Application
 import androidx.annotation.WorkerThread
+import androidx.lifecycle.LiveData
 import androidx.media3.common.MediaItem
 import androidx.media3.session.MediaBrowser
 import com.hepimusic.common.Constants
 import com.hepimusic.main.common.data.MediaStoreRepository
 import com.hepimusic.models.mappers.toSong
 
-open class SongsRepository (application: Application, browser: MediaBrowser) : MediaStoreRepository<Song>(application, browser) {
+open class SongsRepository (application: Application, browser: LiveData<MediaBrowser>) : MediaStoreRepository<Song>(application, browser) {
 
     override fun transform(data: MediaItem): Song {
         return try {

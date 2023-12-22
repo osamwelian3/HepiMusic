@@ -1,6 +1,7 @@
 package com.amplifyframework.datastore.generated.model;
 
 import com.amplifyframework.core.model.temporal.Temporal;
+import com.amplifyframework.core.model.ModelIdentifier;
 
 import java.util.List;
 import java.util.UUID;
@@ -22,9 +23,8 @@ import static com.amplifyframework.core.model.query.predicate.QueryField.field;
 /** This is an auto generated class representing the Song type in your schema. */
 @SuppressWarnings("all")
 @ModelConfig(pluralName = "Songs", type = Model.Type.USER, version = 1, authRules = {
-  @AuthRule(allow = AuthStrategy.OWNER, ownerField = "owner", identityClaim = "cognito:username", provider = "userPools", operations = { ModelOperation.CREATE, ModelOperation.UPDATE, ModelOperation.DELETE, ModelOperation.READ }),
-  @AuthRule(allow = AuthStrategy.PUBLIC, operations = { ModelOperation.READ }),
-  @AuthRule(allow = AuthStrategy.PRIVATE, operations = { ModelOperation.READ })
+  @AuthRule(allow = AuthStrategy.OWNER, ownerField = "owner", identityClaim = "sub::username", provider = "userPools", operations = { ModelOperation.CREATE, ModelOperation.UPDATE, ModelOperation.DELETE, ModelOperation.READ }),
+  @AuthRule(allow = AuthStrategy.PRIVATE, provider = "userPools", operations = { ModelOperation.CREATE, ModelOperation.READ, ModelOperation.UPDATE, ModelOperation.DELETE })
 })
 @Index(name = "undefined", fields = {"key"})
 public final class Song implements Model {
@@ -42,43 +42,81 @@ public final class Song implements Model {
   public static final QueryField THUMBNAIL = field("Song", "thumbnail");
   public static final QueryField THUMBNAIL_KEY = field("Song", "thumbnailKey");
   public static final QueryField OWNER = field("Song", "owner");
-  private final @ModelField(targetType="String", isRequired = true) String key;
-  private final @ModelField(targetType="String", isRequired = true) String fileUrl;
-  private final @ModelField(targetType="String", isRequired = true) String fileKey;
+  private final @ModelField(targetType="ID", isRequired = true, authRules = {
+    @AuthRule(allow = AuthStrategy.OWNER, ownerField = "owner", identityClaim = "sub::username", provider = "userPools", operations = { ModelOperation.CREATE, ModelOperation.UPDATE, ModelOperation.DELETE, ModelOperation.READ }),
+    @AuthRule(allow = AuthStrategy.PUBLIC, operations = { ModelOperation.READ }),
+    @AuthRule(allow = AuthStrategy.PRIVATE, provider = "userPools", operations = { ModelOperation.CREATE, ModelOperation.READ })
+  }) String key;
+  private final @ModelField(targetType="String", isRequired = true, authRules = {
+    @AuthRule(allow = AuthStrategy.OWNER, ownerField = "owner", identityClaim = "sub::username", provider = "userPools", operations = { ModelOperation.CREATE, ModelOperation.UPDATE, ModelOperation.DELETE, ModelOperation.READ }),
+    @AuthRule(allow = AuthStrategy.PUBLIC, operations = { ModelOperation.READ }),
+    @AuthRule(allow = AuthStrategy.PRIVATE, provider = "userPools", operations = { ModelOperation.CREATE, ModelOperation.READ })
+  }) String fileUrl;
+  private final @ModelField(targetType="String", isRequired = true, authRules = {
+    @AuthRule(allow = AuthStrategy.OWNER, ownerField = "owner", identityClaim = "sub::username", provider = "userPools", operations = { ModelOperation.CREATE, ModelOperation.UPDATE, ModelOperation.DELETE, ModelOperation.READ }),
+    @AuthRule(allow = AuthStrategy.PUBLIC, operations = { ModelOperation.READ }),
+    @AuthRule(allow = AuthStrategy.PRIVATE, provider = "userPools", operations = { ModelOperation.CREATE, ModelOperation.READ })
+  }) String fileKey;
   private final @ModelField(targetType="String", authRules = {
-    @AuthRule(allow = AuthStrategy.OWNER, ownerField = "owner", identityClaim = "cognito:username", provider = "userPools", operations = { ModelOperation.CREATE, ModelOperation.UPDATE, ModelOperation.DELETE, ModelOperation.READ }),
+    @AuthRule(allow = AuthStrategy.OWNER, ownerField = "owner", identityClaim = "sub::username", provider = "userPools", operations = { ModelOperation.CREATE, ModelOperation.UPDATE, ModelOperation.DELETE, ModelOperation.READ }),
     @AuthRule(allow = AuthStrategy.PUBLIC, operations = { ModelOperation.READ, ModelOperation.UPDATE }),
-    @AuthRule(allow = AuthStrategy.PRIVATE, operations = { ModelOperation.READ, ModelOperation.UPDATE })
+    @AuthRule(allow = AuthStrategy.PRIVATE, provider = "userPools", operations = { ModelOperation.CREATE, ModelOperation.READ, ModelOperation.UPDATE })
   }) List<String> listens;
   private final @ModelField(targetType="String", authRules = {
-    @AuthRule(allow = AuthStrategy.OWNER, ownerField = "owner", identityClaim = "cognito:username", provider = "userPools", operations = { ModelOperation.CREATE, ModelOperation.UPDATE, ModelOperation.DELETE, ModelOperation.READ }),
+    @AuthRule(allow = AuthStrategy.OWNER, ownerField = "owner", identityClaim = "sub::username", provider = "userPools", operations = { ModelOperation.CREATE, ModelOperation.UPDATE, ModelOperation.DELETE, ModelOperation.READ }),
     @AuthRule(allow = AuthStrategy.PUBLIC, operations = { ModelOperation.READ, ModelOperation.UPDATE }),
-    @AuthRule(allow = AuthStrategy.PRIVATE, operations = { ModelOperation.READ, ModelOperation.UPDATE })
+    @AuthRule(allow = AuthStrategy.PRIVATE, provider = "userPools", operations = { ModelOperation.CREATE, ModelOperation.READ, ModelOperation.UPDATE })
   }) List<String> trendingListens;
   private final @ModelField(targetType="String", authRules = {
-    @AuthRule(allow = AuthStrategy.OWNER, ownerField = "owner", identityClaim = "cognito:username", provider = "userPools", operations = { ModelOperation.CREATE, ModelOperation.UPDATE, ModelOperation.DELETE, ModelOperation.READ }),
-    @AuthRule(allow = AuthStrategy.PUBLIC, operations = { ModelOperation.READ, ModelOperation.UPDATE }),
-    @AuthRule(allow = AuthStrategy.PRIVATE, operations = { ModelOperation.READ, ModelOperation.UPDATE })
+    @AuthRule(allow = AuthStrategy.OWNER, ownerField = "owner", identityClaim = "sub::username", provider = "userPools", operations = { ModelOperation.CREATE, ModelOperation.UPDATE, ModelOperation.DELETE, ModelOperation.READ }),
+    @AuthRule(allow = AuthStrategy.PUBLIC, operations = { ModelOperation.READ }),
+    @AuthRule(allow = AuthStrategy.PRIVATE, provider = "userPools", operations = { ModelOperation.CREATE, ModelOperation.READ, ModelOperation.UPDATE })
   }) List<String> listOfUidDownVotes;
   private final @ModelField(targetType="String", authRules = {
-    @AuthRule(allow = AuthStrategy.OWNER, ownerField = "owner", identityClaim = "cognito:username", provider = "userPools", operations = { ModelOperation.CREATE, ModelOperation.UPDATE, ModelOperation.DELETE, ModelOperation.READ }),
-    @AuthRule(allow = AuthStrategy.PUBLIC, operations = { ModelOperation.READ, ModelOperation.UPDATE }),
-    @AuthRule(allow = AuthStrategy.PRIVATE, operations = { ModelOperation.READ, ModelOperation.UPDATE })
-  }) List<String> listOfUidUpVotes;
-  private final @ModelField(targetType="String", isRequired = true) String name;
-  private final @ModelField(targetType="String") String partOf;
-  private final @ModelField(targetType="String", isRequired = true) String selectedCategory;
-  private final @ModelField(targetType="String") String selectedCreator;
-  private final @ModelField(targetType="String", isRequired = true) String thumbnail;
-  private final @ModelField(targetType="String", isRequired = true) String thumbnailKey;
-  private final @ModelField(targetType="String", authRules = {
-    @AuthRule(allow = AuthStrategy.OWNER, ownerField = "owner", identityClaim = "cognito:username", provider = "userPools", operations = { ModelOperation.CREATE, ModelOperation.READ, ModelOperation.DELETE }),
+    @AuthRule(allow = AuthStrategy.OWNER, ownerField = "owner", identityClaim = "sub::username", provider = "userPools", operations = { ModelOperation.CREATE, ModelOperation.UPDATE, ModelOperation.DELETE, ModelOperation.READ }),
     @AuthRule(allow = AuthStrategy.PUBLIC, operations = { ModelOperation.READ }),
-    @AuthRule(allow = AuthStrategy.PRIVATE, operations = { ModelOperation.READ })
+    @AuthRule(allow = AuthStrategy.PRIVATE, provider = "userPools", operations = { ModelOperation.CREATE, ModelOperation.READ, ModelOperation.UPDATE })
+  }) List<String> listOfUidUpVotes;
+  private final @ModelField(targetType="String", isRequired = true, authRules = {
+    @AuthRule(allow = AuthStrategy.OWNER, ownerField = "owner", identityClaim = "sub::username", provider = "userPools", operations = { ModelOperation.CREATE, ModelOperation.UPDATE, ModelOperation.DELETE, ModelOperation.READ }),
+    @AuthRule(allow = AuthStrategy.PUBLIC, operations = { ModelOperation.READ }),
+    @AuthRule(allow = AuthStrategy.PRIVATE, provider = "userPools", operations = { ModelOperation.CREATE, ModelOperation.READ })
+  }) String name;
+  private final @ModelField(targetType="String", authRules = {
+    @AuthRule(allow = AuthStrategy.OWNER, ownerField = "owner", identityClaim = "sub::username", provider = "userPools", operations = { ModelOperation.CREATE, ModelOperation.UPDATE, ModelOperation.DELETE, ModelOperation.READ }),
+    @AuthRule(allow = AuthStrategy.PUBLIC, operations = { ModelOperation.READ }),
+    @AuthRule(allow = AuthStrategy.PRIVATE, provider = "userPools", operations = { ModelOperation.CREATE, ModelOperation.READ })
+  }) String partOf;
+  private final @ModelField(targetType="String", isRequired = true, authRules = {
+    @AuthRule(allow = AuthStrategy.OWNER, ownerField = "owner", identityClaim = "sub::username", provider = "userPools", operations = { ModelOperation.CREATE, ModelOperation.UPDATE, ModelOperation.DELETE, ModelOperation.READ }),
+    @AuthRule(allow = AuthStrategy.PUBLIC, operations = { ModelOperation.READ }),
+    @AuthRule(allow = AuthStrategy.PRIVATE, provider = "userPools", operations = { ModelOperation.CREATE, ModelOperation.READ })
+  }) String selectedCategory;
+  private final @ModelField(targetType="String", authRules = {
+    @AuthRule(allow = AuthStrategy.OWNER, ownerField = "owner", identityClaim = "sub::username", provider = "userPools", operations = { ModelOperation.CREATE, ModelOperation.UPDATE, ModelOperation.DELETE, ModelOperation.READ }),
+    @AuthRule(allow = AuthStrategy.PUBLIC, operations = { ModelOperation.READ }),
+    @AuthRule(allow = AuthStrategy.PRIVATE, provider = "userPools", operations = { ModelOperation.CREATE, ModelOperation.READ })
+  }) String selectedCreator;
+  private final @ModelField(targetType="String", isRequired = true, authRules = {
+    @AuthRule(allow = AuthStrategy.OWNER, ownerField = "owner", identityClaim = "sub::username", provider = "userPools", operations = { ModelOperation.CREATE, ModelOperation.UPDATE, ModelOperation.DELETE, ModelOperation.READ }),
+    @AuthRule(allow = AuthStrategy.PUBLIC, operations = { ModelOperation.READ }),
+    @AuthRule(allow = AuthStrategy.PRIVATE, provider = "userPools", operations = { ModelOperation.CREATE, ModelOperation.READ })
+  }) String thumbnail;
+  private final @ModelField(targetType="String", isRequired = true, authRules = {
+    @AuthRule(allow = AuthStrategy.OWNER, ownerField = "owner", identityClaim = "sub::username", provider = "userPools", operations = { ModelOperation.CREATE, ModelOperation.UPDATE, ModelOperation.DELETE, ModelOperation.READ }),
+    @AuthRule(allow = AuthStrategy.PUBLIC, operations = { ModelOperation.READ }),
+    @AuthRule(allow = AuthStrategy.PRIVATE, provider = "userPools", operations = { ModelOperation.CREATE, ModelOperation.READ })
+  }) String thumbnailKey;
+  private final @ModelField(targetType="String", authRules = {
+    @AuthRule(allow = AuthStrategy.OWNER, ownerField = "owner", identityClaim = "sub::username", provider = "userPools", operations = { ModelOperation.CREATE, ModelOperation.READ, ModelOperation.DELETE }),
+    @AuthRule(allow = AuthStrategy.PUBLIC, operations = { ModelOperation.READ }),
+    @AuthRule(allow = AuthStrategy.PRIVATE, provider = "userPools", operations = { ModelOperation.CREATE, ModelOperation.READ })
   }) String owner;
   private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime createdAt;
   private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime updatedAt;
-  public String resolveIdentifier() {
+  /** @deprecated This API is internal to Amplify and should not be used. */
+  @Deprecated
+   public String resolveIdentifier() {
     return key;
   }
   
@@ -319,6 +357,27 @@ public final class Song implements Model {
     private String partOf;
     private String selectedCreator;
     private String owner;
+    public Builder() {
+      
+    }
+    
+    private Builder(String key, String fileUrl, String fileKey, List<String> listens, List<String> trendingListens, List<String> listOfUidDownVotes, List<String> listOfUidUpVotes, String name, String partOf, String selectedCategory, String selectedCreator, String thumbnail, String thumbnailKey, String owner) {
+      this.key = key;
+      this.fileUrl = fileUrl;
+      this.fileKey = fileKey;
+      this.listens = listens;
+      this.trendingListens = trendingListens;
+      this.listOfUidDownVotes = listOfUidDownVotes;
+      this.listOfUidUpVotes = listOfUidUpVotes;
+      this.name = name;
+      this.partOf = partOf;
+      this.selectedCategory = selectedCategory;
+      this.selectedCreator = selectedCreator;
+      this.thumbnail = thumbnail;
+      this.thumbnailKey = thumbnailKey;
+      this.owner = owner;
+    }
+    
     @Override
      public Song build() {
         
@@ -434,20 +493,14 @@ public final class Song implements Model {
 
   public final class CopyOfBuilder extends Builder {
     private CopyOfBuilder(String key, String fileUrl, String fileKey, List<String> listens, List<String> trendingListens, List<String> listOfUidDownVotes, List<String> listOfUidUpVotes, String name, String partOf, String selectedCategory, String selectedCreator, String thumbnail, String thumbnailKey, String owner) {
-      super.key(key)
-        .fileUrl(fileUrl)
-        .fileKey(fileKey)
-        .name(name)
-        .selectedCategory(selectedCategory)
-        .thumbnail(thumbnail)
-        .thumbnailKey(thumbnailKey)
-        .listens(listens)
-        .trendingListens(trendingListens)
-        .listOfUidDownVotes(listOfUidDownVotes)
-        .listOfUidUpVotes(listOfUidUpVotes)
-        .partOf(partOf)
-        .selectedCreator(selectedCreator)
-        .owner(owner);
+      super(key, fileUrl, fileKey, listens, trendingListens, listOfUidDownVotes, listOfUidUpVotes, name, partOf, selectedCategory, selectedCreator, thumbnail, thumbnailKey, owner);
+      Objects.requireNonNull(key);
+      Objects.requireNonNull(fileUrl);
+      Objects.requireNonNull(fileKey);
+      Objects.requireNonNull(name);
+      Objects.requireNonNull(selectedCategory);
+      Objects.requireNonNull(thumbnail);
+      Objects.requireNonNull(thumbnailKey);
     }
     
     @Override
@@ -518,6 +571,14 @@ public final class Song implements Model {
     @Override
      public CopyOfBuilder owner(String owner) {
       return (CopyOfBuilder) super.owner(owner);
+    }
+  }
+  
+
+  public static class SongIdentifier extends ModelIdentifier<Song> {
+    private static final long serialVersionUID = 1L;
+    public SongIdentifier(String key) {
+      super(key);
     }
   }
   

@@ -17,6 +17,7 @@ import com.amplifyframework.core.model.query.ObserveQueryOptions
 import com.amplifyframework.core.model.query.QuerySortBy
 import com.amplifyframework.core.model.query.QuerySortOrder
 import com.amplifyframework.core.model.query.Where
+import com.amplifyframework.datastore.generated.model.Creator
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.MultiTransformation
 import com.bumptech.glide.load.engine.DiskCacheStrategy
@@ -25,6 +26,7 @@ import com.bumptech.glide.load.resource.bitmap.CircleCrop
 import com.bumptech.glide.load.resource.bitmap.FitCenter
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.bumptech.glide.request.RequestOptions
+import com.google.gson.Gson
 import com.hepimusic.R
 import com.hepimusic.datasource.repositories.MediaItemTree
 import com.hepimusic.main.albums.Album
@@ -64,7 +66,7 @@ object DataBindingAdapters {
 
     @BindingAdapter("android:srca")
     @JvmStatic
-    fun setAdminAlbumCover(view: ImageView, song: Song?) {
+    fun setAdminAlbumCover(view: ImageView, song: com.hepimusic.main.admin.songs.Song?) {
         Glide.with(view)
             .setDefaultRequestOptions(
                 RequestOptions()
@@ -72,12 +74,30 @@ object DataBindingAdapters {
                     .error(R.drawable.album_art)
                     .diskCacheStrategy(DiskCacheStrategy.DATA)
             )
-            .load(song?.artWork)
+            .load("https://dn1i8z7909ivj.cloudfront.net/public/"+song?.originalSong?.thumbnailKey)
             .transform(
                 MultiTransformation(centerCrop, RoundedCorners(10))
             )
             .placeholder(R.drawable.thumb_circular_default)
             .into(view)
+    }
+
+    @BindingAdapter("android:adminText")
+    @JvmStatic
+    fun setAdminArtist(view: TextView, song: com.hepimusic.main.admin.songs.Song?) {
+        try {
+            val artist = MediaItemTree.artists.find {
+                it.key == (Gson().fromJson(
+                    song?.originalSong?.selectedCreator ?: "",
+                    Creator::class.java
+                )?.key ?: "")
+            }
+            view.setText(artist?.name ?: "Unknown artist")
+        } catch (e: Exception) {
+            e.printStackTrace()
+            view.setText("Unknown Artist")
+        }
+
     }
 
     @BindingAdapter("trending")

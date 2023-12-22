@@ -66,7 +66,7 @@ class SplashActivity : BaseActivity() {
 
     var conditionThree: Boolean = false
 
-    var isAuthenticated = false
+    var isAuthenticated = true
 
     private val preferencesListener: SharedPreferences.OnSharedPreferenceChangeListener =
         SharedPreferences.OnSharedPreferenceChangeListener { sharedPreferences, key ->
@@ -140,6 +140,28 @@ class SplashActivity : BaseActivity() {
                 if (it.message.toString().contains("You are currently signed out.", true)) {
                     startActivity(Intent(this, LoginActivity::class.java))
                     /*finish()*/
+                } else {
+                    isAuthenticated = true
+                    CoroutineScope(Dispatchers.Main + Job()).launch {
+                        viewModel = ViewModelProvider(this@SplashActivity)[SongViewModel::class.java]
+                        viewModel.mediaItemList.observe(this@SplashActivity) { mediaItemsList ->
+                            mediaItemsList.map {
+                                Log.e("MEDIA ITEM: ", it.mediaMetadata.title.toString())
+                            }
+                            if (mediaItemsList.isNotEmpty()) {
+                                goToNextScreen()
+                            } else {
+                                viewModel?.let {
+                                    it.viewModelScope.launch {
+                                        MediaItemTree.initialize(this@SplashActivity, songRepository)
+                                        it.initializeBrowser(this@SplashActivity.applicationContext)
+                                    }
+                                }
+                            }
+                        }
+
+                        MediaItemTree.initialize(this@SplashActivity.applicationContext, songRepository)
+                    }
                 }
             }
         )

@@ -16,6 +16,6 @@ open class AlbumsViewModel @Inject constructor(
         get() = "[albumID]"
 
     final override val repository: MediaStoreRepository<Album>
-        get() = AlbumsRepository(application, browser)
+        get() = AlbumsRepository(application, liveBrowser)
 
 }

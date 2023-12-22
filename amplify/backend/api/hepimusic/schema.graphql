@@ -1,0 +1,227 @@
+# This "input" configures a global authorization rule to enable public access to
+# all models in this schema. Learn more about authorization rules here: https://docs.amplify.aws/cli/graphql/authorization-rules
+# input AMPLIFY { globalAuthRule: AuthRule = { allow: public } } # FOR TESTING ONLY!
+
+type Song
+  @model
+  @auth(
+    rules: [
+      { allow: owner, ownerField: "owner", identityClaim: "sub::username" }
+      { allow: private, operations: [create, read, update, delete], provider: userPools }
+    ]
+  ) {
+  key: ID! @primaryKey
+    @auth(
+      rules: [
+        { allow: owner, identityClaim: "sub::username" }
+        { allow: public, operations: [read] }
+        { allow: private, operations: [create, read], provider: userPools }
+      ]
+    )
+  fileUrl: String!
+    @auth(
+      rules: [
+        { allow: owner, identityClaim: "sub::username" }
+        { allow: public, operations: [read] }
+        { allow: private, operations: [create, read], provider: userPools }
+      ]
+    )
+  fileKey: String!
+    @auth(
+      rules: [
+        { allow: owner, identityClaim: "sub::username" }
+        { allow: public, operations: [read] }
+        { allow: private, operations: [create, read], provider: userPools }
+      ]
+    )
+  listens: [String]
+    @auth(
+      rules: [
+        { allow: owner, identityClaim: "sub::username" }
+        { allow: public, operations: [read, update] }
+        { allow: private, operations: [create, read, update], provider: userPools }
+      ]
+    )
+  trendingListens: [String]
+    @auth(
+      rules: [
+        { allow: owner, identityClaim: "sub::username" }
+        { allow: public, operations: [read, update] }
+        { allow: private, operations: [create, read, update], provider: userPools }
+      ]
+    )
+  listOfUidDownVotes: [String]
+    @auth(
+      rules: [
+        { allow: owner, identityClaim: "sub::username" }
+        { allow: public, operations: [read] }
+        { allow: private, operations: [create, read, update], provider: userPools }
+      ]
+    )
+  listOfUidUpVotes: [String]
+    @auth(
+      rules: [
+        { allow: owner, identityClaim: "sub::username" }
+        { allow: public, operations: [read] }
+        { allow: private, operations: [create, read, update], provider: userPools }
+      ]
+    )
+  name: String!
+    @auth(
+      rules: [
+        { allow: owner, identityClaim: "sub::username" }
+        { allow: public, operations: [read] }
+        { allow: private, operations: [create, read], provider: userPools }
+      ]
+    )
+  partOf: String
+    @auth(
+      rules: [
+        { allow: owner, identityClaim: "sub::username" }
+        { allow: public, operations: [read] }
+        { allow: private, operations: [create, read], provider: userPools }
+      ]
+    )
+  selectedCategory: String!
+    @auth(
+      rules: [
+        { allow: owner, identityClaim: "sub::username" }
+        { allow: public, operations: [read] }
+        { allow: private, operations: [create, read], provider: userPools }
+      ]
+    )
+  selectedCreator: String
+    @auth(
+      rules: [
+        { allow: owner, identityClaim: "sub::username" }
+        { allow: public, operations: [read] }
+        { allow: private, operations: [create, read], provider: userPools }
+      ]
+    )
+  thumbnail: String!
+    @auth(
+      rules: [
+        { allow: owner, identityClaim: "sub::username" }
+        { allow: public, operations: [read] }
+        { allow: private, operations: [create, read], provider: userPools }
+      ]
+    )
+  thumbnailKey: String!
+    @auth(
+      rules: [
+        { allow: owner, identityClaim: "sub::username" }
+        { allow: public, operations: [read] }
+        { allow: private, operations: [create, read], provider: userPools }
+      ]
+    )
+  owner: String
+    @auth(
+      rules: [
+        { allow: owner, operations: [create, read, delete], identityClaim: "sub::username" }
+        { allow: public, operations: [read] }
+        { allow: private, operations: [create, read], provider: userPools }
+      ]
+    )
+}
+
+type Creator @model
+  @auth(
+    rules: [
+      { allow: owner, ownerField: "owner", identityClaim: "sub::username" }
+      { allow: public, operations: [read] }
+      { allow: private, operations: [create, read], provider: userPools }
+    ]
+  ) {
+  key: ID! @primaryKey
+  desc: String
+  facebook: String
+  instagram: String
+  name: String!
+  thumbnail: String
+  thumbnailKey: String
+  twitter: String
+  youtube: String
+  owner: String
+      @auth(
+        rules: [
+          { allow: owner, operations: [create, read, delete], identityClaim: "sub::username" }
+          { allow: public, operations: [read] }
+          { allow: private, operations: [create, read], provider: userPools }
+        ]
+      )
+}
+
+type Category @model
+  @auth(
+    rules: [
+      { allow: owner, ownerField: "owner", identityClaim: "sub::username" }
+      { allow: public, operations: [read] }
+      { allow: private, operations: [create, read], provider: userPools }
+    ]
+  ) {
+  key: ID! @primaryKey
+  name: String!
+  owner: String
+      @auth(
+        rules: [
+          { allow: owner, operations: [create, read, delete], identityClaim: "sub::username" }
+          { allow: public, operations: [read] }
+          { allow: private, operations: [create, read], provider: userPools }
+        ]
+      )
+}
+
+type Album @model
+  @auth(
+    rules: [
+      { allow: owner, ownerField: "owner", identityClaim: "sub::username" }
+      { allow: public, operations: [read] }
+      { allow: private, operations: [create, read], provider: userPools }
+    ]
+  ) {
+  key: ID! @primaryKey
+  name: String!
+  thumbnail: String
+  thumbnailKey: String
+  owner: String
+      @auth(
+        rules: [
+          { allow: owner, operations: [create, read, delete], identityClaim: "sub::username" }
+          { allow: public, operations: [read] }
+          { allow: private, operations: [create, read], provider: userPools }
+        ]
+      )
+}
+
+type Profile
+  @model
+  @auth(
+    rules: [
+      { allow: owner, ownerField: "owner", identityClaim: "sub::username" }
+      { allow: public, operations: [read] }
+      { allow: private, operations: [create, read], provider: userPools }
+    ]
+  ) {
+  key: ID! @primaryKey
+  name: String
+  email: String
+  phone_number: String
+  imageKey: String
+  followers: [String]
+    @auth(
+      rules: [
+        { allow: owner, identityClaim: "sub::username" }
+        { allow: public, operations: [read] }
+        { allow: private, operations: [create, read, update], provider: userPools }
+      ]
+    )
+  follows: [String]
+  owner: String
+      @auth(
+        rules: [
+          { allow: owner, operations: [create, read, delete], identityClaim: "sub::username" }
+          { allow: public, operations: [read] }
+          { allow: private, operations: [create, read], provider: userPools }
+        ]
+      )
+}

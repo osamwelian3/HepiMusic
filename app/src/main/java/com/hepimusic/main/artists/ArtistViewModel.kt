@@ -9,7 +9,7 @@ import javax.inject.Inject
 @HiltViewModel
 class ArtistsViewModel @Inject constructor( val application: Application) : BaseMediaStoreViewModel<Artist>(application) {
     override val repository: MediaStoreRepository<Artist>
-        get() = ArtistsRepository(application, browser)
+        get() = ArtistsRepository(application, liveBrowser)
 
     override val parentId: String
         get() = "[artistID]"

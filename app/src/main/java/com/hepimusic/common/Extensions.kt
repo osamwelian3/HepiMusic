@@ -6,7 +6,12 @@ import android.animation.ObjectAnimator
 import android.animation.PropertyValuesHolder
 import android.content.res.Resources
 import android.net.Uri
+import android.os.Bundle
 import android.view.View
+import androidx.annotation.IdRes
+import androidx.navigation.NavController
+import androidx.navigation.NavDirections
+import androidx.navigation.Navigation
 import com.hepimusic.main.common.callbacks.AnimatorListener
 import java.lang.Math.abs
 
@@ -233,3 +238,34 @@ val Float.dp: Float get() = (this / Resources.getSystem().displayMetrics.density
  * Converts an Float in dp(density independent pixels) to pixels
  */
 val Float.px: Float get() = (this * Resources.getSystem().displayMetrics.density)
+
+/*
+* Safe Navigate extension
+*/
+
+fun NavController.safeNavigate(direction: NavDirections) {
+    currentDestination?.getAction(direction.actionId)?.run { navigate(direction) }
+}
+
+fun NavController.safeNavigate(
+    @IdRes currentDestinationId: Int,
+    @IdRes id: Int,
+    args: Bundle? = null
+) {
+    if (currentDestinationId == currentDestination?.id) {
+        navigate(id, args)
+    }
+}
+
+fun Navigation.safeNavigationOnClickListener(
+    @IdRes currentDestinationId: Int,
+    @IdRes id: Int,
+    args: Bundle? = null
+): View.OnClickListener {
+    return View.OnClickListener { view ->
+        val navController = findNavController(view = view)
+        if (currentDestinationId == navController.currentDestination?.id) {
+            navController.navigate(id, args)
+        }
+    }
+}

@@ -37,9 +37,11 @@
 
         <activity
             android:name=".auth.JoinActivity"
+            android:windowSoftInputMode="adjustPan|adjustResize"
             android:exported="false" />
         <activity
             android:name=".auth.LoginActivity"
+            android:windowSoftInputMode="adjustPan|adjustResize"
             android:exported="false" />
         <activity
             android:name=".onBoarding.OnBoardingActivity"
@@ -73,6 +75,8 @@
 
         <activity
             android:name=".ui.MainActivity"
+            android:windowSoftInputMode="adjustPan"
+            android:configChanges="orientation|keyboardHidden|screenSize"
             android:exported="true" />
 
         <meta-data

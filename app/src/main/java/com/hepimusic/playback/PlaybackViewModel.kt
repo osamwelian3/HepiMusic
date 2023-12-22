@@ -153,6 +153,9 @@ class PlaybackViewModel @Inject constructor(
 
     lateinit var browser: MediaBrowser
 
+    val _liveBrowser = MutableLiveData<MediaBrowser>()
+    val liveBrowser: LiveData<MediaBrowser> = _liveBrowser
+
     var currentUser: AuthUser? = null
     val session_id = preferences.getString(Constants.SESSION_ID, null)
 
@@ -206,6 +209,7 @@ class PlaybackViewModel @Inject constructor(
                     browser2 = globalBrowser
 
                     browser = browser2
+                    _liveBrowser.postValue(browser)
                     browser.addListener(playerListener)
 
                     browser.also { browser ->
@@ -516,8 +520,8 @@ class PlaybackViewModel @Inject constructor(
                 if (song != null && song.key == (nowPlaying.value?.mediaId?.replace("[item]", "")
                         ?: "")
                 ) {
-                    _upVotesCount.postValue(song.listOfUidUpVotes.size.toStreamCount())
-                    _listensCount.postValue(song.listens.size.toStreamCount())
+                    _upVotesCount.postValue((song.listOfUidUpVotes?.size ?: 0).toStreamCount())
+                    _listensCount.postValue((song.listens?.size ?: 0).toStreamCount())
 
                     currentUser?.let { authUser ->
                         val exists = song.listOfUidUpVotes?.find { upVoteKey -> upVoteKey == authUser.userId }
@@ -659,16 +663,17 @@ class PlaybackViewModel @Inject constructor(
 
     fun playAll(playId: String = Constants.PLAY_RANDOM, list: List<MediaItem>? = mediaItems.value, playWhenReady: Boolean = true, lastPosition: Long = C.TIME_UNSET) {
         if (list == null) return
-        _mediaItems.postValue(list)
+        _mediaItems.postValue(list!!)
         val chunkSize = 50
         val totalItemsCount = list.size
         var job: Job? = null
 
         job = CoroutineScope(Dispatchers.IO + Job()).launch {
-            val pos = list.indexOf(list.find { it.mediaId == playId })
+            val pos = if (list.indexOf(list.find { it.mediaId == playId }) < 0) 0 else list.indexOf(list.find { it.mediaId == playId })
             currentIndex = pos
             withContext(Dispatchers.Main) {
-                Log.e("PLAY ALL START INDEX", (if (pos > 0) pos-1 else pos).toString())
+                Log.e("PLAY ALL POS", pos.toString())
+                Log.e("PLAY ALL START INDEX", (if (pos < 0) 0 else if (pos > 0) pos-1 else pos).toString())
                 Log.e("PLAY ALL TO INDEX", (if (((list.size-1)-pos) > 3) pos+3 else list.size).toString())
                 Log.e("PLAY ALL SEEK POSITION", (if (pos > 0 && pos != (list.size - 1)) 1 else 0).toString())
                 browser.setMediaItems(list.subList(if (pos > 0 && pos != (list.size-1)) pos-1 else pos, if (((list.size-1)-pos) > 3) pos+3 else list.size), if (pos > 0 && pos != (list.size - 1)) 1 else 0, lastPosition)

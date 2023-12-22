@@ -212,4 +212,17 @@
     <string name="admin_dashboard">Dashboard</string>
     <string name="admin_songs">Songs You have uploaded</string>
     <string name="edit_song">Edit Song</string>
+    <string name="add_new_song">Add New Song</string>
+    <string name="song_thumbnail_upload">Add Song thumbnail image</string>
+    <string name="song_image">Song Image</string>
+    <string name="song_title_hint">Title of the song</string>
+    <string name="song_file_upload">Upload a music file</string>
+    <string name="select_album">Select an album</string>
+    <string name="artist_input">Artist / Creator</string>
+    <string name="save_song">Save Song</string>
+    <string name="select_an_artist">Select an artist</string>
+    <string name="select_a_category">Select a category</string>
+    <string name="create_song_thumb_text">Click here to change song file</string>
+    <string name="remove_song">REMOVE SONG</string>
+    <string name="song_delete_message">Do you want to permanently delete \\\"%1$s\\\"?</string>
 </resources>

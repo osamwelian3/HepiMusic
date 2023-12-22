@@ -52,6 +52,8 @@ class AdminAlbumsViewModel @Inject constructor(
         val _albumToEdit = MutableLiveData<Album>()
         val albumToEdit: LiveData<Album> = _albumToEdit
 
+        val newAlbumName = MutableLiveData<String?>()
+
         val _key = MutableLiveData<String>()
         @Bindable
         val _name = MutableLiveData<String>()

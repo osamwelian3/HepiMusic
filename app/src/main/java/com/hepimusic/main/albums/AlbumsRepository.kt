@@ -2,12 +2,13 @@ package com.hepimusic.main.albums
 
 import android.app.Application
 import android.net.Uri
+import androidx.lifecycle.LiveData
 import androidx.media3.common.MediaItem
 import androidx.media3.session.MediaBrowser
 import com.hepimusic.main.common.data.MediaStoreRepository
 import com.hepimusic.models.mappers.toAlbum
 
-class AlbumsRepository(application: Application, browser: MediaBrowser): MediaStoreRepository<Album>(application, browser) {
+class AlbumsRepository(application: Application, browser: LiveData<MediaBrowser>): MediaStoreRepository<Album>(application, browser) {
 
     override fun transform(data: MediaItem): Album {
         return try {

@@ -6,10 +6,10 @@
             "awsAPIPlugin": {
                 "hepimusic": {
                     "endpointType": "GraphQL",
-                    "endpoint": "https://6ft45frm3jenboatz3o4tiatci.appsync-api.ap-south-1.amazonaws.com/graphql",
+                    "endpoint": "https://37azpkkivze7zjl425mflmkxiu.appsync-api.ap-south-1.amazonaws.com/graphql",
                     "region": "ap-south-1",
                     "authorizationType": "API_KEY",
-                    "apiKey": "da2-ohly5lzbszb2tdnssnxgmzwqcy"
+                    "apiKey": "da2-nexqmz2v5nflpbyxp2grzrtiiy"
                 }
             }
         }
@@ -24,14 +24,14 @@
                 },
                 "AppSync": {
                     "Default": {
-                        "ApiUrl": "https://6ft45frm3jenboatz3o4tiatci.appsync-api.ap-south-1.amazonaws.com/graphql",
+                        "ApiUrl": "https://37azpkkivze7zjl425mflmkxiu.appsync-api.ap-south-1.amazonaws.com/graphql",
                         "Region": "ap-south-1",
                         "AuthMode": "API_KEY",
-                        "ApiKey": "da2-ohly5lzbszb2tdnssnxgmzwqcy",
+                        "ApiKey": "da2-nexqmz2v5nflpbyxp2grzrtiiy",
                         "ClientDatabasePrefix": "hepimusic_API_KEY"
                     },
                     "hepimusic_AMAZON_COGNITO_USER_POOLS": {
-                        "ApiUrl": "https://6ft45frm3jenboatz3o4tiatci.appsync-api.ap-south-1.amazonaws.com/graphql",
+                        "ApiUrl": "https://37azpkkivze7zjl425mflmkxiu.appsync-api.ap-south-1.amazonaws.com/graphql",
                         "Region": "ap-south-1",
                         "AuthMode": "AMAZON_COGNITO_USER_POOLS",
                         "ClientDatabasePrefix": "hepimusic_AMAZON_COGNITO_USER_POOLS"

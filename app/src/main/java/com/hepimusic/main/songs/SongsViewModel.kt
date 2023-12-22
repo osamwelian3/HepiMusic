@@ -13,6 +13,6 @@ open class SongsViewModel @Inject constructor(val application: Application): Bas
         get() = "[allSongsID]"
 
     override val repository: MediaStoreRepository<Song>
-        get() = SongsRepository(application, browser)
+        get() = SongsRepository(application, liveBrowser)
 
 }

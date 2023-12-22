@@ -164,6 +164,8 @@ class PlaybackFragment : /*BaseFragment()*/ BaseFullscreenDialogFragment(), View
                 binding.playingTracks.drawable.setTint(bodyTextColor)
                 binding.countdownDuration.setTextColor(bodyTextColor)
                 binding.totalDuration.setTextColor(bodyTextColor)
+                binding.upVoteButton.setTextColor(bodyTextColor)
+                binding.streamsCount.setTextColor(bodyTextColor)
 
                 binding.repeatButton.drawable.setTint(bodyTextColor)
                 binding.repeatButton.setColorFilter(bodyTextColor)

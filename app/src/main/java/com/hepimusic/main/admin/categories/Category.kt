@@ -24,6 +24,7 @@ class Category(
     }
 
     override fun writeToParcel(dest: Parcel, flags: Int) {
+        dest.writeString(id)
         dest.writeString(Gson().toJson(originalCategory))
     }
 

@@ -1,6 +1,7 @@
 package com.amplifyframework.datastore.generated.model;
 
 import com.amplifyframework.core.model.temporal.Temporal;
+import com.amplifyframework.core.model.ModelIdentifier;
 
 import java.util.List;
 import java.util.UUID;
@@ -8,7 +9,10 @@ import java.util.Objects;
 
 import androidx.core.util.ObjectsCompat;
 
+import com.amplifyframework.core.model.AuthStrategy;
 import com.amplifyframework.core.model.Model;
+import com.amplifyframework.core.model.ModelOperation;
+import com.amplifyframework.core.model.annotations.AuthRule;
 import com.amplifyframework.core.model.annotations.Index;
 import com.amplifyframework.core.model.annotations.ModelConfig;
 import com.amplifyframework.core.model.annotations.ModelField;
@@ -18,7 +22,11 @@ import static com.amplifyframework.core.model.query.predicate.QueryField.field;
 
 /** This is an auto generated class representing the Creator type in your schema. */
 @SuppressWarnings("all")
-@ModelConfig(pluralName = "Creators", type = Model.Type.USER, version = 1)
+@ModelConfig(pluralName = "Creators", type = Model.Type.USER, version = 1, authRules = {
+  @AuthRule(allow = AuthStrategy.OWNER, ownerField = "owner", identityClaim = "sub::username", provider = "userPools", operations = { ModelOperation.CREATE, ModelOperation.UPDATE, ModelOperation.DELETE, ModelOperation.READ }),
+  @AuthRule(allow = AuthStrategy.PUBLIC, operations = { ModelOperation.READ }),
+  @AuthRule(allow = AuthStrategy.PRIVATE, provider = "userPools", operations = { ModelOperation.CREATE, ModelOperation.READ })
+})
 @Index(name = "undefined", fields = {"key"})
 public final class Creator implements Model {
   public static final QueryField KEY = field("Creator", "key");
@@ -30,7 +38,8 @@ public final class Creator implements Model {
   public static final QueryField THUMBNAIL_KEY = field("Creator", "thumbnailKey");
   public static final QueryField TWITTER = field("Creator", "twitter");
   public static final QueryField YOUTUBE = field("Creator", "youtube");
-  private final @ModelField(targetType="String", isRequired = true) String key;
+  public static final QueryField OWNER = field("Creator", "owner");
+  private final @ModelField(targetType="ID", isRequired = true) String key;
   private final @ModelField(targetType="String") String desc;
   private final @ModelField(targetType="String") String facebook;
   private final @ModelField(targetType="String") String instagram;
@@ -39,9 +48,16 @@ public final class Creator implements Model {
   private final @ModelField(targetType="String") String thumbnailKey;
   private final @ModelField(targetType="String") String twitter;
   private final @ModelField(targetType="String") String youtube;
+  private final @ModelField(targetType="String", authRules = {
+    @AuthRule(allow = AuthStrategy.OWNER, ownerField = "owner", identityClaim = "sub::username", provider = "userPools", operations = { ModelOperation.CREATE, ModelOperation.READ, ModelOperation.DELETE }),
+    @AuthRule(allow = AuthStrategy.PUBLIC, operations = { ModelOperation.READ }),
+    @AuthRule(allow = AuthStrategy.PRIVATE, provider = "userPools", operations = { ModelOperation.CREATE, ModelOperation.READ })
+  }) String owner;
   private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime createdAt;
   private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime updatedAt;
-  public String resolveIdentifier() {
+  /** @deprecated This API is internal to Amplify and should not be used. */
+  @Deprecated
+   public String resolveIdentifier() {
     return key;
   }
   
@@ -81,6 +97,10 @@ public final class Creator implements Model {
       return youtube;
   }
   
+  public String getOwner() {
+      return owner;
+  }
+  
   public Temporal.DateTime getCreatedAt() {
       return createdAt;
   }
@@ -89,7 +109,7 @@ public final class Creator implements Model {
       return updatedAt;
   }
   
-  private Creator(String key, String desc, String facebook, String instagram, String name, String thumbnail, String thumbnailKey, String twitter, String youtube) {
+  private Creator(String key, String desc, String facebook, String instagram, String name, String thumbnail, String thumbnailKey, String twitter, String youtube, String owner) {
     this.key = key;
     this.desc = desc;
     this.facebook = facebook;
@@ -99,6 +119,7 @@ public final class Creator implements Model {
     this.thumbnailKey = thumbnailKey;
     this.twitter = twitter;
     this.youtube = youtube;
+    this.owner = owner;
   }
   
   @Override
@@ -118,6 +139,7 @@ public final class Creator implements Model {
               ObjectsCompat.equals(getThumbnailKey(), creator.getThumbnailKey()) &&
               ObjectsCompat.equals(getTwitter(), creator.getTwitter()) &&
               ObjectsCompat.equals(getYoutube(), creator.getYoutube()) &&
+              ObjectsCompat.equals(getOwner(), creator.getOwner()) &&
               ObjectsCompat.equals(getCreatedAt(), creator.getCreatedAt()) &&
               ObjectsCompat.equals(getUpdatedAt(), creator.getUpdatedAt());
       }
@@ -135,6 +157,7 @@ public final class Creator implements Model {
       .append(getThumbnailKey())
       .append(getTwitter())
       .append(getYoutube())
+      .append(getOwner())
       .append(getCreatedAt())
       .append(getUpdatedAt())
       .toString()
@@ -154,6 +177,7 @@ public final class Creator implements Model {
       .append("thumbnailKey=" + String.valueOf(getThumbnailKey()) + ", ")
       .append("twitter=" + String.valueOf(getTwitter()) + ", ")
       .append("youtube=" + String.valueOf(getYoutube()) + ", ")
+      .append("owner=" + String.valueOf(getOwner()) + ", ")
       .append("createdAt=" + String.valueOf(getCreatedAt()) + ", ")
       .append("updatedAt=" + String.valueOf(getUpdatedAt()))
       .append("}")
@@ -173,7 +197,8 @@ public final class Creator implements Model {
       thumbnail,
       thumbnailKey,
       twitter,
-      youtube);
+      youtube,
+      owner);
   }
   public interface KeyStep {
     NameStep key(String key);
@@ -194,6 +219,7 @@ public final class Creator implements Model {
     BuildStep thumbnailKey(String thumbnailKey);
     BuildStep twitter(String twitter);
     BuildStep youtube(String youtube);
+    BuildStep owner(String owner);
   }
   
 
@@ -207,6 +233,24 @@ public final class Creator implements Model {
     private String thumbnailKey;
     private String twitter;
     private String youtube;
+    private String owner;
+    public Builder() {
+      
+    }
+    
+    private Builder(String key, String desc, String facebook, String instagram, String name, String thumbnail, String thumbnailKey, String twitter, String youtube, String owner) {
+      this.key = key;
+      this.desc = desc;
+      this.facebook = facebook;
+      this.instagram = instagram;
+      this.name = name;
+      this.thumbnail = thumbnail;
+      this.thumbnailKey = thumbnailKey;
+      this.twitter = twitter;
+      this.youtube = youtube;
+      this.owner = owner;
+    }
+    
     @Override
      public Creator build() {
         
@@ -219,7 +263,8 @@ public final class Creator implements Model {
           thumbnail,
           thumbnailKey,
           twitter,
-          youtube);
+          youtube,
+          owner);
     }
     
     @Override
@@ -277,20 +322,20 @@ public final class Creator implements Model {
         this.youtube = youtube;
         return this;
     }
+    
+    @Override
+     public BuildStep owner(String owner) {
+        this.owner = owner;
+        return this;
+    }
   }
   
 
   public final class CopyOfBuilder extends Builder {
-    private CopyOfBuilder(String key, String desc, String facebook, String instagram, String name, String thumbnail, String thumbnailKey, String twitter, String youtube) {
-      super.key(key)
-        .name(name)
-        .desc(desc)
-        .facebook(facebook)
-        .instagram(instagram)
-        .thumbnail(thumbnail)
-        .thumbnailKey(thumbnailKey)
-        .twitter(twitter)
-        .youtube(youtube);
+    private CopyOfBuilder(String key, String desc, String facebook, String instagram, String name, String thumbnail, String thumbnailKey, String twitter, String youtube, String owner) {
+      super(key, desc, facebook, instagram, name, thumbnail, thumbnailKey, twitter, youtube, owner);
+      Objects.requireNonNull(key);
+      Objects.requireNonNull(name);
     }
     
     @Override
@@ -336,6 +381,19 @@ public final class Creator implements Model {
     @Override
      public CopyOfBuilder youtube(String youtube) {
       return (CopyOfBuilder) super.youtube(youtube);
+    }
+    
+    @Override
+     public CopyOfBuilder owner(String owner) {
+      return (CopyOfBuilder) super.owner(owner);
+    }
+  }
+  
+
+  public static class CreatorIdentifier extends ModelIdentifier<Creator> {
+    private static final long serialVersionUID = 1L;
+    public CreatorIdentifier(String key) {
+      super(key);
     }
   }
   

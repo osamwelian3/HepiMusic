@@ -50,6 +50,9 @@ abstract class BaseMediaStoreViewModel<T> (
 
     lateinit var browser: MediaBrowser
 
+    val _liveBrowser = MutableLiveData<MediaBrowser>()
+    val liveBrowser : LiveData<MediaBrowser> = _liveBrowser
+
     private lateinit var controllerFuture: ListenableFuture<MediaController>
 
     private val controller2: MediaController?
@@ -111,6 +114,7 @@ abstract class BaseMediaStoreViewModel<T> (
                         browserFuture.get()
                     }
                     _isBrowserConnected.postValue(::browser.isInitialized)
+                    _liveBrowser.postValue(browser)
                     loadData(parentId)
 //                    getRoot()
                 }

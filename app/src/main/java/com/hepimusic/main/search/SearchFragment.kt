@@ -60,7 +60,7 @@ class SearchFragment : Fragment(), View.OnClickListener {
             param1 = it.getString(ARG_PARAM1)
             param2 = it.getString(ARG_PARAM2)
         }
-        viewModel.init(playbackViewModel.browser)
+        viewModel.init(playbackViewModel.liveBrowser)
     }
 
     override fun onCreateView(

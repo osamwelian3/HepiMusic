@@ -23,6 +23,7 @@ import com.amplifyframework.core.Amplify
 import com.hepimusic.R
 import com.hepimusic.auth.LoginActivity
 import com.hepimusic.common.Constants
+import com.hepimusic.common.safeNavigate
 import com.hepimusic.databinding.FragmentNavigationDialogBinding
 import com.hepimusic.main.common.callbacks.OnItemClickListener
 import com.hepimusic.main.common.view.BaseFullscreenDialogFragment
@@ -194,12 +195,20 @@ class NavigationDialogFragment : BaseFullscreenDialogFragment(), OnStartDragList
                     sharableView.visibility = View.GONE
                 }
                 Amplify.Auth.signOut {
+                    Amplify.DataStore.clear(
+                        {
+
+                        },
+                        {
+
+                        }
+                    )
                     lifecycleScope.launch(Dispatchers.Main) {
                         try {
                             findNavController().popBackStack()
                         } catch (e: Exception) {
                             e.printStackTrace()
-                            navController.navigate(R.id.action_navigationDialogFragment_to_exploreFragment)
+                            navController.safeNavigate(R.id.navigationDialogFragment, R.id.action_navigationDialogFragment_to_exploreFragment)
                         }
                         preferences.edit().putBoolean(Constants.AUTH_TYPE_SOCIAL, false).apply()
                         startActivity(Intent(requireActivity(), LoginActivity::class.java))
@@ -221,7 +230,7 @@ class NavigationDialogFragment : BaseFullscreenDialogFragment(), OnStartDragList
             else -> null
         }
 
-        if (navId != null) navController.navigate(navId) // findNavController()
+        if (navId != null) navController.safeNavigate(R.id.navigationDialogFragment, navId) // findNavController()
 
     }
 

@@ -1,0 +1,169 @@
+{
+  "api": {
+    "hepimusic": {
+      "dependsOn": [
+        {
+          "attributes": [
+            "UserPoolId"
+          ],
+          "category": "auth",
+          "resourceName": "hepimusicd2e09eab"
+        }
+      ],
+      "output": {
+        "authConfig": {
+          "additionalAuthenticationProviders": [
+            {
+              "authenticationType": "AMAZON_COGNITO_USER_POOLS",
+              "userPoolConfig": {
+                "userPoolId": "authhepimusicd2e09eab"
+              }
+            }
+          ],
+          "defaultAuthentication": {
+            "apiKeyConfig": {
+              "apiKeyExpirationDate": "2024-12-12T22:33:06.908Z",
+              "apiKeyExpirationDays": 365,
+              "description": "hepi-amplify-api-key"
+            },
+            "authenticationType": "API_KEY"
+          }
+        }
+      },
+      "providerPlugin": "awscloudformation",
+      "service": "AppSync"
+    }
+  },
+  "auth": {
+    "hepimusicd2e09eab": {
+      "customAuth": false,
+      "dependsOn": [],
+      "frontendAuthConfig": {
+        "mfaConfiguration": "OFF",
+        "mfaTypes": [
+          "SMS"
+        ],
+        "passwordProtectionSettings": {
+          "passwordPolicyCharacters": [],
+          "passwordPolicyMinLength": 8
+        },
+        "signupAttributes": [
+          "EMAIL"
+        ],
+        "socialProviders": [
+          "FACEBOOK",
+          "GOOGLE"
+        ],
+        "usernameAttributes": [],
+        "verificationMechanisms": [
+          "EMAIL"
+        ]
+      },
+      "providerPlugin": "awscloudformation",
+      "service": "Cognito"
+    }
+  },
+  "hosting": {
+    "S3AndCloudFront": {
+      "providerPlugin": "awscloudformation",
+      "service": "S3AndCloudFront"
+    }
+  },
+  "parameters": {
+    "AMPLIFY_auth_hepimusicca90a7e7_allowUnauthenticatedIdentities": {
+      "usedBy": [
+        {
+          "category": "auth",
+          "resourceName": "hepimusicca90a7e7"
+        }
+      ]
+    },
+    "AMPLIFY_auth_hepimusicca90a7e7_authRoleArn": {
+      "usedBy": [
+        {
+          "category": "auth",
+          "resourceName": "hepimusicca90a7e7"
+        }
+      ]
+    },
+    "AMPLIFY_auth_hepimusicca90a7e7_authRoleName": {
+      "usedBy": [
+        {
+          "category": "auth",
+          "resourceName": "hepimusicca90a7e7"
+        }
+      ]
+    },
+    "AMPLIFY_auth_hepimusicca90a7e7_identityPoolId": {
+      "usedBy": [
+        {
+          "category": "auth",
+          "resourceName": "hepimusicca90a7e7"
+        }
+      ]
+    },
+    "AMPLIFY_auth_hepimusicca90a7e7_identityPoolName": {
+      "usedBy": [
+        {
+          "category": "auth",
+          "resourceName": "hepimusicca90a7e7"
+        }
+      ]
+    },
+    "AMPLIFY_auth_hepimusicca90a7e7_nativeClientId": {
+      "usedBy": [
+        {
+          "category": "auth",
+          "resourceName": "hepimusicca90a7e7"
+        }
+      ]
+    },
+    "AMPLIFY_auth_hepimusicca90a7e7_unauthRoleArn": {
+      "usedBy": [
+        {
+          "category": "auth",
+          "resourceName": "hepimusicca90a7e7"
+        }
+      ]
+    },
+    "AMPLIFY_auth_hepimusicca90a7e7_unauthRoleName": {
+      "usedBy": [
+        {
+          "category": "auth",
+          "resourceName": "hepimusicca90a7e7"
+        }
+      ]
+    },
+    "AMPLIFY_auth_hepimusicca90a7e7_userPoolId": {
+      "usedBy": [
+        {
+          "category": "auth",
+          "resourceName": "hepimusicca90a7e7"
+        }
+      ]
+    },
+    "AMPLIFY_auth_hepimusicca90a7e7_userPoolName": {
+      "usedBy": [
+        {
+          "category": "auth",
+          "resourceName": "hepimusicca90a7e7"
+        }
+      ]
+    },
+    "AMPLIFY_auth_hepimusicca90a7e7_webClientId": {
+      "usedBy": [
+        {
+          "category": "auth",
+          "resourceName": "hepimusicca90a7e7"
+        }
+      ]
+    }
+  },
+  "storage": {
+    "hepimusicstorage": {
+      "dependsOn": [],
+      "providerPlugin": "awscloudformation",
+      "service": "S3"
+    }
+  }
+}

@@ -10,6 +10,7 @@ import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaItem.SubtitleConfiguration
 import androidx.media3.common.MediaMetadata
 import com.amplifyframework.core.Amplify
+import com.amplifyframework.core.model.query.QueryPaginationInput
 import com.amplifyframework.core.model.query.Where
 import com.amplifyframework.datastore.DataStoreChannelEventName
 import com.amplifyframework.datastore.DataStoreItemChange
@@ -34,6 +35,7 @@ import com.hepimusic.models.mappers.toCreator
 import com.hepimusic.models.mappers.toMediaItem
 import com.hepimusic.models.mappers.toSong
 import com.hepimusic.models.mappers.toSongEntity
+import com.hepimusic.onBoarding.OnBoardingActivity
 import com.hepimusic.playback.MusicService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -135,7 +137,6 @@ object MediaItemTree {
             for (album in albumNode.getChildren()) {
                 if (album.mediaMetadata.artist == data.title) {
                     discCount += 1
-                    Log.e("discCount "+data.title, discCount.toString())
                 }
             }
             val subtitleConfigurations: MutableList<SubtitleConfiguration> = mutableListOf()
@@ -303,6 +304,14 @@ object MediaItemTree {
             {
                 if (it.type() == DataStoreItemChange.Type.CREATE) {
                     if (!songs.isEmpty()) {
+                        Amplify.DataStore.start(
+                            {
+                                Log.e("SYNC COMPLETE", "Datastore re-sync complete")
+                            },
+                            {
+
+                            }
+                        )
                         songs.add(it.item() /*.toSongEntity().toSong()*/)
                         Log.e("CHANGE TYPE: CREATE", "song: ${it.item().name}")
                         createRootFolders()
@@ -314,6 +323,14 @@ object MediaItemTree {
                     }
                 } else if (it.type() == DataStoreItemChange.Type.UPDATE) {
                     if (!songs.isEmpty()) {
+                        Amplify.DataStore.start(
+                            {
+                                Log.e("SYNC COMPLETE", "Datastore re-sync complete")
+                            },
+                            {
+
+                            }
+                        )
                         songs.map { song -> if (song.key == it.item().key) it.item() else song }
                         Log.e("CHANGE TYPE: UPDATE", "song: ${it.item().name}")
                         createRootFolders()
@@ -325,6 +342,14 @@ object MediaItemTree {
                     }
                 } else if (it.type() == DataStoreItemChange.Type.DELETE) {
                     if (!songs.isEmpty()) {
+                        Amplify.DataStore.start(
+                            {
+                                Log.e("SYNC COMPLETE", "Datastore re-sync complete")
+                            },
+                            {
+
+                            }
+                        )
                         songs.removeIf { song -> song.key == it.item().key }
                         Log.e("CHANGE TYPE: DELETE", "song: ${it.item().name}")
                         createRootFolders()
@@ -344,7 +369,28 @@ object MediaItemTree {
             }
         )
 
-        Amplify.DataStore.query(
+        // first time installation
+        if (!context.applicationContext.getSharedPreferences("main", Context.MODE_PRIVATE).getBoolean(OnBoardingActivity.HAS_SEEN_ON_BOARDING, false)) {
+            Amplify.Hub.subscribe(
+                HubChannel.DATASTORE,
+                {
+                    it.name.equals(DataStoreChannelEventName.READY.toString())
+                },
+                {
+                    val isReady = it.data
+                    Log.e("hub data MIT", it.data.toString())
+                    Log.e("hub name MIT", it.name.toString())
+
+                    if (it.name.equals("ready")) {
+                        queryAllData(context)
+                    }
+                }
+            )
+        } else {
+            queryAllData(context)
+        }
+
+        /*Amplify.DataStore.query(
             Song::class.java,
             { songIterator ->
                 var count = 0
@@ -377,16 +423,16 @@ object MediaItemTree {
                         combinedFlow.collect { musicData ->
                             if (musicData != null) {
                                 musicData.albums?.map {
-                                    albums.add(it /*.toAlbum()*/)
+                                    albums.add(it *//*.toAlbum()*//*)
                                     Log.e("ALBUM", it.name)
                                 }
                                 musicData.artists?.map {
-                                    artists.add(it /*.toCreator()*/)
+                                    artists.add(it *//*.toCreator()*//*)
                                 }
                                 musicData.songs?.map {
                                     Log.e("MEDIA ITEM TREE", "ALBUM SIZE: " + albums.size)
-                                    songs.add(it /*.toSong()*/)
-                                    addNodeToTree(it /*.toSong()*/, albums, artists)
+                                    songs.add(it *//*.toSong()*//*)
+                                    addNodeToTree(it *//*.toSong()*//*, albums, artists)
                                 }
                                 context.applicationContext.getSharedPreferences(
                                     "main",
@@ -490,7 +536,7 @@ object MediaItemTree {
             {
                 Log.e("DataStore Exception MIT", it.message.toString())
             }
-        )
+        )*/
 
         /*if (!initialConnectionEstablished) {
             val albumsFlow = songRepository.getAllAlbums()
@@ -661,6 +707,77 @@ object MediaItemTree {
 
     }
 
+    private fun queryAllData(context: Context) {
+        val options = Where.matchesAll()
+        // query all data
+        Amplify.DataStore.query(
+            Song::class.java,
+            options,
+            { songsIterator ->
+                val songsList = mutableListOf<Song>()
+                var count = 0
+                songsIterator.forEach { song ->
+                    songsList.add(song)
+                    songs.add(song)
+                    count++
+                }
+                Log.e("MEDIA ITEM TREE", "Queried ${songsList.size} songs $count.")
+
+                Amplify.DataStore.query(
+                    Album::class.java,
+                    options,
+                    { albumsIterator ->
+                        val albumsList = mutableListOf<Album>()
+                        albumsIterator.forEach { album ->
+                            albumsList.add(album)
+                            albums.add(album)
+                        }
+                        Log.e("MEDIA ITEM TREE", "Queried ${albumsList.size} albums.")
+
+                        Amplify.DataStore.query(
+                            Creator::class.java,
+                            options,
+                            { creatorsIterator ->
+                                val creatorsList = mutableListOf<Creator>()
+                                creatorsIterator.forEach { creator ->
+                                    creatorsList.add(creator)
+                                    artists.add(creator)
+                                }
+                                Log.e("MEDIA ITEM TREE", "Queried ${creatorsList.size} creators.")
+
+                                CoroutineScope(Dispatchers.Default).launch {
+                                    songsList.forEach {
+                                        addNodeToTree(it, albumsList, creatorsList)
+                                    }
+                                }
+                                context.applicationContext.getSharedPreferences(
+                                    "main",
+                                    Context.MODE_PRIVATE
+                                ).edit().putBoolean(Constants.DATASTORE_READY, true).apply()
+                                context.applicationContext.getSharedPreferences(
+                                    "main",
+                                    Context.MODE_PRIVATE
+                                ).edit().putBoolean(INITIALIZATION_COMPLETE, true).apply()
+                                Log.e("PREFERENCES ADDED", "TRUE")
+                            },
+                            { creatorsException ->
+                                Log.e("MEDIA ITEM TREE", "MEDIA ITEM TREE QUERY CREATORS EXCEPTION ${creatorsException.message.toString()}")
+                            }
+                        )
+
+                    },
+                    { albumsException ->
+                        Log.e("MEDIA ITEM TREE", "MEDIA ITEM TREE QUERY ALBUMS EXCEPTION ${albumsException.message.toString()}")
+                    }
+                )
+
+            },
+            { songsException ->
+                Log.e("MEDIA ITEM TREE", "MEDIA ITEM TREE QUERY SONGS EXCEPTION ${songsException.message.toString()}")
+            }
+        )
+    }
+
     private suspend fun addNodeToTree(
         song: Song,
         albums: List<Album>,
@@ -701,9 +818,54 @@ object MediaItemTree {
         dateFormat.timeZone = TimeZone.getDefault() // Use the device's default timezone
 
         val bundle = Bundle()
-        bundle.putStringArrayList("trendingListens", song.trendingListens as java.util.ArrayList<String>?)
-        bundle.putStringArrayList("listOfUidUpVotes", song.listOfUidUpVotes as java.util.ArrayList<String>?)
-        bundle.putStringArrayList("listOfUidDownVotes", song.listOfUidDownVotes as java.util.ArrayList<String>?)
+        try {
+            bundle.putStringArrayList(
+                "listens",
+                song.listens as java.util.ArrayList<String>?
+            )
+        } catch (e: Exception) {
+            e.printStackTrace()
+            bundle.putStringArrayList(
+                "listens",
+                ArrayList()
+            )
+        }
+        try {
+            bundle.putStringArrayList(
+                "trendingListens",
+                song.trendingListens as java.util.ArrayList<String>?
+            )
+        } catch (e: Exception) {
+            e.printStackTrace()
+            bundle.putStringArrayList(
+                "trendingListens",
+                ArrayList()
+            )
+        }
+        try {
+            bundle.putStringArrayList(
+                "listOfUidUpVotes",
+                song.listOfUidUpVotes as java.util.ArrayList<String>?
+            )
+        } catch (e: Exception) {
+            e.printStackTrace()
+            bundle.putStringArrayList(
+                "listOfUidUpVotes",
+                ArrayList()
+            )
+        }
+        try {
+            bundle.putStringArrayList(
+                "listOfUidDownVotes",
+                song.listOfUidDownVotes as java.util.ArrayList<String>?
+            )
+        } catch (e: Exception) {
+            e.printStackTrace()
+            bundle.putStringArrayList(
+                "listOfUidDownVotes",
+                ArrayList()
+            )
+        }
 
         treeNodes[idInTree] =
             MediaItemNode(

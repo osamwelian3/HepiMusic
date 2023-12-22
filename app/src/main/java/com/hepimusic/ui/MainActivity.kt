@@ -6,9 +6,12 @@ import android.content.Intent
 import android.content.ServiceConnection
 import android.content.SharedPreferences
 import android.os.Bundle
+import android.os.Handler
 import android.os.IBinder
 import android.util.Log
 import android.view.LayoutInflater
+import android.view.View
+import android.view.WindowManager
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
@@ -181,6 +184,8 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         )
+
+        window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
 
 //        Amplify.DataStore.observeQuery(
 //            com.amplifyframework.datastore.generated.model.Song::class.java,

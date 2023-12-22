@@ -19,6 +19,8 @@ import com.amplifyframework.datastore.events.NetworkStatusEvent
 import com.amplifyframework.datastore.generated.model.AmplifyModelProvider
 import com.amplifyframework.datastore.generated.model.Song
 import com.amplifyframework.hub.HubChannel
+import com.amplifyframework.storage.StorageAccessLevel
+import com.amplifyframework.storage.options.StoragePagedListOptions
 import com.amplifyframework.storage.s3.AWSS3StoragePlugin
 import com.hepimusic.common.Constants
 import com.hepimusic.common.Resource
@@ -53,6 +55,21 @@ class HepiApplication: Application() {
             Amplify.configure(applicationContext)
 
             Log.i("MyAmplifyApp", "Initialized Amplify")
+            Amplify.Storage.list(
+                "",
+                StoragePagedListOptions.builder()
+                    .setPageSize(1000)
+                    .accessLevel(StorageAccessLevel.PUBLIC)
+                    .build(),
+                {
+                    it.items.forEach {
+                        Log.e("STORAGE LIST RESULTS ITEM", it.key)
+                    }
+                },
+                {
+                    Log.e("STORAGE LIST FILES EXCEPTION", it.message.toString())
+                }
+            )
             Amplify.Hub.subscribe(
                 HubChannel.AUTH
             ) { event ->

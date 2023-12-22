@@ -1,0 +1,42 @@
+{
+  "dev": {
+    "awscloudformation": {
+      "AuthRoleName": "amplify-hepimusic-dev-203416-authRole",
+      "UnauthRoleArn": "arn:aws:iam::950348583996:role/amplify-hepimusic-dev-203416-unauthRole",
+      "AuthRoleArn": "arn:aws:iam::950348583996:role/amplify-hepimusic-dev-203416-authRole",
+      "Region": "ap-south-1",
+      "DeploymentBucketName": "amplify-hepimusic-dev-203416-deployment",
+      "UnauthRoleName": "amplify-hepimusic-dev-203416-unauthRole",
+      "StackName": "amplify-hepimusic-dev-203416",
+      "StackId": "arn:aws:cloudformation:ap-south-1:950348583996:stack/amplify-hepimusic-dev-203416/3a089df0-fa59-11ed-b84a-0a5f049f7d94",
+      "AmplifyAppId": "d1mkhi2lyr9x1n"
+    },
+    "categories": {
+      "auth": {
+        "hepimusicca90a7e7": {
+          "allowUnauthenticatedIdentities": false,
+          "authRoleArn": "arn:aws:iam::950348583996:role/amplify-hepimusic-dev-203416-authRole",
+          "authRoleName": "amplify-hepimusic-dev-203416-authRole",
+          "identityPoolId": "ap-south-1:38b55e48-2362-4b13-942a-291967bda8de",
+          "identityPoolName": "hepimusicd2e09eab_identitypool_d2e09eab__dev",
+          "nativeClientId": "7447th3l5fmmkl6la4haj283m1",
+          "unauthRoleArn": "arn:aws:iam::950348583996:role/amplify-hepimusic-dev-203416-unauthRole",
+          "unauthRoleName": "amplify-hepimusic-dev-203416-unauthRole",
+          "userPoolId": "ap-south-1_z1btVcOEE",
+          "userPoolName": "hepimusicd2e09eab_userpool_d2e09eab-dev",
+          "webClientId": "10kmu67jt93r7jukcmsfgd57lq"
+        },
+        "hepimusicd2e09eab": {}
+      },
+      "storage": {
+        "hepimusicstorage": {}
+      },
+      "api": {
+        "hepimusic": {}
+      },
+      "hosting": {
+        "S3AndCloudFront": {}
+      }
+    }
+  }
+}

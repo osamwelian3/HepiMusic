@@ -1,0 +1,16 @@
+{
+  "resourceName": "hepimusicstorage",
+  "policyUUID": "323b2fc5",
+  "bucketName": "hepimusic4338794eef5f478fb3bce902d0958964",
+  "storageAccess": "authAndGuest",
+  "guestAccess": [
+    "READ"
+  ],
+  "authAccess": [
+    "CREATE_AND_UPDATE",
+    "READ",
+    "DELETE"
+  ],
+  "triggerFunction": "NONE",
+  "groupAccess": {}
+}
