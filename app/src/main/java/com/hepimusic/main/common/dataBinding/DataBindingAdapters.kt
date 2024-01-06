@@ -17,7 +17,12 @@ import com.amplifyframework.core.model.query.ObserveQueryOptions
 import com.amplifyframework.core.model.query.QuerySortBy
 import com.amplifyframework.core.model.query.QuerySortOrder
 import com.amplifyframework.core.model.query.Where
+import com.amplifyframework.core.model.temporal.Temporal
+import com.amplifyframework.core.model.temporal.Temporal.DateTime
 import com.amplifyframework.datastore.generated.model.Creator
+import com.amplifyframework.datastore.generated.model.Profile
+import com.amplifyframework.datastore.generated.model.RequestPlaylist
+import com.amplifyframework.datastore.generated.model.RequestSong
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.MultiTransformation
 import com.bumptech.glide.load.engine.DiskCacheStrategy
@@ -36,15 +41,101 @@ import com.hepimusic.main.explore.RecentlyPlayed
 import com.hepimusic.main.playlist.Playlist
 import com.hepimusic.main.songs.Song
 import com.hepimusic.playback.MediaItemData
+import okhttp3.internal.http.toHttpDateString
 import java.io.File
 import java.math.BigDecimal
 import java.math.MathContext
 import java.math.RoundingMode
 import java.text.DecimalFormat
+import java.util.Calendar
+import java.util.Date
+import java.util.Locale
 
 object DataBindingAdapters {
     @JvmStatic val centerCrop = CenterCrop()
     @JvmStatic val circleCrop = CircleCrop()
+
+    @BindingAdapter("android:src")
+    @JvmStatic
+    fun setRequestSongArtWork(view: ImageView, song: RequestSong?) {
+        Glide.with(view)
+            .setDefaultRequestOptions(
+                RequestOptions()
+                    .placeholder(R.drawable.album_art)
+                    .error(R.drawable.album_art)
+                    .diskCacheStrategy(DiskCacheStrategy.DATA)
+            )
+            .load("https://dn1i8z7909ivj.cloudfront.net/public/"+song?.thumbnailKey)
+            .transform(
+                MultiTransformation(centerCrop, RoundedCorners(10))
+            )
+            .placeholder(R.drawable.album_art)
+            .into(view)
+    }
+
+    @BindingAdapter("android:textArtist")
+    @JvmStatic
+    fun setRequestSongArtist(view: TextView, requestSong: RequestSong) {
+        requestSong.selectedCreator?.let {
+            val artist = Gson().fromJson(requestSong.selectedCreator, Creator::class.java)
+            view.setText(artist.name)
+        }
+
+        if (requestSong.selectedCreator == null) {
+            view.setText(requestSong.name)
+        }
+
+    }
+
+    @BindingAdapter("android:text")
+    @JvmStatic
+    fun setRequestPlaylistDate(view: TextView, temporalDateTim: Temporal.DateTime?) {
+        val temporalDateTime = temporalDateTim ?: Temporal.DateTime(Date.from(Calendar.getInstance().toInstant()).toString())
+        val calender = Calendar.getInstance()
+        calender.time = temporalDateTime.toDate()
+        val date = calender.get(Calendar.DAY_OF_MONTH)
+        val month = calender.getDisplayName(Calendar.MONTH, Calendar.SHORT_FORMAT, Locale("EN"))
+
+        view.setText("$month $date")
+    }
+
+    @BindingAdapter("android:textTime")
+    @JvmStatic
+    fun setRequestPlaylistTime(view: TextView, temporalDateTim: Temporal.DateTime?) {
+        val temporalDateTime = temporalDateTim ?: Temporal.DateTime(Date.from(Calendar.getInstance().toInstant()).toString())
+        val calender = Calendar.getInstance()
+        calender.time = temporalDateTime.toDate()
+        val hr = calender.get(Calendar.HOUR_OF_DAY)
+        val hour = if (hr.toString().length == 1) "0$hr" else "$hr"
+        val min = calender.get(Calendar.MINUTE)
+        val minute = if (min.toString().length == 1) "0$min" else "$min"
+
+        view.setText("$hour:$minute")
+    }
+
+    @BindingAdapter("android:src")
+    @JvmStatic
+    fun setAdminArtistAvatar(view: ImageView, artist: com.hepimusic.main.admin.creators.Creator) {
+        Glide.with(view)
+            .load("https://dn1i8z7909ivj.cloudfront.net/public/"+artist.originalCreator.thumbnailKey)
+            .transform(
+                MultiTransformation(centerCrop, circleCrop)
+            )
+            .placeholder(R.drawable.thumb_circular_default)
+            .into(view)
+    }
+
+    @BindingAdapter("android:src")
+    @JvmStatic
+    fun setAdminAlbumAvatar(view: ImageView, album: com.hepimusic.main.admin.albums.Album) {
+        Glide.with(view)
+            .load("https://dn1i8z7909ivj.cloudfront.net/public/"+album.originalAlbum.thumbnailKey)
+            .transform(
+                MultiTransformation(centerCrop, RoundedCorners(10))
+            )
+            .placeholder(R.drawable.album_art)
+            .into(view)
+    }
 
     @BindingAdapter("android:src")
     @JvmStatic
@@ -356,7 +447,7 @@ object DataBindingAdapters {
     @JvmStatic
     fun setPlaylistCover(view: ImageView, playlist: Playlist) {
         val uri = FileProvider.getUriForFile(view.context.applicationContext, "${view.context.applicationContext.packageName}.provider", File(view.context.applicationContext.filesDir, playlist.name))
-        Log.e("URI", uri.toString())
+//        Log.e("URI", uri.toString())
         Glide.with(view)
             .load(/*playlist.modForViewWidth(view.measuredWidth)*/uri)
             .transform(
@@ -400,6 +491,51 @@ object DataBindingAdapters {
             )
             .placeholder(R.drawable.album_art)
             .into(view)
+    }
+
+    @BindingAdapter("requestSrc")
+    @JvmStatic
+    fun setRequestSrc(view: ImageView, playlist: RequestPlaylist) {
+        val profile = Amplify.DataStore.query(
+            Profile::class.java,
+            Where.matchesAll(),
+            { profilesIterator ->
+                profilesIterator.forEach { profile ->
+                    playlist.player.owners?.map { owner ->
+                        if (profile.owner == owner) {
+                            Glide.with(view)
+                                .setDefaultRequestOptions(
+                                    RequestOptions()
+                                        .placeholder(R.drawable.album_art)
+                                        .error(R.drawable.album_art)
+                                        .diskCacheStrategy(DiskCacheStrategy.DATA)
+                                )
+                                .load("https://dn1i8z7909ivj.cloudfront.net/public/"+profile.imageKey)
+                                .transform(
+                                    MultiTransformation(centerCrop, FitCenter(), RoundedCorners(10))
+                                )
+                                .placeholder(R.drawable.album_art)
+                                .into(view)
+                        }
+                    }
+                }
+            },
+            {
+                Glide.with(view)
+                    .setDefaultRequestOptions(
+                        RequestOptions()
+                            .placeholder(R.drawable.album_art)
+                            .error(R.drawable.album_art)
+                            .diskCacheStrategy(DiskCacheStrategy.DATA)
+                    )
+                    .load(R.drawable.album_art)
+                    .transform(
+                        MultiTransformation(centerCrop, FitCenter(), RoundedCorners(10))
+                    )
+                    .placeholder(R.drawable.album_art)
+                    .into(view)
+            }
+        )
     }
 
     @BindingAdapter("playlistSrc")

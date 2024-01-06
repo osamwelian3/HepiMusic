@@ -17,11 +17,13 @@ import androidx.navigation.fragment.FragmentNavigator
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.bumptech.glide.RequestManager
 import com.hepimusic.BR
 import com.hepimusic.R
 import com.hepimusic.common.Constants
 import com.hepimusic.common.crossFadeWidth
+import com.hepimusic.common.safeNavigate
 import com.hepimusic.common.safeNavigationOnClickListener
 import com.hepimusic.databinding.FragmentExploreBinding
 import com.hepimusic.main.albums.Album
@@ -44,7 +46,7 @@ private const val ARG_PARAM2 = "param2"
  * create an instance of this fragment.
  */
 @AndroidEntryPoint
-class ExploreFragment : Fragment(), OnItemClickListener {
+class ExploreFragment : Fragment(), OnItemClickListener, SwipeRefreshLayout.OnRefreshListener {
 
     @Inject lateinit var glide: RequestManager
 
@@ -133,6 +135,7 @@ class ExploreFragment : Fragment(), OnItemClickListener {
 
     @Suppress("UNCHECKED_CAST")
     private fun observeViewModel() {
+        viewModel.loadData("[albumID]")
         viewModel.trendingSongs.observe(viewLifecycleOwner, Observer { trendingSongs ->
             if (trendingSongs.isNotEmpty()) {
                 binding.trending.visibility = View.VISIBLE
@@ -158,10 +161,11 @@ class ExploreFragment : Fragment(), OnItemClickListener {
                 playedList.forEachIndexed { index, played -> played.isPlaying = index == 0 }
                 (binding.playedRV.adapter as BaseAdapter<RecentlyPlayed>).updateItems(playedList)
                 binding.playedRV.scrollToPosition(0)
+                binding.swipeContainer.isRefreshing = false
             })
         }
 
-        if (/*albums.isEmpty()*/true) {
+        if (albums.isEmpty()) {
 //            viewModel.init()
             /*if ((viewModel.items.value?.size ?: 0) == 0) {
                 suspend fun load() {
@@ -190,6 +194,11 @@ class ExploreFragment : Fragment(), OnItemClickListener {
                     }
                 }
             }*/
+            if (!viewModel.items.value.isNullOrEmpty()) {
+                albums = viewModel.items.value!!
+                (binding.randomAlbumsRV.adapter as BaseAdapter<Album>).updateItems(albums)
+                observePlayed()
+            }
 
             viewModel.items.observe(viewLifecycleOwner, Observer {
                 albums = it
@@ -220,10 +229,12 @@ class ExploreFragment : Fragment(), OnItemClickListener {
             })*/
         } else {
             viewModel.overrideCurrentItems(albums)
+            binding.swipeContainer.isRefreshing = false
         }
     }
 
     private fun setupViews() {
+        binding.swipeContainer.setOnRefreshListener(this)
         val albumAdapter = BaseAdapter(
             albums, requireActivity(), R.layout.item_album, BR.album, this, null,
             setOf(R.anim.fast_fade_in), true
@@ -267,13 +278,13 @@ class ExploreFragment : Fragment(), OnItemClickListener {
             .build()
         val action =
             ExploreFragmentDirections.actionExploreFragmentToAlbumSongsFragment(albums[position], transitionName)
-        findNavController().navigate(action, extras)
+        findNavController().safeNavigate(action, extras)
     }
 
     override fun onItemLongClick(position: Int) {
         val action =
             ExploreFragmentDirections.actionExploreFragmentToAlbumsMenuBottomSheetDialogFragment(album = albums[position])
-        findNavController().navigate(action)
+        findNavController().safeNavigate(action)
     }
 
 
@@ -281,5 +292,10 @@ class ExploreFragment : Fragment(), OnItemClickListener {
         binding.randomAlbumsRV.adapter = null
         binding.playedRV.adapter = null
         super.onDestroyView()
+    }
+
+    override fun onRefresh() {
+        binding.swipeContainer.isRefreshing = true
+        observeViewModel()
     }
 }

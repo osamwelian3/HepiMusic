@@ -1,16 +1,15 @@
 package com.hepimusic.ui
 
+import android.app.Activity
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
 import android.content.SharedPreferences
 import android.os.Bundle
-import android.os.Handler
 import android.os.IBinder
 import android.util.Log
 import android.view.LayoutInflater
-import android.view.View
 import android.view.WindowManager
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -18,14 +17,21 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
+import com.amplifyframework.auth.AuthUser
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.model.query.Where
+import com.amplifyframework.datastore.generated.model.Profile
+import com.amplifyframework.geo.maplibre.view.AmplifyMapView
+import com.google.android.gms.common.GoogleApiAvailability
+import com.google.firebase.ktx.Firebase
+import com.google.firebase.messaging.ktx.messaging
+import com.google.gson.Gson
 import com.hepimusic.R
 import com.hepimusic.common.Constants
 import com.hepimusic.databinding.ActivityMainBinding
 import com.hepimusic.main.admin.albums.AdminAlbumsViewModel
 import com.hepimusic.main.admin.categories.AdminCategoriesViewModel
-import com.hepimusic.main.admin.common.BaseAdminViewModel
+import com.hepimusic.main.admin.creators.AdminCreatorsViewModel
 import com.hepimusic.main.admin.dashboard.AdminNavViewModel
 import com.hepimusic.main.admin.songs.AdminSongsViewModel
 import com.hepimusic.main.albums.AlbumSongsViewModel
@@ -37,9 +43,10 @@ import com.hepimusic.main.playlist.PlaylistSongsEditorViewModel
 import com.hepimusic.main.playlist.PlaylistSongsViewModel
 import com.hepimusic.main.playlist.PlaylistViewModel
 import com.hepimusic.main.playlist.WritePlaylistViewModel
-import com.hepimusic.main.profile.Profile
 import com.hepimusic.main.profile.ProfileViewModel
 import com.hepimusic.main.profile.WriteProfileViewModel
+import com.hepimusic.main.requests.RequestsViewModel
+import com.hepimusic.main.requests.users.PlayersFragment
 import com.hepimusic.main.search.SearchViewModel
 import com.hepimusic.main.songs.Song
 import com.hepimusic.main.songs.SongsViewModel
@@ -79,6 +86,10 @@ class MainActivity : AppCompatActivity() {
     lateinit var songsAdminViewModel: AdminSongsViewModel
     lateinit var albumsAdminViewModel: AdminAlbumsViewModel
     lateinit var categoriesAdminViewModel: AdminCategoriesViewModel
+    lateinit var creatorsAdminViewModel: AdminCreatorsViewModel
+
+    // requests
+    lateinit var requestsViewModel: RequestsViewModel
 
     lateinit var navHostFragment: NavHostFragment
     lateinit var navController: NavController
@@ -88,7 +99,9 @@ class MainActivity : AppCompatActivity() {
     private val serviceConnection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
             if (service is MusicService.MusicServiceBinder) {
-                playbackViewModel.exoPlayer = service.musicService.player
+                if (::playbackViewModel.isInitialized) {
+                    playbackViewModel.exoPlayer = service.musicService.player
+                }
             }
         }
 
@@ -97,12 +110,26 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private val exceptionHandler = Thread.UncaughtExceptionHandler { t, e ->
+        e.printStackTrace()
+        Log.e("UNCAUGHT EXCEPTION HANDLER", e.message.toString())
+        startActivity(Intent(this, MainActivity::class.java))
+        finish()
+    }
+
+    val amplifyMapView by lazy {
+        findViewById<AmplifyMapView>(R.id.mapView)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+//        Thread.setDefaultUncaughtExceptionHandler(exceptionHandler)
         preferences = this.getSharedPreferences("main", MODE_PRIVATE)
         preferences.edit().putString(Constants.SESSION_ID, UUID.randomUUID().toString()).apply()
 
-        CoroutineScope(Dispatchers.IO).launch(Dispatchers.IO) {
+//        Firebase.messaging.isAutoInitEnabled = true
+
+        CoroutineScope(Dispatchers.IO).launch {
             playbackViewModel = ViewModelProvider(this@MainActivity)[PlaybackViewModel::class.java]
             exploreViewModel = ViewModelProvider(this@MainActivity)[ExploreViewModel::class.java]
             songsViewModel = ViewModelProvider(this@MainActivity)[SongsViewModel::class.java]
@@ -122,22 +149,28 @@ class MainActivity : AppCompatActivity() {
             songsAdminViewModel = ViewModelProvider(this@MainActivity)[AdminSongsViewModel::class.java]
             albumsAdminViewModel = ViewModelProvider(this@MainActivity)[AdminAlbumsViewModel::class.java]
             categoriesAdminViewModel = ViewModelProvider(this@MainActivity)[AdminCategoriesViewModel::class.java]
+            creatorsAdminViewModel = ViewModelProvider(this@MainActivity)[AdminCreatorsViewModel::class.java]
             adminNavViewModel = ViewModelProvider(this@MainActivity)[AdminNavViewModel::class.java]
+            requestsViewModel = ViewModelProvider(this@MainActivity)[RequestsViewModel::class.java]
         }
         startMusicService()
 
         Amplify.Auth.getCurrentUser(
             { user ->
+                if (preferences.getString(Constants.AUTH_USER, null).isNullOrEmpty()) {
+                    preferences.edit().putString(Constants.AUTH_USER, Gson().toJson(user)).apply()
+                }
                 if (!preferences.getBoolean(Constants.AUTH_TYPE_SOCIAL, false)) {
                     Amplify.DataStore.query(
-                        com.amplifyframework.datastore.generated.model.Profile::class.java,
-                        Where.matches(com.amplifyframework.datastore.generated.model.Profile.NAME.eq(user.username)),
+                        Profile::class.java,
+                        Where.identifier(Profile::class.java, user.userId),
                         { profileMutableIterator ->
                             if (!profileMutableIterator.hasNext()) {
                                 Amplify.DataStore.save(
                                     com.amplifyframework.datastore.generated.model.Profile.builder()
-                                        .key(UUID.randomUUID().toString())
+                                        .key(user.userId)
                                         .name(user.username)
+                                        .email(if (preferences.getString(Constants.USERNAME, "")!!.contains("@")) preferences.getString(Constants.USERNAME, "") else "")
                                         .build(),
                                     {
                                         Log.e("INITIALIZE PROFILE", it.item().name)
@@ -154,14 +187,18 @@ class MainActivity : AppCompatActivity() {
                     )
                 } else {
                     Amplify.DataStore.query(
-                        com.amplifyframework.datastore.generated.model.Profile::class.java,
-                        Where.matches(com.amplifyframework.datastore.generated.model.Profile.EMAIL.eq(preferences.getString(Constants.USERNAME, ""))),
+                        Profile::class.java,
+                        Where.identifier(Profile::class.java, user.userId),
                         { profileMutableIterator ->
                             if (!profileMutableIterator.hasNext()) {
                                 Amplify.DataStore.save(
                                     com.amplifyframework.datastore.generated.model.Profile.builder()
-                                        .key(UUID.randomUUID().toString())
+                                        .key(user.userId)
                                         .email(preferences.getString(Constants.USERNAME, ""))
+                                        .name(
+                                            preferences.getString(Constants.USERNAME, "")?.split("@")
+                                                ?.get(0)
+                                                ?: "")
                                         .build(),
                                     {
                                         Log.e("INITIALIZE PROFILE", it.item().name)
@@ -179,8 +216,75 @@ class MainActivity : AppCompatActivity() {
                 }
             },
             {
-                CoroutineScope(Dispatchers.Main).launch {
-                    Toast.makeText(application.applicationContext, it.message.toString(), Toast.LENGTH_LONG).show()
+                try {
+                    val user = Gson().fromJson(
+                        preferences.getString(Constants.AUTH_USER, null),
+                        AuthUser::class.java
+                    )
+                    if (user != null) {
+                        if (!preferences.getBoolean(Constants.AUTH_TYPE_SOCIAL, false)) {
+                            Amplify.DataStore.query(
+                                Profile::class.java,
+                                Where.identifier(Profile::class.java, user.userId),
+                                { profileMutableIterator ->
+                                    if (!profileMutableIterator.hasNext()) {
+                                        Amplify.DataStore.save(
+                                            Profile.builder()
+                                                .key(user.userId)
+                                                .name(user.username)
+                                                .email(if (preferences.getString(Constants.USERNAME, "")!!.contains("@")) preferences.getString(Constants.USERNAME, "") else "")
+                                                .build(),
+                                            {
+                                                Log.e("INITIALIZE PROFILE", it.item().name)
+                                            },
+                                            {
+                                                Log.e("INITIALIZE PROFILE", it.cause?.message.toString())
+                                            }
+                                        )
+                                    }
+                                },
+                                {
+
+                                }
+                            )
+                        } else {
+                            Amplify.DataStore.query(
+                                Profile::class.java,
+                                Where.identifier(Profile::class.java, user.userId),
+                                { profileMutableIterator ->
+                                    if (!profileMutableIterator.hasNext()) {
+                                        Amplify.DataStore.save(
+                                            com.amplifyframework.datastore.generated.model.Profile.builder()
+                                                .key(user.userId)
+                                                .email(preferences.getString(Constants.USERNAME, ""))
+                                                .name(
+                                                    preferences.getString(Constants.USERNAME, "")?.split("@")
+                                                        ?.get(0)
+                                                        ?: "")
+                                                .build(),
+                                            {
+                                                Log.e("INITIALIZE PROFILE", it.item().name)
+                                            },
+                                            {
+                                                Log.e("INITIALIZE PROFILE", it.cause?.message.toString())
+                                            }
+                                        )
+                                    }
+                                },
+                                {
+
+                                }
+                            )
+                        }
+                    }
+                } catch (e: Exception) {
+                    CoroutineScope(Dispatchers.Main).launch {
+                        Toast.makeText(
+                            application.applicationContext,
+                            it.message.toString(),
+                            Toast.LENGTH_LONG
+                        ).show()
+                    }
                 }
             }
         )
@@ -219,6 +323,7 @@ class MainActivity : AppCompatActivity() {
 //        playbackViewModel.init()
 //        playbackViewModel.loadInitialData()
         binding = ActivityMainBinding.inflate(LayoutInflater.from(this))
+        binding.mapView
 //        navHostFragment = supportFragmentManager.findFragmentById(R.id.mainNavHostFragment) as NavHostFragment
 //        navController = navHostFragment.navController
 //        navController.setGraph(R.navigation.navigation_graph)
@@ -331,6 +436,39 @@ class MainActivity : AppCompatActivity() {
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
+        val fragmentManager = this.supportFragmentManager
+        val fragmentsList = fragmentManager.fragments
+        var fragment: Fragment? = null
+
+        loop@ for (f in fragmentsList) {
+            if (f != null && f.isVisible) {
+                val childFragmentManager = f.childFragmentManager
+                val childFragmentsList = childFragmentManager.fragments
+                for (cf in childFragmentsList) {
+                    if (cf is PlayersFragment) {
+                        fragment = cf
+                        break@loop
+                    }
+                }
+                /*if (f.javaClass.isInstance(PlayersFragment::class.java)) {
+                    fragment = f
+                }*/
+            }
+        }
+
+
+        fragment?.let {
+            if (Constants.REQUEST_CHECK_SETTINGS == requestCode) {
+                if(Activity.RESULT_OK == resultCode){
+                    //user clicked OK, you can startUpdatingLocation(...);
+                    (fragment as PlayersFragment).getLocation()
+                }else{
+                    //user clicked cancel: informUserImportanceOfLocationAndPresentRequestAgain();
+                    Toast.makeText(this, "We need your device location to find Players near you. Please allow device location", Toast.LENGTH_LONG).show()
+                    (fragment as PlayersFragment).createLocationRequest()
+                }
+            }
+        }
     }
 
     /*fun observeViewModel() {

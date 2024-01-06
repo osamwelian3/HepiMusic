@@ -112,6 +112,33 @@ fun com.amplifyframework.datastore.generated.model.Song.toMediaItem(): MediaItem
         .build()
 }
 
+fun com.amplifyframework.datastore.generated.model.RequestSong.toMediaItem(): MediaItem{
+    val albums = MediaItemTree.albums
+    val albm = partOf.let {
+        albums.find { album -> album.key == it  }?.name
+    }
+    val creator = selectedCreator?.let {
+        Json.parseToJsonElement(it).jsonObject["name"]
+    }
+    val bundle = Bundle()
+    bundle.putStringArrayList("trendingListens", this.trendingListens as ArrayList<String>?)
+    bundle.putStringArrayList("listOfUidUpVotes", this.listOfUidUpVotes as ArrayList<String>?)
+    bundle.putStringArrayList("listOfUidDownVotes", this.listOfUidDownVotes as ArrayList<String>?)
+    val data = MediaMetadata.Builder()
+        .setTitle(name)
+        .setSubtitle(name)
+        .setAlbumTitle(albm ?: "Unknown Album")
+        .setArtist(creator?.toString()?.removeSurrounding("\"") ?: "Unknown Artist")
+        .setArtworkUri(Uri.parse("https://dn1i8z7909ivj.cloudfront.net/public/$thumbnailKey"))
+        .setExtras(bundle)
+        .build()
+    return MediaItem.Builder()
+        .setMediaId(key)
+        .setUri(Uri.parse("https://dn1i8z7909ivj.cloudfront.net/public/$fileKey"))
+        .setMediaMetadata(data)
+        .build()
+}
+
 fun com.amplifyframework.datastore.generated.model.Song.toSong(): com.hepimusic.main.songs.Song {
     return com.hepimusic.main.songs.Song(
         this.toMediaItem()

@@ -12,6 +12,7 @@ import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.amplifyframework.core.Amplify
+import com.amplifyframework.geo.maplibre.view.AmplifyMapView
 import com.hepimusic.R
 import com.hepimusic.auth.LoginActivity
 import com.hepimusic.common.BaseActivity
@@ -40,6 +41,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -96,9 +98,57 @@ class SplashActivity : BaseActivity() {
             }
         }
 
+    private val amplifyMapView by lazy {
+        findViewById<AmplifyMapView>(R.id.mapView)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_splash)
+        amplifyMapView.mapView.getMapAsync {
+
+        }
+        preferences = application.getSharedPreferences("main", Context.MODE_PRIVATE)
+
+        runBlocking {
+            if (preferences.getBoolean(Constants.LOGGED_IN, false)) {
+                isAuthenticated = true
+
+                if (!MediaItemTree.liveDataSongs.value.isNullOrEmpty()) {
+                    goToNextScreen()
+                } else {
+                    CoroutineScope(Dispatchers.Main + Job()).launch {
+                        MediaItemTree.liveDataSongs.observe(this@SplashActivity) {
+                            goToNextScreen()
+                        }
+                        MediaItemTree.initialize(this@SplashActivity, songRepository)
+                    }
+                }
+                /*CoroutineScope(Dispatchers.Main + Job()).launch {
+                    viewModel = ViewModelProvider(this@SplashActivity)[SongViewModel::class.java]
+                    viewModel.mediaItemList.observe(this@SplashActivity) { mediaItemsList ->
+                        mediaItemsList.map {
+                            Log.e("MEDIA ITEM: ", it.mediaMetadata.title.toString())
+                        }
+                        if (mediaItemsList.isNotEmpty()) {
+                            goToNextScreen()
+                        } else {
+                            viewModel?.let {
+                                it.viewModelScope.launch {
+                                    MediaItemTree.initialize(this@SplashActivity, songRepository)
+                                    it.initializeBrowser(this@SplashActivity.applicationContext)
+                                }
+                            }
+                        }
+                    }
+
+                    MediaItemTree.initialize(this@SplashActivity.applicationContext, songRepository)
+                }*/
+            } else {
+                startActivity(Intent(this@SplashActivity, LoginActivity::class.java).setFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+                finish()
+            }
+        }
 
 //        val browserInstance = BrowserInstance(this.applicationContext, this)
 //        browserInstance.run()
@@ -106,7 +156,7 @@ class SplashActivity : BaseActivity() {
 //        MediaBrowserManager.initialize(this.applicationContext)
 //        browser = MediaBrowserManager.getMediaBrowser() // browserInstance.getBrowserInstance()
 
-        Amplify.Auth.getCurrentUser(
+        /*Amplify.Auth.getCurrentUser(
             { authUser ->
                 Log.e("AUTH USER", authUser.username)
                 isAuthenticated = true
@@ -139,7 +189,7 @@ class SplashActivity : BaseActivity() {
 
                 if (it.message.toString().contains("You are currently signed out.", true)) {
                     startActivity(Intent(this, LoginActivity::class.java))
-                    /*finish()*/
+                    *//*finish()*//*
                 } else {
                     isAuthenticated = true
                     CoroutineScope(Dispatchers.Main + Job()).launch {
@@ -166,8 +216,7 @@ class SplashActivity : BaseActivity() {
             }
         )
 
-        preferences = application.getSharedPreferences("main", Context.MODE_PRIVATE)
-        preferences.edit().putBoolean(Constants.INITIALIZATION_COMPLETE, false).apply()
+        preferences.edit().putBoolean(Constants.INITIALIZATION_COMPLETE, false).apply()*/
 
         // conditions
         conditionOne = preferences.getBoolean(OnBoardingActivity.HAS_SEEN_ON_BOARDING, false)
@@ -246,6 +295,7 @@ class SplashActivity : BaseActivity() {
                 }
             }
         val intent = Intent(this, nextActivity)
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
         startActivity(intent)
         if (Build.VERSION.SDK_INT >= 34) {
             overrideActivityTransition(OVERRIDE_TRANSITION_OPEN, R.anim.fade_in, R.anim.fade_out)

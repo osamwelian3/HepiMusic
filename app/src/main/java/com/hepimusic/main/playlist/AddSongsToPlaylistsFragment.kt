@@ -16,6 +16,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.hepimusic.BR
 import com.hepimusic.R
 import com.hepimusic.common.crossFadeWidth
+import com.hepimusic.common.safeNavigate
 import com.hepimusic.databinding.FragmentAddSongsToPlaylistsBinding
 import com.hepimusic.main.common.callbacks.OnItemClickListener
 import com.hepimusic.main.common.event.Event
@@ -145,7 +146,7 @@ class AddSongsToPlaylistsFragment : BaseFullscreenDialogFragment(), OnItemClickL
     override fun onClick(v: View?) {
         when (v?.id) {
             R.id.closeButton -> dismissAllowingStateLoss()
-            R.id.addPlayListIcon -> findNavController().navigate(AddSongsToPlaylistsFragmentDirections.actionAddSongsToPlaylistsFragmentToWritePlaylistDialogFragment())
+            R.id.addPlayListIcon -> findNavController().safeNavigate(AddSongsToPlaylistsFragmentDirections.actionAddSongsToPlaylistsFragmentToWritePlaylistDialogFragment())
         }
     }
 

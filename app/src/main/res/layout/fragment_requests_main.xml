@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+xmlns:app="http://schemas.android.com/apk/res-auto"
+xmlns:tools="http://schemas.android.com/tools"
+android:layout_width="match_parent"
+android:layout_height="match_parent"
+android:id="@+id/container"
+tools:context=".main.requests.RequestsMainFragment">
+
+<fragment
+    android:id="@+id/requestsBottomNavHostFragment"
+    android:tag="requests_bottom_nav"
+    android:name="androidx.navigation.fragment.NavHostFragment"
+    android:layout_width="0dp"
+    android:layout_height="0dp"
+    app:defaultNavHost="true"
+    app:layout_constraintBottom_toTopOf="@+id/requestsBottomPlaybackFragment"
+    app:layout_constraintLeft_toLeftOf="parent"
+    app:layout_constraintRight_toRightOf="parent"
+    app:layout_constraintTop_toTopOf="parent"
+    app:navGraph="@navigation/requests_bottom_navigation_graph"
+    android:clickable="true" />
+
+    <View
+        android:id="@+id/fabOverlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/black_overlay"
+        android:visibility="gone"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+<LinearLayout
+    android:id="@+id/requestsFABContainer"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_margin="20dp"
+    android:gravity="center_horizontal"
+    app:layout_constraintBottom_toTopOf="@id/requestsBottomPlaybackFragment"
+    app:layout_constraintEnd_toEndOf="parent"
+    android:orientation="vertical">
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fabtwo"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/thumb_circular_default"
+        android:scaleType="centerCrop"
+        android:transitionName="mainFragmentToRequestOnBoardingTransition"
+        app:maxImageSize="40dp"
+        android:clickable="true"
+        android:layout_margin="10dp"
+        app:fabSize="mini"
+        android:contentDescription="@string/requests_fab" />
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fabone"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/thumb_circular_default"
+        android:scaleType="centerCrop"
+        android:transitionName="mainFragmentToRequestOnBoardingTransition"
+        app:maxImageSize="40dp"
+        android:clickable="true"
+        android:layout_margin="10dp"
+        app:fabSize="mini"
+        android:contentDescription="@string/requests_fab" />
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/requestsFAB"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/baseline_add_24"
+        android:tint="@color/black"
+        android:transitionName="mainFragmentToRequestOnBoardingTransition"
+        app:maxImageSize="55dp"
+        android:backgroundTint="@color/colorAccent"
+        android:clickable="true"
+        android:layout_margin="10dp"
+        app:fabSize="normal"
+        android:contentDescription="@string/requests_fab" />
+</LinearLayout>
+
+<fragment
+    android:id="@+id/requestsBottomPlaybackFragment"
+    android:name="com.hepimusic.playback.BottomPlaybackFragment"
+    android:layout_width="0dp"
+    android:layout_height="@dimen/floating_playback_height"
+    app:layout_constraintBottom_toBottomOf="parent"
+    app:layout_constraintEnd_toEndOf="parent"
+    app:layout_constraintStart_toStartOf="parent"
+    tools:layout="@layout/fragment_bottom_playback" />
+</androidx.constraintlayout.widget.ConstraintLayout>

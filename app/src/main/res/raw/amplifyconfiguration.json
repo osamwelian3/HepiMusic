@@ -106,5 +106,26 @@
                 "defaultAccessLevel": "guest"
             }
         }
+    },
+    "geo": {
+        "plugins": {
+            "awsLocationGeoPlugin": {
+                "region": "us-west-2",
+                "maps": {
+                    "items": {
+                        "HepiMusicRequestsPlayersmap-dev": {
+                            "style": "VectorEsriStreets"
+                        }
+                    },
+                    "default": "HepiMusicRequestsPlayersmap-dev"
+                },
+                "searchIndices": {
+                    "items": [
+                        "HepiMusicPlayerPlaceIndex-dev"
+                    ],
+                    "default": "HepiMusicPlayerPlaceIndex-dev"
+                }
+            }
+        }
     }
 }

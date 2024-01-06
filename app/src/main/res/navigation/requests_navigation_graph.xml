@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/requests_navigation_graph"
+    app:startDestination="@id/requestsOnBoardingFragment">
+
+    <fragment
+        android:id="@+id/requestsOnBoardingFragment"
+        android:name="com.hepimusic.main.requests.RequestsOnBoardingFragment"
+        android:label="fragment_requests_on_boarding"
+        tools:layout="@layout/fragment_requests_on_boarding" >
+        <action
+            android:id="@+id/action_requestsOnBoardingFragment_to_playersFragment"
+            app:destination="@id/playersFragment" />
+        <action
+            android:id="@+id/action_requestsOnBoardingFragment_to_requestsMainFragment"
+            app:destination="@id/requestsMainFragment" />
+    </fragment>
+    <action android:id="@+id/action_global_requestsOnBoardingFragment" app:destination="@id/requestsOnBoardingFragment"/>
+    <fragment
+        android:id="@+id/playersFragment"
+        android:name="com.hepimusic.main.requests.users.PlayersFragment"
+        android:label="fragment_players"
+        tools:layout="@layout/fragment_players" />
+    <fragment
+        android:id="@+id/requestsMainFragment"
+        android:name="com.hepimusic.main.requests.RequestsMainFragment"
+        android:label="fragment_requests_main"
+        tools:layout="@layout/fragment_requests_main" />
+</navigation>

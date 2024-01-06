@@ -15,6 +15,7 @@ import androidx.navigation.fragment.findNavController
 import com.hepimusic.R
 import com.hepimusic.common.fadeInSlideInHorizontally
 import com.hepimusic.common.fadeOutSlideOutHorizontally
+import com.hepimusic.common.safeNavigate
 import com.hepimusic.databinding.FragmentSearchBinding
 import com.hepimusic.main.common.data.Model
 import com.hepimusic.playback.PlaybackViewModel
@@ -91,9 +92,9 @@ class SearchFragment : Fragment(), View.OnClickListener {
         viewModel.searchNavigation.observe(viewLifecycleOwner, Observer { event ->
             event.getContentIfNotHandled()?.let {
                 if (it.navigatorExtras == null) {
-                    findNavController().navigate(it.directions)
+                    findNavController().safeNavigate(it.directions)
                 } else {
-                    findNavController().navigate(it.directions, it.navigatorExtras)
+                    findNavController().safeNavigate(it.directions, it.navigatorExtras)
                 }
             }
         })

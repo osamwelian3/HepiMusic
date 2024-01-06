@@ -13,6 +13,10 @@
         <action
             android:id="@+id/action_mainFragment_to_playbackFragment"
             app:destination="@id/playbackFragment" />
+        <action
+            android:id="@+id/action_mainFragment_to_requests_navigation_graph"
+            app:destination="@id/requests_navigation_graph"
+            app:popUpTo="@id/mainFragment" />
     </fragment>
     <dialog
         android:id="@+id/playbackFragment"
@@ -86,4 +90,5 @@
             app:argType="com.hepimusic.main.playlist.Playlist"
             app:nullable="true" />
     </dialog>
+    <include app:graph="@navigation/requests_navigation_graph" /><action android:id="@+id/action_global_mainFragment" app:destination="@id/mainFragment"/>
 </navigation>

@@ -1,6 +1,7 @@
 package com.hepimusic.main.admin.categories
 
 import android.app.Application
+import android.util.Log
 import androidx.annotation.StringRes
 import androidx.databinding.BaseObservable
 import androidx.databinding.Bindable
@@ -32,13 +33,15 @@ class AdminCategoriesViewModel @Inject constructor(
 
         val _categoryToEdit = MutableLiveData<Category>()
         val categoryToEdit : LiveData<Category> = _categoryToEdit
+        val _editClicked = MutableLiveData<Boolean>()
+        val editClicked : LiveData<Boolean> = _editClicked
 
         private val _key = MutableLiveData<String>()
         @Bindable
-        val _name = MutableLiveData<String>()
+        val catname = MutableLiveData<String>()
 
         val key: LiveData<String> = _key
-        val name: LiveData<String> = _name
+        val name: LiveData<String> = catname
 
         fun saveCategoryToDb(category: Category) {
             Amplify.DataStore.save(
@@ -71,6 +74,25 @@ class AdminCategoriesViewModel @Inject constructor(
                 .name(name.value)
                 .build()
             saveCategoryToDb(category)
+        }
+
+        fun deleteCategory() {
+            Amplify.DataStore.delete(
+                categoryToEdit.value!!,
+                {
+                    Log.e("CATEGORY DELETE", it.item().name)
+                    _data.postValue(WriteResult(true))
+                },
+                {
+                    Log.e("CATEGORY DELETE EXCEPTION", it.message.toString())
+                    _data.postValue(
+                        WriteResult(
+                            false,
+                            R.string.sth_went_wrong
+                        )
+                    )
+                }
+            )
         }
 
         fun clearResult(@StringRes success: Int) {

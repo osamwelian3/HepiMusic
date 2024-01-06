@@ -1090,7 +1090,12 @@ class PlaybackViewModel @Inject constructor(
     }, 0, 10)*/
 
     override fun onCleared() {
-        globalBrowser.release()
+        try {
+            globalBrowser.release()
+        } catch(e: Exception) {
+            e.printStackTrace()
+        }
+
         browser.release()
         controller.release()
         timer.cancel()

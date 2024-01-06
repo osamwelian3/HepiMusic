@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/requests_bottom_navigation_graph"
+    app:startDestination="@id/playersFragment2">
+
+    <fragment
+        android:id="@+id/playersFragment2"
+        android:name="com.hepimusic.main.requests.users.PlayersFragment"
+        android:label="fragment_players"
+        tools:layout="@layout/fragment_players" >
+        <action
+            android:id="@+id/action_playersFragment2_to_playerControlFragment"
+            app:destination="@id/playerControlFragment"
+            app:popUpTo="@id/playersFragment2" />
+    </fragment>
+    <fragment
+        android:id="@+id/playerControlFragment"
+        android:name="com.hepimusic.main.requests.players.PlayerControlFragment"
+        android:label="fragment_player_control"
+        tools:layout="@layout/fragment_player_control" >
+        <argument
+            android:name="playerKey"
+            app:argType="string" />
+        <action
+            android:id="@+id/action_playerControlFragment_to_playlistFragment2"
+            app:destination="@id/playlistFragment2"
+            app:popUpTo="@id/playerControlFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/playlistFragment2"
+        android:name="com.hepimusic.main.requests.users.PlaylistFragment"
+        android:label="PlaylistFragment"
+        tools:layout="@layout/fragment_playlist_fragment" >
+        <argument
+            android:name="playlistKey"
+            app:argType="string" />
+    </fragment>
+</navigation>

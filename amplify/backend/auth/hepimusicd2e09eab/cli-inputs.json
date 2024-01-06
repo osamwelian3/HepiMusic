@@ -2,7 +2,7 @@
   "version": "1",
   "cognitoConfig": {
     "identityPoolName": "hepimusicd2e09eab_identitypool_d2e09eab",
-    "allowUnauthenticatedIdentities": false,
+    "allowUnauthenticatedIdentities": true,
     "resourceNameTruncated": "hepimud2e09eab",
     "userPoolName": "hepimusicd2e09eab_userpool_d2e09eab",
     "autoVerifiedAttributes": [

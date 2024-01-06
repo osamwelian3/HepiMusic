@@ -39,6 +39,7 @@ import com.hepimusic.common.fadeInSlideUp
 import com.hepimusic.common.fadeOutSlideDown
 import com.hepimusic.common.fadeOutSlideUp
 import com.hepimusic.common.px
+import com.hepimusic.common.safeNavigate
 import com.hepimusic.databinding.FragmentPlaybackBinding
 import com.hepimusic.main.common.callbacks.AnimatorListener
 import com.hepimusic.main.common.callbacks.OnSeekBarChangeListener
@@ -257,7 +258,7 @@ class PlaybackFragment : /*BaseFragment()*/ BaseFullscreenDialogFragment(), View
                 /*val navHostFragment = requireActivity().supportFragmentManager.findFragmentById(R.id.mainNavHostFragment) as NavHostFragment
                 val navController = navHostFragment.navController
                 Log.e("DESTINATION", navController.currentDestination?.displayName.toString())
-                navController.navigate(R.id.action_playbackFragment_to_mainFragment2)*/
+                navController.safeNavigate(R.id.action_playbackFragment_to_mainFragment2)*/
                 /*(requireActivity() as MainActivity).navController.popBackStack()*/
 //                requireActivity().supportFragmentManager.beginTransaction().replace(R.id.mainNavHostFragment, MainFragment()).commit()
                 activity?.findNavController(R.id.mainNavHostFragment)?.popBackStack()
@@ -296,7 +297,7 @@ class PlaybackFragment : /*BaseFragment()*/ BaseFullscreenDialogFragment(), View
         val mediaItem = viewModel.currentItem.value ?: return
         val action =
             PlaybackFragmentDirections.actionPlaybackFragmentToSongsMenuBottomSheetDialogFragment(mediaItem.mediaId, mediaItem.toSong())
-        findNavController().navigate(action)
+        findNavController().safeNavigate(action)
     }
 
     private fun closeLyrics() {

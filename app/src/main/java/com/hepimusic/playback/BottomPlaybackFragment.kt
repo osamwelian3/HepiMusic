@@ -14,6 +14,7 @@ import androidx.media3.common.Player
 import androidx.navigation.findNavController
 import androidx.navigation.fragment.FragmentNavigator
 import com.hepimusic.R
+import com.hepimusic.common.safeNavigate
 import com.hepimusic.databinding.FragmentBottomPlaybackBinding
 import com.hepimusic.main.common.view.BaseFragment
 import com.hepimusic.ui.MainFragmentDirections
@@ -139,8 +140,8 @@ class BottomPlaybackFragment : BaseFragment() {
                 val transitionName = ViewCompat.getTransitionName(binding.sharableView)!!
                 val extras = FragmentNavigator.Extras.Builder().addSharedElement(binding.sharableView, transitionName).build()
                 val action = MainFragmentDirections.actionMainFragmentToPlaybackFragment(transitionName)
-                activity?.findNavController(R.id.mainNavHostFragment)?.navigate(action, extras)
-                /*(requireActivity() as MainActivity).navController.navigate(action, extras)*/
+                activity?.findNavController(R.id.mainNavHostFragment)?.safeNavigate(action, extras)
+                /*(requireActivity() as MainActivity).navController.safeNavigate(action, extras)*/
             }
         }
     }

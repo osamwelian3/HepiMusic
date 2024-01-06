@@ -14,4 +14,5 @@ abstract class BaseMenuBottomSheet: BaseBottomSheetDialogFragment(), View.OnClic
             buttonsContainer.getChildAt(i).setOnClickListener(this)
         }
     }
+
 }

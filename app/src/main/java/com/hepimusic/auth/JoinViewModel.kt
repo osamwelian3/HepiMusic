@@ -35,7 +35,8 @@ class JoinViewModel @Inject constructor(val application: Application): ViewModel
 
     fun setPassword(password: String) = _password.postValue(password)
 
-    fun createProfile() {
+    // never use
+    /*fun createProfile() {
         val profile = Profile.builder()
             .key(UUID.randomUUID().toString())
             .name(username.value)
@@ -53,5 +54,5 @@ class JoinViewModel @Inject constructor(val application: Application): ViewModel
                 Toast.makeText(application.applicationContext, it.cause?.message.toString(), Toast.LENGTH_LONG).show()
             }
         )
-    }
+    }*/
 }

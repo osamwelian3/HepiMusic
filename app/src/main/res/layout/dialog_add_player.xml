@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/rounded_bg_theme"
+    android:padding="@dimen/padding_medium"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <TextView
+        android:id="@+id/addPlayerTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Create a Player Profile to attract your audience"
+        android:textAlignment="center"
+        style="@style/Theme.HepiMusic.SectionTitle"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <com.google.android.material.textfield.TextInputEditText
+        android:id="@+id/playerNameField"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/margin_xx_large"
+        android:background="@drawable/edit_text_background"
+        android:textColor="@color/black"
+        android:hint="Player Name e.g ABC Restaurant"
+        android:imeOptions="actionNext"
+        android:inputType="text"
+        android:maxLines="1"
+        android:paddingStart="@dimen/padding_x_large"
+        android:paddingTop="@dimen/padding_medium"
+        android:paddingEnd="@dimen/padding_x_large"
+        android:paddingBottom="@dimen/padding_medium"
+        app:hintAnimationEnabled="false"
+        app:hintTextAppearance="@style/TextAppearance.AppCompat.Subhead"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/addPlayerTitle" />
+
+    <com.google.android.material.textfield.TextInputEditText
+        android:id="@+id/playerDescField"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/margin_xx_large"
+        android:background="@drawable/edit_text_background"
+        android:textColor="@color/black"
+        android:hint="Player Description e.g Where fun meets music"
+        android:imeOptions="actionNext"
+        android:inputType="text"
+        android:maxLines="1"
+        android:paddingStart="@dimen/padding_x_large"
+        android:paddingTop="@dimen/padding_medium"
+        android:paddingEnd="@dimen/padding_x_large"
+        android:paddingBottom="@dimen/padding_medium"
+        app:hintAnimationEnabled="false"
+        app:hintTextAppearance="@style/TextAppearance.AppCompat.Subhead"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/playerNameField" />
+
+    <Button
+        android:id="@+id/writePlayer"
+        style="@style/Widget.AppCompat.Button.Colored"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/margin_x_large"
+        android:enabled="false"
+        android:paddingTop="@dimen/button_padding"
+        android:paddingBottom="18dp"
+        android:text="SAVE"
+        android:textAppearance="@style/TextAppearance.AppCompat.Body1"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/playerDescField" />
+
+    <ProgressBar
+        android:id="@+id/progressBar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        app:layout_constraintTop_toTopOf="@id/writePlayer"
+        app:layout_constraintStart_toStartOf="@id/writePlayer"
+        app:layout_constraintEnd_toEndOf="@id/writePlayer"
+        app:layout_constraintBottom_toBottomOf="@id/writePlayer" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

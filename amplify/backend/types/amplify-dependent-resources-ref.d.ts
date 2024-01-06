@@ -19,6 +19,19 @@ export type AmplifyDependentResourcesAttributes = {
       "UserPoolName": "string"
     }
   },
+  "geo": {
+    "HepiMusicPlayerPlaceIndex": {
+      "Arn": "string",
+      "Name": "string",
+      "Region": "string"
+    },
+    "HepiMusicRequestsPlayersmap": {
+      "Arn": "string",
+      "Name": "string",
+      "Region": "string",
+      "Style": "string"
+    }
+  },
   "hosting": {
     "S3AndCloudFront": {
       "CloudFrontDistributionID": "string",

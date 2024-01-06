@@ -750,12 +750,12 @@ class AdminWriteSongDialogFragment : BaseFullscreenDialogFragment(), View.OnClic
         val songCategory = binding.autoCompleteCategories.text.toString()
         @StringRes var res: Int? = null
         if (song == null && (songName.trim().isEmpty() || viewModel.getObservable().nname.value.isNullOrEmpty() || viewModel.getObservable()._partOf.value.isNullOrEmpty() || viewModel.getObservable().sselectedCategory.value.isNullOrEmpty() || viewModel.getObservable()._selectedCreator.value.isNullOrEmpty() || tempFileUri == null || tempThumbUri == null)) {
-            res = R.string.profile_empty_message
+            res = R.string.song_empty_message
         } else if (song != null) {
             if (tempThumbUri == null && songName.trim() == song!!.originalSong.name && songAlbum.trim() == (viewModel.albums.value?.find { it.originalAlbum.key == song!!.originalSong.partOf }?.originalAlbum?.name
                     ?: "") && songCategory.trim() == song!!.originalSong.selectedCategory && !deleteImageFile
             ) {
-                res = R.string.profile_empty_thumb_message
+                res = R.string.song_empty_thumb_message
             }
         }
 
@@ -796,6 +796,9 @@ class AdminWriteSongDialogFragment : BaseFullscreenDialogFragment(), View.OnClic
             vm.getObservable().sselectedCategory.postValue(null)
             vm.getObservable()._selectedCreator.postValue(null)
             vm.getObservable()._partOf.postValue(null)
+            vm.getObservable()._imageUri.postValue(null)
+            vm.getObservable()._deleteOldImage.postValue(null)
+            vm.getObservable()._fileUri.postValue(null)
         }
     }
 

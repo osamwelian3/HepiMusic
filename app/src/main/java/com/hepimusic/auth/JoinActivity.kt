@@ -139,6 +139,7 @@ class JoinActivity : AppCompatActivity(), View.OnClickListener {
             this@JoinActivity,
             {
                 preferences.edit().putBoolean(Constants.AUTH_TYPE_SOCIAL, true).apply()
+                preferences.edit().putBoolean(Constants.LOGGED_IN, true).apply()
                 startActivity(Intent(this@JoinActivity, SplashActivity::class.java))
                 finish()
             },
@@ -156,6 +157,7 @@ class JoinActivity : AppCompatActivity(), View.OnClickListener {
             this@JoinActivity,
             {
                 preferences.edit().putBoolean(Constants.AUTH_TYPE_SOCIAL, true).apply()
+                preferences.edit().putBoolean(Constants.LOGGED_IN, true).apply()
                 startActivity(Intent(this@JoinActivity, SplashActivity::class.java))
                 finish()
             },
@@ -235,8 +237,8 @@ class JoinActivity : AppCompatActivity(), View.OnClickListener {
             viewModel.password.value!!,
             {
                 if (it.isSignedIn) {
-                    val profile = Profile.builder()
-                        .key(UUID.randomUUID().toString())
+                    /*val profile = Profile.builder()
+                        .key()
                         .name(viewModel.username.value)
                         .email(viewModel.emailAddr.value)
                         .phoneNumber(viewModel.phone.value)
@@ -251,12 +253,13 @@ class JoinActivity : AppCompatActivity(), View.OnClickListener {
                             Log.e("PROFILE SAVE EXCEPTION", it.message.toString())
                             Toast.makeText(application.applicationContext, "User created without profile, you can create profile later in the profile menu. ErrMessage: "+it.cause?.message.toString(), Toast.LENGTH_LONG).show()
                         }
-                    )
+                    )*/
                     preferences.edit().putBoolean(Constants.AUTH_TYPE_SOCIAL, false).apply()
                     preferences.edit().remove(USERNAME).apply()
                     preferences.edit().remove(USER_EMAIL).apply()
                     preferences.edit().remove(USER_PHONE).apply()
                     preferences.edit().remove(USER_PASSWORD).apply()
+                    preferences.edit().putBoolean(Constants.LOGGED_IN, true).apply()
                     startActivity(Intent(this@JoinActivity, SplashActivity::class.java))
                     finish()
                 }

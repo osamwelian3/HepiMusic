@@ -14,6 +14,8 @@ import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.hepimusic.BR
 import com.hepimusic.R
+import com.hepimusic.common.safeNavigate
+import com.hepimusic.common.safeNavigationOnClickListener
 import com.hepimusic.databinding.FragmentArtistsBinding
 import com.hepimusic.main.common.callbacks.OnItemClickListener
 import com.hepimusic.main.common.view.BaseAdapter
@@ -63,7 +65,8 @@ class ArtistsFragment : BaseFragment(), OnItemClickListener {
         setupRecyclerView()
         observeViewModel()
         binding.navigationIcon.setOnClickListener(
-            Navigation.createNavigateOnClickListener(
+            Navigation.safeNavigationOnClickListener(
+                R.id.artistsFragment,
                 R.id.action_artistsFragment_to_navigationDialogFragment
             )
         )
@@ -97,7 +100,7 @@ class ArtistsFragment : BaseFragment(), OnItemClickListener {
             .build()
         val action =
             ArtistsFragmentDirections.actionArtistsFragmentToArtistAlbumsFragment(items[position], transitionName)
-        findNavController().navigate(action, extras)
+        findNavController().safeNavigate(action, extras)
     }
 
     companion object {

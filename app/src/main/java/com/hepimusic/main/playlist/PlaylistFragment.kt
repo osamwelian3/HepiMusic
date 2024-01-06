@@ -15,6 +15,7 @@ import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.hepimusic.BR
 import com.hepimusic.R
+import com.hepimusic.common.safeNavigate
 import com.hepimusic.databinding.FragmentPlaylistBinding
 import com.hepimusic.main.common.callbacks.OnItemClickListener
 import com.hepimusic.main.common.view.BaseAdapter
@@ -122,20 +123,21 @@ class PlaylistFragment : BaseFragment(), OnItemClickListener, View.OnClickListen
             .build()
         val action =
             PlaylistFragmentDirections.actionPlaylistFragmentToPlaylistSongsFragment(transitionName, items[position])
-        findNavController().navigate(action, extras)
+        findNavController().safeNavigate(action, extras)
     }
 
     override fun onItemLongClick(position: Int) {
         super.onItemLongClick(position)
         val action =
             PlaylistFragmentDirections.actionPlaylistFragmentToPlaylistMenuBottomSheetDialogFragment(playlist = items[position])
-        findNavController().navigate(action)
+        findNavController().safeNavigate(action)
     }
 
     override fun onClick(v: View?) {
         when (v?.id) {
-            R.id.navigationIcon -> findNavController().navigate(R.id.action_playlistFragment_to_navigationDialogFragment)
-            R.id.addPlayList, R.id.addPlayListIcon -> findNavController().navigate(
+            R.id.navigationIcon -> findNavController().safeNavigate(R.id.playlistFragment, R.id.action_playlistFragment_to_navigationDialogFragment)
+            R.id.addPlayList, R.id.addPlayListIcon -> findNavController().safeNavigate(
+                R.id.playlistFragment,
                 R.id.action_playlistFragment_to_writePlaylistDialogFragment
             )
         }

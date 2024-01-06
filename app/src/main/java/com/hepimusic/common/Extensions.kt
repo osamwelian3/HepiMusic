@@ -1,17 +1,23 @@
 package com.hepimusic.common
 
+import android.Manifest
 import android.animation.Animator
 import android.animation.AnimatorSet
 import android.animation.ObjectAnimator
 import android.animation.PropertyValuesHolder
+import android.content.Context
+import android.content.pm.PackageManager
 import android.content.res.Resources
 import android.net.Uri
 import android.os.Bundle
 import android.view.View
 import androidx.annotation.IdRes
+import androidx.core.content.ContextCompat
 import androidx.navigation.NavController
 import androidx.navigation.NavDirections
+import androidx.navigation.NavOptions
 import androidx.navigation.Navigation
+import androidx.navigation.Navigator
 import com.hepimusic.main.common.callbacks.AnimatorListener
 import java.lang.Math.abs
 
@@ -247,6 +253,14 @@ fun NavController.safeNavigate(direction: NavDirections) {
     currentDestination?.getAction(direction.actionId)?.run { navigate(direction) }
 }
 
+fun NavController.safeNavigate(direction: NavDirections, args: Navigator.Extras) {
+    currentDestination?.getAction(direction.actionId)?.run { navigate(direction, args) }
+}
+
+fun NavController.safeNavigate(direction: NavDirections, navOptions: NavOptions) {
+    currentDestination?.getAction(direction.actionId)?.run { navigate(direction, navOptions) }
+}
+
 fun NavController.safeNavigate(
     @IdRes currentDestinationId: Int,
     @IdRes id: Int,
@@ -268,4 +282,15 @@ fun Navigation.safeNavigationOnClickListener(
             navController.navigate(id, args)
         }
     }
+}
+
+fun Context.hasLocationPermission(): Boolean {
+    return ContextCompat.checkSelfPermission(
+        this,
+        Manifest.permission.ACCESS_COARSE_LOCATION
+    ) == PackageManager.PERMISSION_GRANTED &&
+            ContextCompat.checkSelfPermission(
+        this,
+        Manifest.permission.ACCESS_FINE_LOCATION
+    ) == PackageManager.PERMISSION_GRANTED
 }

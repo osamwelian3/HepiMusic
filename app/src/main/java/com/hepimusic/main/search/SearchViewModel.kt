@@ -66,11 +66,11 @@ class SearchViewModel @Inject constructor(val application: Application, val play
                 }
             }
 
-            _songs.value = songs.await()
-            _albums.value = albums.await()
-            _artists.value = artists.await()
-            _genres.value = genres.await()
-            _playlists.value = playlists.await()
+            _songs.value = songs.await() ?: emptyList()
+            _albums.value = albums.await() ?: emptyList()
+            _artists.value = artists.await() ?: emptyList()
+            _genres.value = genres.await() ?: emptyList()
+            _playlists.value = playlists.await() ?: emptyList()
             val totalSize = (_songs.value?.size ?: 0) + (_albums.value?.size ?: 0) + (_artists.value?.size
                 ?: 0) + (_genres.value?.size ?: 0) + (_playlists.value?.size ?: 0)
             _resultSize.postValue(totalSize)

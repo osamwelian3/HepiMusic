@@ -20,6 +20,7 @@ import androidx.navigation.Navigation
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.hepimusic.R
+import com.hepimusic.common.safeNavigationOnClickListener
 import com.hepimusic.databinding.FragmentBasePlayerBinding
 import com.hepimusic.main.common.callbacks.OnItemClickListener
 import com.hepimusic.main.common.data.Model
@@ -38,6 +39,7 @@ abstract class BasePlayerFragment<T : Model> : BaseFragment(), View.OnClickListe
     lateinit var viewModel: BaseMediaStoreViewModel<T>
     @get: IdRes
     abstract var navigationFragmentId: Int
+    abstract var currentNavigationFragmentId: Int
     @get: PluralsRes
     open var numberOfDataRes: Int = -1
     @get: StringRes
@@ -91,7 +93,8 @@ abstract class BasePlayerFragment<T : Model> : BaseFragment(), View.OnClickListe
             }
         }*/
         binding.navigationIcon.setOnClickListener(
-            Navigation.createNavigateOnClickListener(
+            Navigation.safeNavigationOnClickListener(
+                currentNavigationFragmentId,
                 navigationFragmentId
             )
         )

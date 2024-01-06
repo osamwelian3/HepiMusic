@@ -78,6 +78,10 @@
         <item quantity="one">%d song</item>
         <item quantity="other">%d songs</item>
     </plurals>
+    <plurals name="numberOfCreators">
+        <item quantity="one">%d artist</item>
+        <item quantity="other">%d artists</item>
+    </plurals>
     <plurals name="numberOfSongsInAlbum">
         <item quantity="one">%d song</item>
         <item quantity="other">%d songs</item>
@@ -96,6 +100,10 @@
         <item quantity="one">%d album</item>
         <item quantity="other">%d albums</item>
     </plurals>
+    <plurals name="numberOfCategories">
+        <item quantity="one">%d category</item>
+        <item quantity="other">%d categories</item>
+    </plurals>
     <plurals name="numberOfPlaylists">
         <item quantity="one">%d playlist</item>
         <item quantity="other">%d playlists</item>
@@ -109,6 +117,7 @@
     <!--Others-->
     <string name="read_storage_permission_info">We need to be authorized to access the media files on your device.</string>
     <string name="read_storage_permission_settings">Storage permission can be enabled under Settings > Apps > %s > Permission.</string>
+    <string name="location_permission_settings">Location permission can be enabled under Settings > Apps > %s > Permission.</string>
     <string name="goToAppInfo">Go to App Info</string>
     <string name="recentlyPlayed">Recently Played</string>
     <string name="empty_playlist">You have not played any song yet</string>
@@ -170,6 +179,7 @@
     <string name="playlists">PlayLists</string>
     <string name="saved">saved</string>
     <string name="blur_image_view">Blur Image View</string>
+    <string name="custom_message">%s</string>
     <string name="email">Email</string>
     <string name="password">Password</string>
     <string name="log_in">Log In</string>
@@ -225,4 +235,47 @@
     <string name="create_song_thumb_text">Click here to change song file</string>
     <string name="remove_song">REMOVE SONG</string>
     <string name="song_delete_message">Do you want to permanently delete \\\"%1$s\\\"?</string>
+    <string name="creator_saved">New Creator added succesfully.</string>
+    <string name="creator_description">Artist description</string>
+    <string name="artist_ig_link">Artist Instagram Link</string>
+    <string name="artist_fb_link">Artist Facebook Link</string>
+    <string name="artist_x_link">Artist X Link (Formerly Twitter)</string>
+    <string name="artist_yt_link">Artist YouTube Link</string>
+    <string name="artist_name">Artist Name</string>
+    <string name="creator_thumbnail_upload">Add creator thumbnail image</string>
+    <string name="add_new_creator">Add new content creator</string>
+    <string name="add_new_album">Add New Album</string>
+    <string name="album_thumbnail_upload">Add album thumbnail image</string>
+    <string name="album_name">Album Name</string>
+    <string name="admin_creators">Artists you have added.</string>
+    <string name="edit_creator">Edit Artist</string>
+    <string name="delete_artist">Delete Artist</string>
+    <string name="save_artist">Save Artist</string>
+    <string name="artist_empty_message">Artist cannot be empty</string>
+    <string name="song_empty_message">Song cannot be empty</string>
+    <string name="creator_empty_thumb_message">Change artist details or select image</string>
+    <string name="song_empty_thumb_message">Change song details or select image</string>
+    <string name="edit_album">Edit Album</string>
+    <string name="delete_album">Delete Album</string>
+    <string name="save_album">Save Album</string>
+    <string name="admin_albums">Albums you have added</string>
+    <string name="album_empty_message">Album cannot be empty</string>
+    <string name="album_empty_thumb_message">Change album name or select new image</string>
+    <string name="admin_categories">Categories you have added.</string>
+    <string name="add_new_category">Add a new Category</string>
+    <string name="category_name">Category Name</string>
+    <string name="save_category">Save Category</string>
+    <string name="category_empty_message">Category cannot be empty</string>
+    <string name="category_empty_thumb_message">Change category name</string>
+    <string name="edit_category">Edit Category</string>
+    <string name="delete_category">Delete Category</string>
+    <string name="requests_fab">requests fab</string>
+    <string name="welcome_requests">Welcome to HepiMusic Requests</string>
+    <string name="location_permission_info">We need permission to know your location to identify players near you.</string>
+    <string name="requests_get_started">Opt in to Hepi Music Requests</string>
+    <string name="request_playlist_added">Playlist created successfully</string>
+    <string name="request_player_added">Player saved</string>
+    <string name="delete_request_playlist">Delete Playlist</string>
+    <string name="playlist_chat">Playlist Chat (Coming soon)</string>
+    <string name="request_song_added_to_playlist">Song added to playlist</string>
 </resources>

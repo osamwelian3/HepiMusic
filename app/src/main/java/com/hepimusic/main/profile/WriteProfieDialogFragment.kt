@@ -7,7 +7,6 @@ import android.graphics.drawable.Drawable
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.os.Parcelable
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
@@ -16,7 +15,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
-import android.webkit.MimeTypeMap
 import android.widget.Toast
 import androidx.annotation.StringRes
 import androidx.core.content.FileProvider
@@ -39,8 +37,6 @@ import com.hepimusic.databinding.FragmentWriteProfieDialogBinding
 import com.hepimusic.main.common.dataBinding.DataBindingAdapters
 import com.hepimusic.main.common.utils.Utils
 import com.hepimusic.main.common.view.BaseFullscreenDialogFragment
-import com.hepimusic.main.playlist.Playlist
-import okhttp3.MediaType.Companion.toMediaType
 import java.io.File
 
 // TODO: Rename parameter arguments, choose names that match
@@ -63,6 +59,7 @@ class WriteProfieDialogFragment : BaseFullscreenDialogFragment(), View.OnClickLi
     private var tempThumbUri: Uri? = null
     private var profile: Profile? = null
     lateinit var viewModel: WriteProfileViewModel
+    lateinit var profileViewModel: ProfileViewModel
     var deleteImageFile = false
 
     lateinit var binding: FragmentWriteProfieDialogBinding
@@ -71,6 +68,7 @@ class WriteProfieDialogFragment : BaseFullscreenDialogFragment(), View.OnClickLi
         super.onCreate(savedInstanceState)
         profile = arguments?.getParcelable("profile")
         viewModel = ViewModelProvider(requireActivity())[WriteProfileViewModel::class.java]
+        profileViewModel = ViewModelProvider(requireActivity())[ProfileViewModel::class.java]
         viewModel.originalProfile.postValue(profile?.originalProfile)
         binding = FragmentWriteProfieDialogBinding.inflate(LayoutInflater.from(requireContext()))
         arguments?.let {
@@ -255,7 +253,7 @@ class WriteProfieDialogFragment : BaseFullscreenDialogFragment(), View.OnClickLi
         val profileEmail = binding.emailField.text.toString().trim()
         val profilePhone = binding.phoneField.text.toString().trim()
         if (profile == null) {
-            viewModel.createProfile(profileName, profileEmail, profilePhone, tempThumbUri)
+            viewModel.createProfile(profileName, profileEmail, profilePhone, tempThumbUri, profileViewModel.userId.value!!)
         } else {
             viewModel.editProfile(profileName, profileEmail, profilePhone,
                 profile!!.originalProfile, tempThumbUri, deleteImageFile)

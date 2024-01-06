@@ -63,6 +63,41 @@
       "service": "Cognito"
     }
   },
+  "geo": {
+    "HepiMusicPlayerPlaceIndex": {
+      "accessType": "AuthorizedAndGuestUsers",
+      "dataProvider": "HERE",
+      "dataSourceIntendedUse": "SingleUse",
+      "dependsOn": [
+        {
+          "attributes": [
+            "UserPoolId"
+          ],
+          "category": "auth",
+          "resourceName": "hepimusicd2e09eab"
+        }
+      ],
+      "isDefault": true,
+      "providerPlugin": "awscloudformation",
+      "service": "PlaceIndex"
+    },
+    "HepiMusicRequestsPlayersmap": {
+      "accessType": "AuthorizedAndGuestUsers",
+      "dependsOn": [
+        {
+          "attributes": [
+            "UserPoolId"
+          ],
+          "category": "auth",
+          "resourceName": "hepimusicd2e09eab"
+        }
+      ],
+      "isDefault": true,
+      "mapStyle": "VectorEsriStreets",
+      "providerPlugin": "awscloudformation",
+      "service": "Map"
+    }
+  },
   "hosting": {
     "S3AndCloudFront": {
       "providerPlugin": "awscloudformation",

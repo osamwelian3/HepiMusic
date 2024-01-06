@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <data>
+        <variable
+            name="viewModel"
+            type="com.hepimusic.main.admin.categories.AdminCategoriesViewModel.AdminCategoriesObservable" />
+    </data>
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/black"
+        android:fitsSystemWindows="true"
+        tools:context=".main.admin.categories.AdminWriteCategoryDialogFragment">
+
+        <androidx.core.widget.NestedScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:padding="15dp"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent">
+
+                <ImageButton
+                    android:id="@+id/closeButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="@string/go_back"
+                    android:padding="@dimen/padding_medium"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:srcCompat="@drawable/ic_close" />
+
+
+                <TextView
+                    android:id="@+id/addACategory"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:text="@string/add_new_category"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Body1"
+                    android:textStyle="bold"
+                    app:layout_constraintEnd_toStartOf="@+id/closeButton"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/closeButton" />
+                
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/nameField"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/margin_xx_large"
+                    android:background="@drawable/edit_text_background"
+                    android:textColor="@color/black"
+                    android:hint="@string/category_name"
+                    android:imeOptions="actionDone"
+                    android:inputType="text"
+                    android:text="@={viewModel.catname}"
+                    android:maxLines="1"
+                    android:paddingStart="@dimen/padding_x_large"
+                    android:paddingTop="@dimen/padding_medium"
+                    android:paddingEnd="@dimen/padding_x_large"
+                    android:paddingBottom="@dimen/padding_medium"
+                    app:hintAnimationEnabled="false"
+                    app:hintTextAppearance="@style/TextAppearance.AppCompat.Subhead"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/addACategory" />
+                
+                <Button
+                    android:id="@+id/writeCategory"
+                    style="@style/Widget.AppCompat.Button.Colored"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/margin_x_large"
+                    android:enabled="false"
+                    android:paddingTop="@dimen/button_padding"
+                    android:paddingBottom="18dp"
+                    android:text="@string/save_category"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Body1"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/nameField" />
+
+                <ProgressBar
+                    android:id="@+id/progressBar"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:visibility="gone"
+                    app:layout_constraintTop_toTopOf="@id/writeCategory"
+                    app:layout_constraintStart_toStartOf="@id/writeCategory"
+                    app:layout_constraintEnd_toEndOf="@id/writeCategory"
+                    app:layout_constraintBottom_toBottomOf="@id/writeCategory" />
+
+                <TextView
+                    android:id="@+id/progressCount"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="0%"
+                    android:textColor="@color/white"
+                    android:textSize="12sp"
+                    android:visibility="gone"
+                    app:layout_constraintTop_toTopOf="@id/writeCategory"
+                    app:layout_constraintStart_toStartOf="@id/writeCategory"
+                    app:layout_constraintEnd_toEndOf="@id/writeCategory"
+                    app:layout_constraintBottom_toBottomOf="@id/writeCategory" />
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+        </androidx.core.widget.NestedScrollView>
+    </FrameLayout>
+</layout>

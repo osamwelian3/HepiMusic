@@ -24,7 +24,7 @@ abstract class BaseMediaStoreRepository(private val application: Application, va
     val preferences: SharedPreferences = application.getSharedPreferences("main", Context.MODE_PRIVATE)
 
     private val job = Job()
-    private val backgroundScope = CoroutineScope(Dispatchers.Default + job)
+    private val backgroundScope = CoroutineScope(Dispatchers.IO + job)
     private val foregroundScope = CoroutineScope(Dispatchers.Main + job)
     lateinit var browser: MediaBrowser
 
@@ -133,7 +133,7 @@ abstract class BaseMediaStoreRepository(private val application: Application, va
 //        return list
     }*/
 
-    suspend fun query(parentId: String = "[albumID]"): List<MediaItem> = withContext(Dispatchers.Default) {
+    suspend fun query(parentId: String = "[albumID]"): List<MediaItem> = withContext(Dispatchers.IO) {
         val list = mutableListOf<MediaItem>()
         val albums = MediaItemTree.albums
         val artists = MediaItemTree.artists
@@ -216,7 +216,7 @@ abstract class BaseMediaStoreRepository(private val application: Application, va
                         mediaItem.mediaMetadata.totalDiscCount
                     )
 
-                    Log.e("URI", item.localConfiguration?.uri.toString())
+//                    Log.e("URI", item.localConfiguration?.uri.toString())
                     list.add(item)
                 }
             }

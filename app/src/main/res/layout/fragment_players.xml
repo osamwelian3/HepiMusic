@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.swiperefreshlayout.widget.SwipeRefreshLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:id="@+id/swipe_container"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:map="http://schemas.android.com/apk/res-auto"
+    tools:context=".main.requests.users.PlayersFragment">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <TextView
+            android:id="@+id/textView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Players Console"
+            android:textColor="@color/white"
+            android:layout_marginTop="20dp"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
+
+        <LinearLayout
+            android:id="@+id/switcherButtons"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="20dp"
+            android:gravity="center_horizontal"
+            app:layout_constraintTop_toBottomOf="@id/textView"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:orientation="horizontal" >
+
+            <Button
+                android:id="@+id/searchViewButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Search View"
+                android:drawableStart="@drawable/ic_baseline_search_24"
+                android:contentDescription="searchview button"/>
+
+            <Button
+                android:id="@+id/mapViewButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Map View"
+                android:drawableStart="@drawable/baseline_map_24"
+                android:contentDescription="searchview button"/>
+        </LinearLayout>
+
+        <ViewSwitcher
+            android:id="@+id/viewSwitcher"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:inAnimation="@android:anim/slide_in_left"
+            app:layout_constraintTop_toBottomOf="@id/switcherButtons"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
+
+            <LinearLayout
+                android:id="@+id/searchView"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical">
+
+                <EditText
+                    android:id="@+id/searchPlayers"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="20dp"
+                    android:padding="10dp"
+                    android:background="@drawable/edit_text_background"
+                    app:layout_constraintTop_toBottomOf="@id/textView"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent" />
+
+                <TextView
+                    android:id="@+id/emptyPlayers"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="No Players matching entered search phrase"
+                    android:textColor="@color/white"
+                    android:layout_margin="20dp"
+                    android:visibility="gone"
+                    app:layout_constraintTop_toBottomOf="@id/searchPlayers"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent" />
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/playersRV"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="20dp"
+                    android:layout_marginEnd="20dp"
+                    android:layout_marginBottom="5dp"
+                    app:layout_constraintTop_toBottomOf="@id/searchPlayers"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    tools:listitem="@layout/request_playlist_item"/>
+
+
+
+            </LinearLayout>
+            <LinearLayout
+                android:id="@+id/mapViewView"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/mapViewTitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="0.1"
+                    android:text="Select a player near you from the map"
+                    android:textColor="@color/white"
+                    android:layout_margin="20dp"
+                    app:layout_constraintTop_toBottomOf="@id/playersRV"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent" />
+
+                <com.amplifyframework.geo.maplibre.view.AmplifyMapView
+                    android:id="@+id/mapView"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_weight="0.9"
+                    android:layout_marginTop="20dp"
+                    map:map_showZoomControls="true"
+                    map:map_zoomLevel="1"
+                    map:map_centerLatitude="1"
+                    map:map_centerLongitude="38"
+                    app:layout_constraintTop_toBottomOf="@id/mapViewTitle"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"/>
+            </LinearLayout>
+        </ViewSwitcher>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</androidx.swiperefreshlayout.widget.SwipeRefreshLayout>

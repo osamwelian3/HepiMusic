@@ -193,6 +193,11 @@ type Album @model
       )
 }
 
+enum ActiveStatus {
+    ACTIVE
+    INACTIVE
+}
+
 type Profile
   @model
   @auth(
@@ -216,10 +221,325 @@ type Profile
       ]
     )
   follows: [String]
+  activeStatus: ActiveStatus @default(value: "INACTIVE")
+  lastActive: AWSDateTime
   owner: String
       @auth(
         rules: [
           { allow: owner, operations: [create, read, delete], identityClaim: "sub::username" }
+          { allow: public, operations: [read] }
+          { allow: private, operations: [create, read], provider: userPools }
+        ]
+      )
+}
+
+type RequestPlayer
+  @model
+  @auth(
+    rules: [
+      { allow: owner, ownerField: "owners", identityClaim: "sub::username" }
+      { allow: public, operations: [read] }
+      { allow: private, operations: [create, read], provider: userPools }
+    ]
+  ) {
+  key: ID! @primaryKey
+  name: String
+  desc: String
+  device: String
+    @auth(
+      rules: [
+        { allow: owner, ownerField: "owners", identityClaim: "sub::username" }
+        { allow: public, operations: [read, update] }
+        { allow: private, operations: [create, read], provider: userPools }
+      ]
+    )
+  longitude: String
+  latitude: String
+  playlists: [RequestPlaylist] @hasMany
+    @auth(
+      rules: [
+        { allow: owner, ownerField: "owners", identityClaim: "sub::username" }
+        { allow: public, operations: [read] }
+        { allow: private, operations: [create, read], provider: userPools }
+      ]
+    )
+  followers: [String]
+    @auth(
+      rules: [
+        { allow: owner, ownerField: "owners", identityClaim: "sub::username" }
+        { allow: public, operations: [read] }
+        { allow: private, operations: [create, read, update], provider: userPools }
+      ]
+    )
+  following: [String]
+    @auth(
+      rules: [
+        { allow: owner, ownerField: "owners", identityClaim: "sub::username" }
+        { allow: public, operations: [read] }
+        { allow: private, operations: [create, read, update], provider: userPools }
+      ]
+    )
+  createdDate: AWSDateTime!
+      @auth(
+        rules: [
+          { allow: owner, ownerField: "owners", operations: [create, read, delete], identityClaim: "sub::username" }
+          { allow: public, operations: [read] }
+          { allow: private, operations: [create, read], provider: userPools }
+        ]
+      )
+  updatedDate: AWSDateTime!
+      @auth(
+        rules: [
+          { allow: owner, ownerField: "owners", operations: [create, read, update, delete], identityClaim: "sub::username" }
+          { allow: public, operations: [read] }
+          { allow: private, operations: [create, read, update], provider: userPools }
+        ]
+      )
+  ownerData: String
+      @auth(
+        rules: [
+          { allow: owner, ownerField: "owners", operations: [create, read, update, delete], identityClaim: "sub::username" }
+          { allow: public, operations: [read] }
+          { allow: private, operations: [create, read], provider: userPools }
+        ]
+      )
+  owners: [String]
+      @auth(
+        rules: [
+          { allow: owner, ownerField: "owners", operations: [create, read, update, delete], identityClaim: "sub::username" }
+          { allow: public, operations: [read] }
+          { allow: private, operations: [create, read], provider: userPools }
+        ]
+      )
+}
+
+type RequestSong
+  @model
+  @auth(
+    rules: [
+      { allow: owner, ownerField: "owner", identityClaim: "sub::username" }
+      { allow: private, operations: [create, read, update, delete], provider: userPools }
+    ]
+  ) {
+  key: ID! @primaryKey
+    @auth(
+      rules: [
+        { allow: owner, identityClaim: "sub::username" }
+        { allow: public, operations: [read] }
+        { allow: private, operations: [create, read], provider: userPools }
+      ]
+    )
+  fileUrl: String!
+    @auth(
+      rules: [
+        { allow: owner, identityClaim: "sub::username" }
+        { allow: public, operations: [read] }
+        { allow: private, operations: [create, read], provider: userPools }
+      ]
+    )
+  fileKey: String!
+    @auth(
+      rules: [
+        { allow: owner, identityClaim: "sub::username" }
+        { allow: public, operations: [read] }
+        { allow: private, operations: [create, read], provider: userPools }
+      ]
+    )
+  listens: [String]
+    @auth(
+      rules: [
+        { allow: owner, identityClaim: "sub::username" }
+        { allow: public, operations: [read, update] }
+        { allow: private, operations: [create, read, update], provider: userPools }
+      ]
+    )
+  trendingListens: [String]
+    @auth(
+      rules: [
+        { allow: owner, identityClaim: "sub::username" }
+        { allow: public, operations: [read, update] }
+        { allow: private, operations: [create, read, update], provider: userPools }
+      ]
+    )
+  listOfUidDownVotes: [String]
+    @auth(
+      rules: [
+        { allow: owner, identityClaim: "sub::username" }
+        { allow: public, operations: [read] }
+        { allow: private, operations: [create, read, update], provider: userPools }
+      ]
+    )
+  listOfUidUpVotes: [String]
+    @auth(
+      rules: [
+        { allow: owner, identityClaim: "sub::username" }
+        { allow: public, operations: [read] }
+        { allow: private, operations: [create, read, update], provider: userPools }
+      ]
+    )
+  requests: [String]
+    @auth(
+      rules: [
+        { allow: owner, identityClaim: "sub::username" }
+        { allow: public, operations: [read] }
+        { allow: private, operations: [create, read, update], provider: userPools }
+      ]
+    )
+  requestUpVotes: [String]
+    @auth(
+      rules: [
+        { allow: owner, identityClaim: "sub::username" }
+        { allow: public, operations: [read] }
+        { allow: private, operations: [create, read, update], provider: userPools }
+      ]
+    )
+  name: String!
+    @auth(
+      rules: [
+        { allow: owner, identityClaim: "sub::username" }
+        { allow: public, operations: [read] }
+        { allow: private, operations: [create, read], provider: userPools }
+      ]
+    )
+  partOf: String
+    @auth(
+      rules: [
+        { allow: owner, identityClaim: "sub::username" }
+        { allow: public, operations: [read] }
+        { allow: private, operations: [create, read], provider: userPools }
+      ]
+    )
+  selectedCategory: String!
+    @auth(
+      rules: [
+        { allow: owner, identityClaim: "sub::username" }
+        { allow: public, operations: [read] }
+        { allow: private, operations: [create, read], provider: userPools }
+      ]
+    )
+  selectedCreator: String
+    @auth(
+      rules: [
+        { allow: owner, identityClaim: "sub::username" }
+        { allow: public, operations: [read] }
+        { allow: private, operations: [create, read], provider: userPools }
+      ]
+    )
+  thumbnail: String!
+    @auth(
+      rules: [
+        { allow: owner, identityClaim: "sub::username" }
+        { allow: public, operations: [read] }
+        { allow: private, operations: [create, read], provider: userPools }
+      ]
+    )
+  thumbnailKey: String!
+    @auth(
+      rules: [
+        { allow: owner, identityClaim: "sub::username" }
+        { allow: public, operations: [read] }
+        { allow: private, operations: [create, read], provider: userPools }
+      ]
+    )
+  playlist: RequestPlaylist! @belongsTo
+    @auth(
+      rules: [
+        { allow: owner, identityClaim: "sub::username" }
+        { allow: public, operations: [read] }
+        { allow: private, operations: [create, read, update], provider: userPools }
+      ]
+    )
+  createdDate: AWSDateTime!
+      @auth(
+        rules: [
+          { allow: owner, ownerField: "owners", operations: [create, read, delete], identityClaim: "sub::username" }
+          { allow: public, operations: [read] }
+          { allow: private, operations: [create, read], provider: userPools }
+        ]
+      )
+  updatedDate: AWSDateTime!
+      @auth(
+        rules: [
+          { allow: owner, ownerField: "owners", operations: [create, read, update, delete], identityClaim: "sub::username" }
+          { allow: public, operations: [read] }
+          { allow: private, operations: [create, read, update], provider: userPools }
+        ]
+      )
+  ownerData: String
+      @auth(
+        rules: [
+          { allow: owner, ownerField: "owners", operations: [create, read, update, delete], identityClaim: "sub::username" }
+          { allow: public, operations: [read] }
+          { allow: private, operations: [create, read], provider: userPools }
+        ]
+      )
+  owner: String
+    @auth(
+      rules: [
+        { allow: owner, operations: [create, read, delete], identityClaim: "sub::username" }
+        { allow: public, operations: [read] }
+        { allow: private, operations: [create, read], provider: userPools }
+      ]
+    )
+}
+
+type RequestPlaylist
+  @model
+  @auth(
+    rules: [
+      { allow: owner, ownerField: "owners", identityClaim: "sub::username" }
+      { allow: public, operations: [read] }
+      { allow: private, operations: [create, read], provider: userPools }
+    ]
+  ) {
+  key: ID! @primaryKey
+  name: String
+  desc: String
+  player: RequestPlayer! @belongsTo
+  songs: [RequestSong] @hasMany
+    @auth(
+      rules: [
+        { allow: owner, ownerField: "owners", identityClaim: "sub::username" }
+        { allow: public, operations: [read] }
+        { allow: private, operations: [create, read, update], provider: userPools }
+      ]
+    )
+  listeners: [String]
+    @auth(
+      rules: [
+        { allow: owner, ownerField: "owners", identityClaim: "sub::username" }
+        { allow: public, operations: [read] }
+        { allow: private, operations: [create, read, update], provider: userPools }
+      ]
+    )
+  createdDate: AWSDateTime!
+      @auth(
+        rules: [
+          { allow: owner, ownerField: "owners", operations: [create, read, delete], identityClaim: "sub::username" }
+          { allow: public, operations: [read] }
+          { allow: private, operations: [create, read], provider: userPools }
+        ]
+      )
+  updatedDate: AWSDateTime!
+      @auth(
+        rules: [
+          { allow: owner, ownerField: "owners", operations: [create, read, update, delete], identityClaim: "sub::username" }
+          { allow: public, operations: [read] }
+          { allow: private, operations: [create, read, update], provider: userPools }
+        ]
+      )
+  ownerData: String
+      @auth(
+        rules: [
+          { allow: owner, ownerField: "owners", operations: [create, read, update, delete], identityClaim: "sub::username" }
+          { allow: public, operations: [read] }
+          { allow: private, operations: [create, read], provider: userPools }
+        ]
+      )
+  owners: [String]
+      @auth(
+        rules: [
+          { allow: owner, ownerField: "owners", operations: [create, read, update, delete], identityClaim: "sub::username" }
           { allow: public, operations: [read] }
           { allow: private, operations: [create, read], provider: userPools }
         ]

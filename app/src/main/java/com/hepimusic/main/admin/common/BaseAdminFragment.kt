@@ -23,11 +23,16 @@ import androidx.media3.ui.PlayerView
 import androidx.navigation.Navigation
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.flexbox.FlexDirection
+import com.google.android.flexbox.FlexboxLayoutManager
+import com.google.android.flexbox.JustifyContent
 import com.hepimusic.R
+import com.hepimusic.common.safeNavigationOnClickListener
 import com.hepimusic.databinding.FragmentBaseAdminBinding
 import com.hepimusic.databinding.FragmentBasePlayerBinding
 import com.hepimusic.main.admin.albums.Album
 import com.hepimusic.main.admin.categories.Category
+import com.hepimusic.main.admin.creators.Creator
 import com.hepimusic.main.common.callbacks.OnItemClickListener
 import com.hepimusic.main.common.data.Model
 import com.hepimusic.main.profile.Profile
@@ -45,6 +50,7 @@ abstract class BaseAdminFragment<T : Model> : BaseFragment(), View.OnClickListen
     lateinit var binding: FragmentBaseAdminBinding
     lateinit var playbackViewModel: PlaybackViewModel // by activityViewModels<PlaybackViewModel>() // viewModels<PlaybackViewModel>()
     var songItems = emptyList<com.hepimusic.main.admin.songs.Song>()
+    var creatorItems = emptyList<Creator>()
     var albumItems = emptyList<Album>()
     var categoryItems = emptyList<Category>()
     var profileItems = emptyList<Profile>()
@@ -52,6 +58,7 @@ abstract class BaseAdminFragment<T : Model> : BaseFragment(), View.OnClickListen
     lateinit var viewModel: BaseAdminViewModel
     @get: IdRes
     abstract var navigationFragmentId: Int
+    abstract var currentNavigationFragmentId: Int
     @get: PluralsRes
     open var numberOfDataRes: Int = -1
     @get: StringRes
@@ -106,7 +113,8 @@ abstract class BaseAdminFragment<T : Model> : BaseFragment(), View.OnClickListen
             }
         }*/
         binding.navigationIcon.setOnClickListener(
-            Navigation.createNavigateOnClickListener(
+            Navigation.safeNavigationOnClickListener(
+                currentNavigationFragmentId,
                 navigationFragmentId
             )
         )
@@ -122,11 +130,26 @@ abstract class BaseAdminFragment<T : Model> : BaseFragment(), View.OnClickListen
                 updateViews(items)
             }
         }
+        viewModel.creators.observe(viewLifecycleOwner) {
+            creatorItems = it
+            if (clazz == Creator::class.java) {
+                items = creatorItems as List<T>
+                updateViews(items)
+            }
+        }
         viewModel.albums.observe(viewLifecycleOwner) {
             albumItems = it
+            if (clazz == Album::class.java) {
+                items = albumItems as List<T>
+                updateViews(items)
+            }
         }
         viewModel.categories.observe(viewLifecycleOwner) {
             categoryItems = it
+            if (clazz == Category::class.java) {
+                items = categoryItems as List<T>
+                updateViews(items)
+            }
         }
         viewModel.profiles.observe(viewLifecycleOwner) {
             profileItems = it
@@ -153,7 +176,15 @@ abstract class BaseAdminFragment<T : Model> : BaseFragment(), View.OnClickListen
                 adapterItemAnimSet, longClickItems
             )
         binding.dataRV.adapter = adapter
-        binding.dataRV.layoutManager = layoutManager()
+        if (clazz == Album::class.java) {
+            val flexboxLayoutManager = FlexboxLayoutManager(activity).apply {
+                flexDirection = FlexDirection.ROW
+                justifyContent = JustifyContent.SPACE_EVENLY
+            }
+            binding.dataRV.layoutManager = flexboxLayoutManager
+        } else {
+            binding.dataRV.layoutManager = layoutManager()
+        }
     }
 
     open fun layoutManager(): RecyclerView.LayoutManager {

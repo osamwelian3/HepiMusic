@@ -24,6 +24,7 @@ import com.bumptech.glide.request.RequestOptions
 import com.hepimusic.R
 import com.hepimusic.auth.LoginActivity
 import com.hepimusic.common.Constants
+import com.hepimusic.common.safeNavigate
 import com.hepimusic.databinding.FragmentPlaylistMenuBottomSheetDialogBinding
 import com.hepimusic.databinding.FragmentProfileMenuBottomSheetDialogBinding
 import com.hepimusic.main.common.dataBinding.DataBindingAdapters
@@ -105,7 +106,7 @@ class ProfileMenuBottomSheetDialogFragment : BaseMenuBottomSheet() {
 
     override fun onClick(v: View?) {
         when (v?.id) {
-            R.id.editProfile -> findNavController().navigate(
+            R.id.editProfile -> findNavController().safeNavigate(
                 ProfileMenuBottomSheetDialogFragmentDirections.actionProfileMenuBottomSheetDialogFragmentToWriteProfieDialogFragment(profile)
             )
             R.id.aboutHepi -> {
@@ -129,6 +130,9 @@ class ProfileMenuBottomSheetDialogFragment : BaseMenuBottomSheet() {
 
                         }
                         preferences.edit().putBoolean(Constants.AUTH_TYPE_SOCIAL, false).apply()
+                        preferences.edit().putBoolean(Constants.LOGGED_IN, false).apply()
+                        preferences.edit().remove(Constants.AUTH_USER_ATTRIBUTES).apply()
+                        preferences.edit().remove(Constants.AUTH_USER).apply()
                         startActivity(Intent(requireActivity(), LoginActivity::class.java))
                         requireActivity().finish()
                     }

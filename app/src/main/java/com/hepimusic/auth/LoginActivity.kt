@@ -93,6 +93,7 @@ class LoginActivity : AppCompatActivity(), View.OnClickListener {
             this@LoginActivity,
             {
                 preferences.edit().putBoolean(Constants.AUTH_TYPE_SOCIAL, true).apply()
+                preferences.edit().putBoolean(Constants.LOGGED_IN, true).apply()
                 startActivity(Intent(this@LoginActivity, SplashActivity::class.java))
                 finish()
             },
@@ -117,6 +118,7 @@ class LoginActivity : AppCompatActivity(), View.OnClickListener {
             this@LoginActivity,
             {
                 preferences.edit().putBoolean(Constants.AUTH_TYPE_SOCIAL, true).apply()
+                preferences.edit().putBoolean(Constants.LOGGED_IN, true).apply()
                 startActivity(Intent(this@LoginActivity, SplashActivity::class.java))
                 finish()
             },
@@ -148,6 +150,7 @@ class LoginActivity : AppCompatActivity(), View.OnClickListener {
     private fun onLoginSuccess(authSignInResult: AuthSignInResult) {
         runOnUiThread {
             preferences.edit().putBoolean(Constants.AUTH_TYPE_SOCIAL, false).apply()
+            preferences.edit().putBoolean(Constants.LOGGED_IN, true).apply()
             startActivity(Intent(this@LoginActivity, SplashActivity::class.java))
             finish()
         }

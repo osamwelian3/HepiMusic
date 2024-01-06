@@ -9,6 +9,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaItem.SubtitleConfiguration
 import androidx.media3.common.MediaMetadata
+import com.amplifyframework.api.events.ApiChannelEventName
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.model.query.QueryPaginationInput
 import com.amplifyframework.core.model.query.Where
@@ -18,6 +19,7 @@ import com.amplifyframework.datastore.events.ModelSyncedEvent
 import com.amplifyframework.datastore.events.NetworkStatusEvent
 import com.amplifyframework.datastore.generated.model.Album
 import com.amplifyframework.datastore.generated.model.Creator
+import com.amplifyframework.datastore.generated.model.RequestSong
 import com.amplifyframework.datastore.generated.model.Song
 import com.amplifyframework.hub.HubChannel
 import com.google.common.collect.ImmutableList
@@ -40,6 +42,8 @@ import com.hepimusic.playback.MusicService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flowOf
@@ -80,10 +84,14 @@ object MediaItemTree {
     private const val ALL_SONGS_PREFIX = "[allSongs]"
 
     val songs: MutableList<Song> = mutableListOf()
+    val liveDataSongs = MutableLiveData<List<Song>>()
+    val liveDataRequestSong = MutableLiveData<RequestSong>()
     val albums: MutableList<Album> = mutableListOf()
     val artists: MutableList<Creator> = mutableListOf()
     private var firstAttempt = true
     var initialConnectionEstablished = false
+    var job: Job? = null
+    var hubInit = false
 
     private class MediaItemNode(var item: MediaItem) {
         private val children: MutableList<MediaItem> = ArrayList()
@@ -210,7 +218,7 @@ object MediaItemTree {
     }
 
     fun createRootFolders() {
-        treeNodes.clear()
+//        treeNodes.clear()
         // create root and folders for album/artist/genre.
         treeNodes[ROOT_ID] =
             MediaItemNode(
@@ -290,84 +298,15 @@ object MediaItemTree {
         treeNodes[ROOT_ID]!!.addChild(ALL_SONGS_ID)
     }
 
-    suspend fun initialize(context: Context, songRepository: SongRepository) = withContext(Dispatchers.Default) {
-        if (isInitialized) return@withContext
+    suspend fun initialize(context: Context, songRepository: SongRepository) = withContext(Dispatchers.IO) {
+        if (songs.isNotEmpty()) {
+            liveDataSongs.postValue(songs)
+        }
+        job?.cancel()
+        /*if (isInitialized) return@withContext*/
         isInitialized = true
 
         createRootFolders()
-
-        Amplify.DataStore.observe(
-            com.amplifyframework.datastore.generated.model.Song::class.java,
-            {
-
-            },
-            {
-                if (it.type() == DataStoreItemChange.Type.CREATE) {
-                    if (!songs.isEmpty()) {
-                        Amplify.DataStore.start(
-                            {
-                                Log.e("SYNC COMPLETE", "Datastore re-sync complete")
-                            },
-                            {
-
-                            }
-                        )
-                        songs.add(it.item() /*.toSongEntity().toSong()*/)
-                        Log.e("CHANGE TYPE: CREATE", "song: ${it.item().name}")
-                        createRootFolders()
-                        CoroutineScope(Dispatchers.Default).launch {
-                            songs.map { song ->
-                                addNodeToTree(song, albums, artists)
-                            }
-                        }
-                    }
-                } else if (it.type() == DataStoreItemChange.Type.UPDATE) {
-                    if (!songs.isEmpty()) {
-                        Amplify.DataStore.start(
-                            {
-                                Log.e("SYNC COMPLETE", "Datastore re-sync complete")
-                            },
-                            {
-
-                            }
-                        )
-                        songs.map { song -> if (song.key == it.item().key) it.item() else song }
-                        Log.e("CHANGE TYPE: UPDATE", "song: ${it.item().name}")
-                        createRootFolders()
-                        CoroutineScope(Dispatchers.Default).launch {
-                            songs.map { song ->
-                                addNodeToTree(song, albums, artists)
-                            }
-                        }
-                    }
-                } else if (it.type() == DataStoreItemChange.Type.DELETE) {
-                    if (!songs.isEmpty()) {
-                        Amplify.DataStore.start(
-                            {
-                                Log.e("SYNC COMPLETE", "Datastore re-sync complete")
-                            },
-                            {
-
-                            }
-                        )
-                        songs.removeIf { song -> song.key == it.item().key }
-                        Log.e("CHANGE TYPE: DELETE", "song: ${it.item().name}")
-                        createRootFolders()
-                        CoroutineScope(Dispatchers.Default).launch {
-                            songs.map { song ->
-                                addNodeToTree(song, albums, artists)
-                            }
-                        }
-                    }
-                }
-            },
-            {
-
-            },
-            {
-                // observation completed
-            }
-        )
 
         // first time installation
         if (!context.applicationContext.getSharedPreferences("main", Context.MODE_PRIVATE).getBoolean(OnBoardingActivity.HAS_SEEN_ON_BOARDING, false)) {
@@ -382,12 +321,58 @@ object MediaItemTree {
                     Log.e("hub name MIT", it.name.toString())
 
                     if (it.name.equals("ready")) {
-                        queryAllData(context)
+                        if (!hubInit) {
+                            hubInit = true
+                            queryAllData(context)
+                        }
                     }
                 }
             )
+
+
+
+            fun datastoreStart() {
+                Amplify.DataStore.start(
+                    {
+                        if (!hubInit) {
+                            Amplify.DataStore.stop(
+                                {
+                                    Amplify.DataStore.start(
+                                        {
+                                            launch {
+                                                delay(4000)
+                                                datastoreStart()
+                                            }
+                                        },
+                                        {
+                                            it.printStackTrace()
+                                        }
+                                    )
+                                },
+                                {
+                                    it.printStackTrace()
+                                }
+                            )
+                        }
+                    },
+                    {
+                        it.printStackTrace()
+                    }
+                )
+            }
+            datastoreStart()
         } else {
-            queryAllData(context)
+            if (!hubInit) {
+                Amplify.DataStore.start(
+                    {
+                        hubInit = true
+                        queryAllData(context)
+                    },
+                    {
+                        it.printStackTrace()
+                    }
+                )
+            }
         }
 
         /*Amplify.DataStore.query(
@@ -745,9 +730,19 @@ object MediaItemTree {
                                 }
                                 Log.e("MEDIA ITEM TREE", "Queried ${creatorsList.size} creators.")
 
-                                CoroutineScope(Dispatchers.Default).launch {
-                                    songsList.forEach {
-                                        addNodeToTree(it, albumsList, creatorsList)
+                                liveDataSongs.postValue(songs)
+                                CoroutineScope(Dispatchers.IO).launch {
+                                    withContext(Dispatchers.IO) {
+                                        songsList.forEach {
+                                            try {
+                                                addNodeToTree(it, albumsList, creatorsList)
+                                            } catch (e: Exception) {
+                                                if (e is NullPointerException) {
+                                                    createRootFolders()
+                                                    addNodeToTree(it, albumsList, creatorsList)
+                                                }
+                                            }
+                                        }
                                     }
                                 }
                                 context.applicationContext.getSharedPreferences(
@@ -759,6 +754,7 @@ object MediaItemTree {
                                     Context.MODE_PRIVATE
                                 ).edit().putBoolean(INITIALIZATION_COMPLETE, true).apply()
                                 Log.e("PREFERENCES ADDED", "TRUE")
+                                startObserver()
                             },
                             { creatorsException ->
                                 Log.e("MEDIA ITEM TREE", "MEDIA ITEM TREE QUERY CREATORS EXCEPTION ${creatorsException.message.toString()}")
@@ -778,11 +774,90 @@ object MediaItemTree {
         )
     }
 
+    private fun startObserver() {
+        Amplify.DataStore.observe(
+            com.amplifyframework.datastore.generated.model.Song::class.java,
+            {
+
+            },
+            {
+                if (it.type() == DataStoreItemChange.Type.CREATE) {
+                    if (!songs.isEmpty()) {
+                        /*Amplify.DataStore.start(
+                            {
+                                Log.e("SYNC COMPLETE", "Datastore re-sync complete")
+                            },
+                            {
+
+                            }
+                        )*/
+                        songs.add(it.item() /*.toSongEntity().toSong()*/)
+                        val copyOfSongs = songs.toMutableList()
+                        Log.e("CHANGE TYPE: CREATE", "song: ${it.item().name}")
+                        createRootFolders()
+                        CoroutineScope(Dispatchers.IO).launch {
+                            for (song in copyOfSongs) {
+                                addNodeToTree(song, albums, artists)
+                            }
+                        }
+                    }
+                } else if (it.type() == DataStoreItemChange.Type.UPDATE) {
+                    if (!songs.isEmpty()) {
+                        /*Amplify.DataStore.start(
+                            {
+                                Log.e("SYNC COMPLETE", "Datastore re-sync complete")
+                            },
+                            {
+
+                            }
+                        )*/
+                        songs.map { song -> if (song.key == it.item().key) it.item() else song }
+                        val copyOfSongs = songs.toMutableList()
+                        Log.e("CHANGE TYPE: UPDATE", "song: ${it.item().name}")
+                        createRootFolders()
+                        CoroutineScope(Dispatchers.IO).launch {
+                            for (song in copyOfSongs) {
+                                addNodeToTree(song, albums, artists)
+                            }
+                        }
+                    }
+                } else if (it.type() == DataStoreItemChange.Type.DELETE) {
+                    if (!songs.isEmpty()) {
+                        /*Amplify.DataStore.start(
+                            {
+                                Log.e("SYNC COMPLETE", "Datastore re-sync complete")
+                            },
+                            {
+
+                            }
+                        )*/
+                        songs.removeIf { song -> song.key == it.item().key }
+                        val copyOfSongs = songs.toMutableList()
+                        Log.e("CHANGE TYPE: DELETE", "song: ${it.item().name}")
+                        createRootFolders()
+                        CoroutineScope(Dispatchers.IO).launch {
+                            for (song in copyOfSongs) {
+                                addNodeToTree(song, albums, artists)
+                            }
+                        }
+                    }
+                }
+            },
+            {
+
+            },
+            {
+                // observation completed
+            }
+        )
+
+    }
+
     private suspend fun addNodeToTree(
         song: Song,
         albums: List<Album>,
         artists: MutableList<Creator>
-    ) = withContext(Dispatchers.Default) {
+    ) /*= withContext(Dispatchers.IO) */{
 
         val id = song.key
         val albm = song.partOf.let {
@@ -794,7 +869,7 @@ object MediaItemTree {
         val creator = song.selectedCreator?.let {
             Json.parseToJsonElement(it).jsonObject["name"]
         }
-        Log.e("Selected Creator", "selectedCreator: $creator")
+//        Log.e("Selected Creator", "selectedCreator: $creator")
         val artist = creator?.toString()?.removeSurrounding("\"") ?: "Unknown Artist"
         val artistImage = "https://dn1i8z7909ivj.cloudfront.net/public/"+song.selectedCreator?.let {
             Json.parseToJsonElement(it).jsonObject["thumbnailKey"]
@@ -803,8 +878,8 @@ object MediaItemTree {
         val subtitleConfigurations: MutableList<SubtitleConfiguration> = mutableListOf()
 
         val sourceUri = Uri.parse("https://dn1i8z7909ivj.cloudfront.net/public/"+song.fileKey)
-        Log.e("ALBUM", album)
-        Log.e("SONG URI", "https://dn1i8z7909ivj.cloudfront.net/public/"+song.thumbnailKey)
+//        Log.e("ALBUM", album)
+//        Log.e("SONG URI", "https://dn1i8z7909ivj.cloudfront.net/public/"+song.thumbnailKey)
         val imageUri = Uri.parse("https://dn1i8z7909ivj.cloudfront.net/public/"+song.thumbnailKey)
 
         // key of such items in tree

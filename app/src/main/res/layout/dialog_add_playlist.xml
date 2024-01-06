@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="@dimen/padding_medium"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <TextView
+        android:id="@+id/addPlaylistTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Create a Playlist Profile to attract your audience"
+        android:textAlignment="center"
+        style="@style/Theme.HepiMusic.SectionTitle"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <com.google.android.material.textfield.TextInputEditText
+        android:id="@+id/playlistNameField"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/margin_xx_large"
+        android:background="@drawable/edit_text_background"
+        android:textColor="@color/black"
+        android:hint="Playlist Name e.g ABC Hotel Raggae night"
+        android:imeOptions="actionNext"
+        android:inputType="text"
+        android:maxLines="1"
+        android:paddingStart="@dimen/padding_x_large"
+        android:paddingTop="@dimen/padding_medium"
+        android:paddingEnd="@dimen/padding_x_large"
+        android:paddingBottom="@dimen/padding_medium"
+        app:hintAnimationEnabled="false"
+        app:hintTextAppearance="@style/TextAppearance.AppCompat.Subhead"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/addPlaylistTitle" />
+
+    <com.google.android.material.textfield.TextInputEditText
+        android:id="@+id/playlistDescField"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/margin_xx_large"
+        android:background="@drawable/edit_text_background"
+        android:textColor="@color/black"
+        android:hint="Playlist Description e.g A night of roots and culture"
+        android:imeOptions="actionNext"
+        android:inputType="text"
+        android:maxLines="1"
+        android:paddingStart="@dimen/padding_x_large"
+        android:paddingTop="@dimen/padding_medium"
+        android:paddingEnd="@dimen/padding_x_large"
+        android:paddingBottom="@dimen/padding_medium"
+        app:hintAnimationEnabled="false"
+        app:hintTextAppearance="@style/TextAppearance.AppCompat.Subhead"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/playlistNameField" />
+
+    <Button
+        android:id="@+id/writePlaylist"
+        style="@style/Widget.AppCompat.Button.Colored"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/margin_x_large"
+        android:enabled="false"
+        android:paddingTop="@dimen/button_padding"
+        android:paddingBottom="18dp"
+        android:text="SAVE"
+        android:textAppearance="@style/TextAppearance.AppCompat.Body1"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/playlistDescField" />
+
+    <ProgressBar
+        android:id="@+id/progressBar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        app:layout_constraintTop_toTopOf="@id/writePlaylist"
+        app:layout_constraintStart_toStartOf="@id/writePlaylist"
+        app:layout_constraintEnd_toEndOf="@id/writePlaylist"
+        app:layout_constraintBottom_toBottomOf="@id/writePlaylist" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

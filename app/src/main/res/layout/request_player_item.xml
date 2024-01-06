@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <data>
+        <variable
+            name="requestPlayer"
+            type="com.amplifyframework.datastore.generated.model.RequestPlayerCopy" />
+        <variable
+            name="userNameOrEmail"
+            type="String" />
+    </data>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@{requestPlayer.ownerData.contains(userNameOrEmail) ? @drawable/black_selectable_background_owner : @drawable/black_selectable_background}"
+        android:id="@+id/container"
+        android:padding="15dp">
+
+        <TextView
+            android:id="@+id/playerName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@{requestPlayer.name}"
+            android:textColor="@color/white"
+            android:textSize="19sp"
+            android:textStyle="bold"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:text="CJ's bar" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@{requestPlayer.desc}"
+            android:textColor="@color/white"
+            android:textSize="12sp"
+            android:textStyle="italic"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/playerName"
+            tools:text="The best of the best" />
+
+        <TextView
+            android:id="@+id/playlistsCount"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="15dp"
+            android:text="@{requestPlayer.playlists != null ? String.valueOf(requestPlayer.playlists.size()) : String.valueOf(0)}"
+            android:textColor="@color/white"
+            android:textStyle="italic"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            tools:text="100" />
+
+        <TextView
+            android:id="@+id/playlists"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="5dp"
+            android:text="playlists  "
+            android:textColor="@color/white"
+            android:textStyle="italic"
+            app:layout_constraintEnd_toStartOf="@id/playlistsCount"
+            app:layout_constraintBottom_toBottomOf="parent"
+            tools:text="playlists" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</layout>

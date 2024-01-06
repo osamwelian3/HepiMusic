@@ -14,6 +14,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.NavOptions
 import androidx.navigation.fragment.findNavController
 import com.hepimusic.R
+import com.hepimusic.common.safeNavigate
 import com.hepimusic.databinding.FragmentPlaylistMenuBottomSheetDialogBinding
 import com.hepimusic.main.common.utils.Utils
 import com.hepimusic.main.common.view.BaseMenuBottomSheet
@@ -106,7 +107,7 @@ class PlaylistMenuBottomSheetDialogFragment : BaseMenuBottomSheet() {
 
 
     private fun editPlaylist() {
-        findNavController().navigate(
+        findNavController().safeNavigate(
             PlaylistMenuBottomSheetDialogFragmentDirections
                 .actionPlaylistMenuBottomSheetDialogFragmentToWritePlaylistDialogFragment(playlist)
         )
@@ -121,7 +122,7 @@ class PlaylistMenuBottomSheetDialogFragment : BaseMenuBottomSheet() {
     }
 
     private fun editSongs() {
-        findNavController().navigate(
+        findNavController().safeNavigate(
             PlaylistMenuBottomSheetDialogFragmentDirections
                 .actionPlaylistMenuBottomSheetDialogFragmentToPlaylistSongsEditorDialogFragment(playlist),
             NavOptions.Builder().setPopUpTo(popUpTo, false).build()

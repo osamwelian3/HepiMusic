@@ -1,6 +1,7 @@
 package com.hepimusic.common
 
 object Constants {
+    const val LOGGED_IN = "com.hepimusic.playback.LOGGED_IN"
     val SESSION_ID: String = "com.hepimusic.playback.SESSION_ID"
     const val NOTIFICATION_ID = 1
     const val NOTIFICATION_CHANNEL_ID = "music"
@@ -56,6 +57,8 @@ object Constants {
     const val USER_PHONE: String = "com.hepimusic.auth.USER.PHONE"
     const val USER_PASSWORD: String = "com.hepimusic.auth.USER.PASSWORD"
     const val AUTH_TYPE_SOCIAL = "com.hepimusic.auth.AUTH_TYPE_SOCIAL"
+    const val AUTH_USER_ATTRIBUTES = "com.hepimusic.auth.AUTH_USER_ATTRIBUTES"
+    const val AUTH_USER = "com.hepimusic.auth.AUTH_USER"
 
     // Other constants
     const val MAX_RECENTLY_PLAYED = 50
@@ -63,4 +66,13 @@ object Constants {
     const val INITIALIZATION_COMPLETE = "com.hepimusic.INITIALIZATION_COMPLETE"
     const val DATASTORE_READY = "com.hepimusic.DATASTORE_READY"
     const val MAX_MODEL_IMAGE_THUMB_WIDTH = 100
+    const val REQUEST_CHECK_SETTINGS = 0
+
+    // Push Notification (FCM)
+    const val FCM_BASE_URL = "https://fcm.googleapis.com"
+    const val SERVER_KEY = "cd2795e29b0817ca176fdf629fe7b0dd758c95ea"
+    const val CONTENT_TYPE = "application/json"
+    const val PROJECT_ID = "storage-urli"
+    var ACCESS_TOKEN = ""
+
 }

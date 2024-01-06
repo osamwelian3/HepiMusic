@@ -5,6 +5,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import androidx.navigation.findNavController
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.setupWithNavController
 import com.hepimusic.R
@@ -35,6 +36,7 @@ class MainFragment : Fragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        binding = FragmentMainBinding.inflate(LayoutInflater.from(requireContext()))
         arguments?.let {
             param1 = it.getString(ARG_PARAM1)
             param2 = it.getString(ARG_PARAM2)
@@ -45,7 +47,6 @@ class MainFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        binding = FragmentMainBinding.inflate(LayoutInflater.from(requireContext()))
 
         // Dynamically add BottomPlaybackFragment
 //        requireActivity().supportFragmentManager.beginTransaction().add(R.id.bottomPlaybackFragment, BottomPlaybackFragment()).commit()
@@ -84,9 +85,20 @@ class MainFragment : Fragment() {
         /*requireActivity().supportFragmentManager.beginTransaction().replace(R.id.bottomNavHostFragment, navHostF).commitNow()
         navHostF.navController.setGraph(R.navigation.navigation_graph)
         binding.navigationBar.setupWithNavController(navHostF.navController)*/
+        val navHostFragment2 = requireActivity().supportFragmentManager.findFragmentById(R.id.mainNavHostFragment) as NavHostFragment
+        val navController2 = navHostFragment2.navController
+        binding.requestsFab.setOnClickListener {
+            val navController3 = activity?.findNavController(R.id.mainNavHostFragment)
+            navController3?.setGraph(R.navigation.requests_navigation_graph)
+            navController3?.navigate(R.id.action_global_requestsOnBoardingFragment)
+
+        }
+        /*Navigation.safeNavigationOnClickListener(
+                R.id.mainFragment,
+                R.id.requests_navigation_graph
+            )*/
 
     }
-
 
     companion object {
         /**
@@ -106,5 +118,17 @@ class MainFragment : Fragment() {
                     putString(ARG_PARAM2, param2)
                 }
             }
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        val fragment = requireActivity().supportFragmentManager.findFragmentById(R.id.bottomNavHostFragment)
+        val fragmentBP = requireActivity().supportFragmentManager.findFragmentById(R.id.bottomPlaybackFragment)
+        val fragmentTransaction = requireActivity().supportFragmentManager.beginTransaction()
+        if (fragment != null && fragmentBP != null) {
+            fragmentTransaction.remove(fragment)
+            fragmentTransaction.remove(fragmentBP)
+            fragmentTransaction.commitAllowingStateLoss()
+        }
     }
 }

@@ -18,6 +18,7 @@ import androidx.transition.TransitionInflater
 import com.hepimusic.BR
 import com.hepimusic.R
 import com.hepimusic.common.Constants
+import com.hepimusic.common.safeNavigate
 import com.hepimusic.databinding.FragmentPlaylistSongsBinding
 import com.hepimusic.main.common.callbacks.OnItemClickListener
 import com.hepimusic.main.common.view.BaseAdapter
@@ -118,7 +119,7 @@ class PlaylistSongsFragment : BaseFragment(), OnItemClickListener, View.OnClickL
     override fun onClick(v: View?) {
         when (v?.id) {
             R.id.sectionBackButton -> findNavController().popBackStack()
-            R.id.moreOptions -> findNavController().navigate(
+            R.id.moreOptions -> findNavController().safeNavigate(
                 PlaylistSongsFragmentDirections
                     .actionPlaylistSongsFragmentToPlaylistMenuBottomSheetDialogFragment(playlist = playlist)
             )

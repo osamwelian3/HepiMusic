@@ -23,6 +23,9 @@ import com.amplifyframework.core.Amplify
 import com.hepimusic.R
 import com.hepimusic.auth.LoginActivity
 import com.hepimusic.common.Constants
+import com.hepimusic.common.Constants.AUTH_USER
+import com.hepimusic.common.Constants.AUTH_USER_ATTRIBUTES
+import com.hepimusic.common.Constants.LOGGED_IN
 import com.hepimusic.common.safeNavigate
 import com.hepimusic.databinding.FragmentNavigationDialogBinding
 import com.hepimusic.main.common.callbacks.OnItemClickListener
@@ -211,13 +214,16 @@ class NavigationDialogFragment : BaseFullscreenDialogFragment(), OnStartDragList
                             navController.safeNavigate(R.id.navigationDialogFragment, R.id.action_navigationDialogFragment_to_exploreFragment)
                         }
                         preferences.edit().putBoolean(Constants.AUTH_TYPE_SOCIAL, false).apply()
+                        preferences.edit().putBoolean(LOGGED_IN, false).apply()
+                        preferences.edit().remove(AUTH_USER_ATTRIBUTES).apply()
+                        preferences.edit().remove(AUTH_USER).apply()
                         startActivity(Intent(requireActivity(), LoginActivity::class.java))
                         requireActivity().finish()
                     }
                 }
             }
             /*Constants.NAV_CREATORS_DASHBOARD -> {
-                findNavController().navigate(R.id.action_navigationDialogFragment_to_adminDashboardFragment)
+                findNavController().safeNavigate(R.id.action_navigationDialogFragment_to_adminDashboardFragment)
             }*/
         }
         val navId = when (items[position].id) {

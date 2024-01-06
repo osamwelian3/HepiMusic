@@ -31,6 +31,8 @@ import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.request.RequestOptions
 import com.hepimusic.BR
 import com.hepimusic.R
+import com.hepimusic.common.safeNavigate
+import com.hepimusic.common.safeNavigationOnClickListener
 import com.hepimusic.databinding.FragmentProfileBinding
 import com.hepimusic.databinding.ItemOuterRvBinding
 import com.hepimusic.main.common.callbacks.OnItemClickListener
@@ -74,7 +76,8 @@ class ProfileFragment : Fragment(), OnItemClickListener, View.OnClickListener {
 
         binding.backButton.setOnClickListener(this)
         binding.navigationIcon.setOnClickListener(
-            Navigation.createNavigateOnClickListener(
+            Navigation.safeNavigationOnClickListener(
+                R.id.profileFragement,
                 R.id.action_profileFragment_to_navigationDialogFragment
             )
         )
@@ -193,10 +196,10 @@ class ProfileFragment : Fragment(), OnItemClickListener, View.OnClickListener {
     override fun onClick(v: View?) {
         when (v?.id) {
             binding.backButton.id -> findNavController().popBackStack()
-            binding.editProfile.id -> findNavController().navigate(
+            binding.editProfile.id -> findNavController().safeNavigate(
                 ProfileFragmentDirections.actionProfileFragmentToWriteProfieDialogFragment(profileViewModel.profile.value)
             )
-            binding.viewMore.id -> findNavController().navigate(
+            binding.viewMore.id -> findNavController().safeNavigate(
                 ProfileFragmentDirections.actionProfileFragmentToProfileMenuBottomSheetDialogFragment(profileViewModel.profile.value!!)
             )
         }

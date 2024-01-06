@@ -1,7 +1,6 @@
 package com.hepimusic.main.profile
 
 import android.app.Application
-import android.graphics.BitmapFactory
 import android.net.Uri
 import android.util.Log
 import android.webkit.MimeTypeMap
@@ -14,12 +13,9 @@ import com.amplifyframework.core.Amplify
 import com.amplifyframework.datastore.generated.model.Profile
 import com.amplifyframework.storage.StorageAccessLevel
 import com.amplifyframework.storage.options.StorageUploadFileOptions
-import com.amplifyframework.storage.result.StorageUploadResult
 import com.amplifyframework.storage.s3.options.AWSS3StorageUploadFileOptions
-import com.bumptech.glide.Glide
 import com.hepimusic.R
 import com.hepimusic.main.common.utils.ImageUtils
-import com.hepimusic.main.playlist.Playlist
 import com.hepimusic.main.playlist.WriteResult
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -27,7 +23,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.InputStream
-import java.net.URI
 import java.util.UUID
 import javax.inject.Inject
 
@@ -39,16 +34,21 @@ class WriteProfileViewModel @Inject constructor(val application: Application): V
     private val _data = MutableLiveData<WriteResult>()
     internal val data: LiveData<WriteResult> get() = _data
 
-    fun createProfile(profileName: String, profileEmail: String, profilePhone: String, tempThumbUri: Uri?) {
+    fun createProfile(
+        profileName: String,
+        profileEmail: String,
+        profilePhone: String,
+        tempThumbUri: Uri?,
+        userId: String
+    ) {
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
                 try {
-                    val uuid = UUID.randomUUID().toString()
 
                     val key = if (profileName.isNotEmpty()) {
                         "profilePictureImage/${profileName}"
                     } else {
-                        "profilePictureImage/${uuid}"
+                        "profilePictureImage/$userId"
                     }
 
                     val uploadOptions = StorageUploadFileOptions.builder()
@@ -93,7 +93,7 @@ class WriteProfileViewModel @Inject constructor(val application: Application): V
 
                         upload.setOnSuccess {
                             val profile = Profile.builder()
-                                .key(uuid)
+                                .key(userId)
                                 .name(profileName)
                                 .email(profileEmail)
                                 .phoneNumber(profilePhone)
@@ -168,7 +168,7 @@ class WriteProfileViewModel @Inject constructor(val application: Application): V
                         val file = File(tempFile.absolutePath)
 
                         Log.e("FILE", file.name)
-                        Log.e("URI", tempThumbUri.toString())
+//                        Log.e("URI", tempThumbUri.toString())
                         Log.e("PATH", tempThumbUri.path.toString())
                         val upload = Amplify.Storage.uploadFile(
                             "$key.$ext",

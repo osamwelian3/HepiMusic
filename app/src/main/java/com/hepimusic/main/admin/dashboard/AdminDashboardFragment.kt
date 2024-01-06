@@ -22,6 +22,7 @@ import com.google.android.flexbox.FlexboxLayoutManager
 import com.google.android.flexbox.JustifyContent
 import com.hepimusic.R
 import com.hepimusic.common.Constants
+import com.hepimusic.common.safeNavigate
 import com.hepimusic.databinding.FragmentAdminDasboardBinding
 import com.hepimusic.main.common.callbacks.OnItemClickListener
 import com.hepimusic.main.common.view.BaseFullscreenDialogFragment
@@ -196,13 +197,13 @@ class AdminDashboardFragment : BaseFullscreenDialogFragment(), OnStartDragListen
 
         val navId = when (items[position].id) {
             Constants.ADMIN_NAV_SONGS -> R.id.action_adminDashboardFragment_to_adminSongsFragment
-            Constants.ADMIN_NAV_ALBUMS -> R.id.action_navigationDialogFragment_to_playlistFragment
-            Constants.ADMIN_NAV_CATEGORIES -> R.id.action_navigationDialogFragment_to_artistsFragment
-            Constants.ADMIN_NAV_CREATORS -> R.id.action_navigationDialogFragment_to_genresFragment
+            Constants.ADMIN_NAV_ALBUMS -> R.id.action_adminDashboardFragment_to_adminAlbumsFragment
+            Constants.ADMIN_NAV_CATEGORIES -> R.id.action_adminDashboardFragment_to_adminCategoriesFragment
+            Constants.ADMIN_NAV_CREATORS -> R.id.action_adminDashboardFragment_to_adminCreatorsFragment
             else -> null
         }
 
-        if (navId != null) navController.navigate(navId) // findNavController()
+        if (navId != null) navController.safeNavigate(R.id.adminDashboardFragment, navId) // findNavController()
 
     }
 

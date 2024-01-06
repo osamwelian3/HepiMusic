@@ -10,6 +10,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.NavOptions
 import androidx.navigation.fragment.findNavController
 import com.hepimusic.R
+import com.hepimusic.common.safeNavigate
 import com.hepimusic.databinding.FragmentAlbumsMenuBottomSheetDialogBinding
 import com.hepimusic.main.common.view.BaseMenuBottomSheet
 import com.hepimusic.playback.PlaybackViewModel
@@ -80,7 +81,7 @@ class AlbumsMenuBottomSheetDialogFragment : BaseMenuBottomSheet() {
             .actionAlbumsMenuBottomSheetDialogFragmentToAddSongsToPlaylistsFragment(/*selectionArgs*/null, /*selection*/null)
         val navOptions = NavOptions.Builder().setPopUpTo(popUpTo, false).build()
 
-        findNavController().navigate(action, navOptions)
+        findNavController().safeNavigate(action, navOptions)
     }
 
     private fun share() {

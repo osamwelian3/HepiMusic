@@ -14,6 +14,7 @@ import androidx.navigation.fragment.findNavController
 import com.hepimusic.BR
 import com.hepimusic.R
 import com.hepimusic.common.Constants
+import com.hepimusic.common.safeNavigate
 import com.hepimusic.main.admin.common.BaseAdminAdapter
 import com.hepimusic.main.admin.common.BaseAdminFragment
 import com.hepimusic.models.mappers.toMediaItem
@@ -49,12 +50,14 @@ class AdminSongsFragment() : BaseAdminFragment<Song>() {
         super.onViewCreated(view, savedInstanceState)
         (viewModel as AdminSongsViewModel).getObservable().editClicked.observe(viewLifecycleOwner) {
             if (it) {
-                val songToEdit = (viewModel as AdminSongsViewModel).getObservable().songToEdit.value!!
-                findNavController().navigate(
-                    AdminSongsFragmentDirections.actionAdminSongsFragmentToAdminWriteSongDialogFragment(
-                        Song(songToEdit.key, songToEdit)
+                val songToEdit = (viewModel as AdminSongsViewModel).getObservable().songToEdit.value
+                if (songToEdit != null) {
+                    findNavController().safeNavigate(
+                        AdminSongsFragmentDirections.actionAdminSongsFragmentToAdminWriteSongDialogFragment(
+                            Song(songToEdit.key, songToEdit)
+                        )
                     )
-                )
+                }
             }
         }
 
@@ -99,15 +102,11 @@ class AdminSongsFragment() : BaseAdminFragment<Song>() {
         vm.getObservable()._partOf.postValue(null)
     }
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-    }
-
     override fun onClick(v: View?) {
         when (v?.id) {
             R.id.addNewButton -> {
                 (viewModel as AdminSongsViewModel).getObservable()._songToEdit.postValue(null)
-                findNavController().navigate(
+                findNavController().safeNavigate(
                     AdminSongsFragmentDirections.actionAdminSongsFragmentToAdminWriteSongDialogFragment()
                 )
             }
@@ -127,7 +126,7 @@ class AdminSongsFragment() : BaseAdminFragment<Song>() {
         val action =
             AdminSongsFragmentDirections.actionAdminSongsFragmentToAdminSongsMenuBottomSheetDialogFragment(
                 mediaId = "[item]"+items[position].originalSong.key!!, song = items[position])
-        findNavController().navigate(action)
+        findNavController().safeNavigate(action)
     }
 
     companion object {
@@ -151,6 +150,7 @@ class AdminSongsFragment() : BaseAdminFragment<Song>() {
     }
 
     override var navigationFragmentId: Int = R.id.action_adminSongsFragment_to_adminDashboardFragment
+    override var currentNavigationFragmentId: Int = R.id.adminSongsFragment
     override var itemLayoutId: Int = R.layout.item_admin_song
     override var clazz: Class<Song> = Song::class.java
     override var parentId: String = ""

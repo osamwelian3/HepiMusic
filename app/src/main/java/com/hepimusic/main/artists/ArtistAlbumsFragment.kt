@@ -19,6 +19,8 @@ import com.google.android.flexbox.JustifyContent
 import com.hepimusic.BR
 import com.hepimusic.R
 import com.hepimusic.common.px
+import com.hepimusic.common.safeNavigate
+import com.hepimusic.common.safeNavigationOnClickListener
 import com.hepimusic.databinding.FragmentArtistAlbumsBinding
 import com.hepimusic.main.albums.Album
 import com.hepimusic.main.common.callbacks.OnItemClickListener
@@ -74,7 +76,8 @@ class ArtistAlbumsFragment : BaseFragment(), OnItemClickListener {
         observeViewModel()
         binding.sectionBackButton.setOnClickListener { findNavController().popBackStack() }
         binding.navigationIcon.setOnClickListener(
-            Navigation.createNavigateOnClickListener(
+            Navigation.safeNavigationOnClickListener(
+                R.id.artistAlbumsFragment,
                 R.id.action_artistAlbumsFragment_to_navigationDialogFragment
             )
         )
@@ -122,13 +125,13 @@ class ArtistAlbumsFragment : BaseFragment(), OnItemClickListener {
                 albums[position],
                 transitionName
             )
-        findNavController().navigate(action, extras)
+        findNavController().safeNavigate(action, extras)
     }
 
     override fun onItemLongClick(position: Int) {
         val action =
             ArtistAlbumsFragmentDirections.actionArtistAlbumsFragmentToAlbumsMenuBottomSheetDialogFragment(album = albums[position])
-        findNavController().navigate(action)
+        findNavController().safeNavigate(action)
 
     }
 

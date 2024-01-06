@@ -13,6 +13,7 @@ import androidx.navigation.fragment.findNavController
 import com.hepimusic.BR
 import com.hepimusic.R
 import com.hepimusic.common.Constants
+import com.hepimusic.common.safeNavigate
 import com.hepimusic.main.common.view.BasePlayerFragment
 import com.hepimusic.models.mappers.toMediaItem
 import dagger.hilt.android.AndroidEntryPoint
@@ -122,12 +123,13 @@ class SongsFragment : BasePlayerFragment<Song>() {
         Log.e("MEDIA URI", items[position].path)
         val action =
             SongsFragmentDirections.actionSongsFragmentToSongsMenuBottomSheetDialogFragment(mediaId = items[position].id, song = items[position])
-        findNavController().navigate(action)
+        findNavController().safeNavigate(action)
     }
 
     override var itemLayoutId: Int = R.layout.item_song
     override var viewModelVariableId: Int = BR.song
     override var navigationFragmentId: Int = R.id.action_songsFragment_to_navigationDialogFragment
+    override var currentNavigationFragmentId: Int = R.id.songsFragment
     override var numberOfDataRes: Int = R.plurals.numberOfSongs
     override var titleRes: Int = R.string.songs
     override var parentId: String = "[allSongsID]"

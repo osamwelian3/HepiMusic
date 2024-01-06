@@ -36,6 +36,10 @@
       },
       "hosting": {
         "S3AndCloudFront": {}
+      },
+      "geo": {
+        "HepiMusicRequestsPlayersmap": {},
+        "HepiMusicPlayerPlaceIndex": {}
       }
     }
   }

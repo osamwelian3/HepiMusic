@@ -85,6 +85,8 @@ class AdminSongsMenuBottomSheetDialogFragment : BaseMenuBottomSheet() {
         vm.getObservable()._partOf.postValue(null)
         vm.getObservable()._imageUri.postValue(null)
         vm.getObservable()._fileUri.postValue(null)
+        vm.getObservable()._imageUri.postValue(null)
+        vm.getObservable()._deleteOldImage.postValue(null)
     }
 
     override fun onClick(v: View?) {
@@ -135,7 +137,7 @@ class AdminSongsMenuBottomSheetDialogFragment : BaseMenuBottomSheet() {
     }
 
     private fun editTrack() {
-        /*findNavController().navigate(
+        /*findNavController().safenavigate(
             AdminSongsMenuBottomSheetDialogFragmentDirections.actionAdminSongsMenuBottomSheetDialogFragmentToAdminWriteSongDialogFragment(song)
         )*/
         adminSongsViewModel.getObservable()._editClicked.postValue(true)
