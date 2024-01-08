@@ -111,6 +111,23 @@ fun View.fadeIn(duration: Long = 1000, startDelay: Long = 0): ObjectAnimator {
     }
 }
 
+fun View.fadeOut(duration: Long = 1000, startDelay: Long = 0): ObjectAnimator {
+    return ObjectAnimator.ofFloat(this, View.ALPHA, 1F, 0F).apply {
+        addListener(object : AnimatorListener {
+            override fun onAnimationStart(animation: Animator) {
+                super.onAnimationStart(animation)
+                this@fadeOut.visibility = View.GONE
+                this@fadeOut.isEnabled = false
+                removeListener(this)
+            }
+        })
+        setDuration(duration)
+        setStartDelay(startDelay)
+        start()
+
+    }
+}
+
 /**
  *  Fades in this view and fades out the [otherView] view simultaneously
  *  @param  otherView the view to fade out

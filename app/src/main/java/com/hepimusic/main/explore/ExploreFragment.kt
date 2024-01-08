@@ -201,9 +201,11 @@ class ExploreFragment : Fragment(), OnItemClickListener, SwipeRefreshLayout.OnRe
             }
 
             viewModel.items.observe(viewLifecycleOwner, Observer {
-                albums = it
-                (binding.randomAlbumsRV.adapter as BaseAdapter<Album>).updateItems(albums)
-                observePlayed()
+                if (viewModel.exploreAlbums.value != null && it.size >= viewModel.exploreAlbums.value!!.size) {
+                    albums = it
+                    (binding.randomAlbumsRV.adapter as BaseAdapter<Album>).updateItems(albums)
+                    observePlayed()
+                }
             })
             /*viewModel.isBrowserConnected.observe(viewLifecycleOwner, Observer { connected ->
                 if (connected) {
@@ -287,15 +289,21 @@ class ExploreFragment : Fragment(), OnItemClickListener, SwipeRefreshLayout.OnRe
         findNavController().safeNavigate(action)
     }
 
+    override fun onResume() {
+        super.onResume()
+        viewModel.startExploreJob()
+    }
 
     override fun onDestroyView() {
         binding.randomAlbumsRV.adapter = null
         binding.playedRV.adapter = null
+        viewModel.stopExploreJob()
         super.onDestroyView()
     }
 
     override fun onRefresh() {
         binding.swipeContainer.isRefreshing = true
         observeViewModel()
+        viewModel.startExploreJob()
     }
 }

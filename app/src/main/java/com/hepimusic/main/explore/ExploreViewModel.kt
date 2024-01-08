@@ -20,10 +20,14 @@ import com.amplifyframework.datastore.DataStoreException
 import com.amplifyframework.datastore.DataStoreQuerySnapshot
 import com.amplifyframework.datastore.generated.model.Song
 import com.hepimusic.common.Constants
+import com.hepimusic.main.albums.Album
 import com.hepimusic.main.albums.AlbumsViewModel
+import com.hepimusic.models.mappers.toLAlbum
 import com.hepimusic.ui.MainActivity
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -56,6 +60,10 @@ class ExploreViewModel @Inject constructor(
     val _trendingSongs = MutableLiveData<List<Song>>()
     val trendingSongs: LiveData<List<Song>> = _trendingSongs
 
+    val _exploreAlbums = MutableLiveData<List<Album>>()
+    val exploreAlbums: LiveData<List<Album>> = _exploreAlbums
+    var fetchExploreAlbumsJob: Job? = null
+
     private lateinit var recentlyPlayedRepository: RecentlyPlayedRepository
     lateinit var recentlyPlayed: LiveData<List<RecentlyPlayed>>
 
@@ -70,8 +78,57 @@ class ExploreViewModel @Inject constructor(
             val recentDao = recentlyPlayedDatabase.dao
             recentlyPlayedRepository = RecentlyPlayedRepository(recentDao)
             recentlyPlayed = withContext(Dispatchers.IO) { recentlyPlayedRepository.recentlyPlayed }
-            getTrending()
+            startExploreJob()
         }
+    }
+
+
+
+    fun startExploreJob() {
+        if (::recentlyPlayed.isInitialized) {
+            fetchExploreAlbumsJob?.cancel()
+            fetchExploreAlbumsJob = CoroutineScope(Job() + Dispatchers.IO).launch {
+                getTrending()
+                getExploreAlbums()
+            }
+            fetchExploreAlbumsJob?.start()
+        }
+    }
+
+    fun stopExploreJob() {
+        fetchExploreAlbumsJob?.cancel()
+    }
+
+    private fun getExploreAlbums() {
+        val tag = "ViewModel Observe Albums Query"
+        val onQuerySnapshot: Consumer<DataStoreQuerySnapshot<com.amplifyframework.datastore.generated.model.Album>> = Consumer<DataStoreQuerySnapshot<com.amplifyframework.datastore.generated.model.Album>> { value ->
+            Log.d(tag, "success on snapshot")
+            Log.d(tag, "number of albums: " + value.items.size)
+            Log.d(tag, "sync status: " + value.isSynced)
+
+            _exploreAlbums.postValue(value.items.map { it.toLAlbum() })
+            deliverResult(value.items.map { it.toLAlbum() })
+        }
+        val observationStarted = Consumer { _: Cancelable ->
+            Log.d(tag, "Success on cancelable")
+        }
+        val onObservationError = Consumer { value: DataStoreException ->
+            Log.d(tag, "error on snapshot $value")
+        }
+        val onObservationComplete = Action {
+            Log.d(tag, "complete")
+        }
+        val predicate: QueryPredicate = Where.matchesAll().queryPredicate
+        val querySortBy = QuerySortBy("Album", "createdAt", QuerySortOrder.DESCENDING)
+        val options = ObserveQueryOptions(predicate, listOf(querySortBy))
+        Amplify.DataStore.observeQuery(
+            com.amplifyframework.datastore.generated.model.Album::class.java,
+            options,
+            observationStarted,
+            onQuerySnapshot,
+            onObservationError,
+            onObservationComplete
+        )
     }
 
     private fun getTrending() {
@@ -135,5 +192,10 @@ class ExploreViewModel @Inject constructor(
             /*Log.e("Filtered listens", listen.jsonObject.toString())*/
             listen.jsonObject.toString()
         }
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        stopExploreJob()
     }
 }

@@ -16,6 +16,8 @@ import com.hepimusic.main.playlist.PlaylistDatabase
 import com.hepimusic.main.playlist.PlaylistRepository
 import com.hepimusic.main.songs.Song
 import com.hepimusic.models.mappers.toAlbum
+import com.hepimusic.models.mappers.toArtist
+import com.hepimusic.models.mappers.toGenre
 import com.hepimusic.models.mappers.toSong
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -63,12 +65,41 @@ class SearchRepository(application: Application, browser: LiveData<MediaBrowser>
     }
 
     @WorkerThread
-    fun queryArtists(query: String, ascend: Boolean): List<Artist> {
+    suspend fun queryArtists(query: String, ascend: Boolean): List<Artist> {
         /*val selection = "${MediaStore.Audio.Media.ARTIST} LIKE ?"
         val selectionArgs = arrayOf("%$query%")
         val order = "${MediaStore.Audio.Media.ARTIST} COLLATE NOCASE ${if (ascend) "ASC" else "DESC"}"
         return loadData(baseArtistUri, baseArtistProjection, selection, selectionArgs, order, ::Artist)*/
-        return emptyList()
+        fun transform(data: MediaItem): Artist {
+            return try {
+                val castData = data.toArtist()
+                castData
+            } catch (e: Exception){
+                e.printStackTrace()
+                Artist(null, "", "", Uri.parse(""), null, null, null, "")
+            }
+
+        }
+        return if (ascend) loadData(parentId = "[artistID]") { transform(it) }.filter { it.name.contains(query, true) }.sortedBy { it.name } else loadData(parentId = "[artistID]") { transform(it) }.filter { it.name.contains(query, true) }.sortedBy { it.name }.reversed()
+    }
+
+    @WorkerThread
+    suspend fun queryCategories(query: String, ascend: Boolean): List<Genre> {
+        /*val selection = "${MediaStore.Audio.Media.ARTIST} LIKE ?"
+        val selectionArgs = arrayOf("%$query%")
+        val order = "${MediaStore.Audio.Media.ARTIST} COLLATE NOCASE ${if (ascend) "ASC" else "DESC"}"
+        return loadData(baseArtistUri, baseArtistProjection, selection, selectionArgs, order, ::Artist)*/
+        fun transform(data: MediaItem): Genre {
+            return try {
+                val castData = data.toGenre()
+                castData
+            } catch (e: Exception){
+                e.printStackTrace()
+                Genre("", "", "")
+            }
+
+        }
+        return if (ascend) loadData(parentId = "[categoryID]") { transform(it) }.filter { it.name.contains(query, true) }.sortedBy { it.name } else loadData(parentId = "[categoryID]") { transform(it) }.filter { it.name.contains(query, true) }.sortedBy { it.name }.reversed()
     }
 
     @WorkerThread

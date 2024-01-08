@@ -22,6 +22,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.hepimusic.R
 import com.hepimusic.common.safeNavigationOnClickListener
 import com.hepimusic.databinding.FragmentBasePlayerBinding
+import com.hepimusic.main.albums.AlbumsViewModel
 import com.hepimusic.main.common.callbacks.OnItemClickListener
 import com.hepimusic.main.common.data.Model
 import com.hepimusic.main.songs.Song
@@ -127,7 +128,9 @@ abstract class BasePlayerFragment<T : Model> : BaseFragment(), View.OnClickListe
                     viewModel.items.observe(viewLifecycleOwner) { list ->
                         if (list.isNotEmpty()) {
                             viewModel.items.value?.first()?.id?.let {
-                                if (parentId != "[albumID]" && it.toString().contains("[album]")) {
+                                if (parentId != "[albumID]" && it.toString()
+                                        .contains("[album]")
+                                ) {
                                     Log.e("ID", it.toString())
                                     viewModel.loadData(parentId)
                                 }
@@ -152,9 +155,20 @@ abstract class BasePlayerFragment<T : Model> : BaseFragment(), View.OnClickListe
 
     @Suppress("UNCHECKED_CAST")
     private fun updateViews(items: List<T>) {
-        this.items = items
-        (binding.dataRV.adapter as BaseAdapter<T>).updateItems(items)
-        binding.dataNum.text = resources.getQuantityString(numberOfDataRes, items.count(), items.count())
+        if (viewModel.javaClass == AlbumsViewModel::class.java) {
+            val vm = viewModel as AlbumsViewModel
+            if (vm.albums.value != null && items.size >= vm.albums.value!!.size) {
+                this.items = items
+                (binding.dataRV.adapter as BaseAdapter<T>).updateItems(items)
+                binding.dataNum.text =
+                    resources.getQuantityString(numberOfDataRes, items.count(), items.count())
+            }
+        } else {
+            this.items = items
+            (binding.dataRV.adapter as BaseAdapter<T>).updateItems(items)
+            binding.dataNum.text =
+                resources.getQuantityString(numberOfDataRes, items.count(), items.count())
+        }
     }
 
     @SuppressLint("ResourceType")

@@ -31,7 +31,7 @@ data class Album(
     )
 
     constructor(data: MediaItem) : this(
-        id = data.mediaId,
+        id = "[album]${data.mediaMetadata.title.toString()}",
         name = data.mediaMetadata.title.toString(),
         artist = data.mediaMetadata.artist.toString(),
         albumArt = data.mediaMetadata.artworkUri,

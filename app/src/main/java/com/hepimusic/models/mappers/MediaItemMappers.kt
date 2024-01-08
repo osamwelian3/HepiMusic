@@ -4,6 +4,7 @@ import android.net.Uri
 import android.os.Bundle
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
+import com.hepimusic.main.artists.Artist
 import com.hepimusic.main.explore.RecentlyPlayed
 import com.hepimusic.main.playlist.PlaylistItem
 import com.hepimusic.playback.MediaItemData
@@ -64,4 +65,10 @@ fun MediaItemData.toMediaItem(): MediaItem {
         .setMediaId(id)
         .setMediaMetadata(data)
         .build()
+}
+
+fun MediaItem.toArtist(): Artist {
+    return Artist(
+        this
+    )
 }

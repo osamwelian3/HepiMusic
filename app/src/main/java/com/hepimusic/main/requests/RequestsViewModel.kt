@@ -13,6 +13,7 @@ import androidx.databinding.BaseObservable
 import androidx.databinding.Bindable
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.viewModelScope
 import com.amplifyframework.api.graphql.PaginatedResult
 import com.amplifyframework.api.graphql.model.ModelMutation
 import com.amplifyframework.api.graphql.model.ModelQuery
@@ -45,6 +46,7 @@ import com.google.gson.Gson
 import com.hepimusic.R
 import com.hepimusic.common.Constants.AUTH_USER
 import com.hepimusic.common.Constants.SERVER_KEY
+import com.hepimusic.common.networkobserver.ConnectivityObserver
 import com.hepimusic.datasource.repositories.MediaItemTree
 import com.hepimusic.main.requests.common.BaseRequestsViewModel
 import com.hepimusic.main.requests.common.toRequestPlayer
@@ -65,6 +67,8 @@ class RequestsViewModel @Inject constructor(
 ): BaseRequestsViewModel(application) {
 
     val sharedPreferences = application.getSharedPreferences("main", MODE_PRIVATE)
+
+    val connectivityStatus = MutableLiveData<ConnectivityObserver.Status>()
 
     val currentAuthUserString = sharedPreferences.getString(AUTH_USER, null)
 
@@ -302,6 +306,13 @@ class RequestsViewModel @Inject constructor(
         val playlistPlayer: LiveData<RequestPlayer?> = pplaylistPlayer
 
         fun savePlayerToDb(player: RequestPlayer) {
+            if (connectivityStatus.value != ConnectivityObserver.Status.Available) {
+                viewModelScope.launch {
+                    Toast.makeText(application.applicationContext, "You need an internet connection to perform this operation", Toast.LENGTH_LONG).show()
+                    _data.postValue(WriteResult(false, R.string.no_internet))
+                }
+                return
+            }
             Amplify.DataStore.save(
                 player,
                 {
@@ -377,6 +388,13 @@ class RequestsViewModel @Inject constructor(
         }
 
         fun savePlaylistToDb(playist: RequestPlaylist) {
+            if (connectivityStatus.value != ConnectivityObserver.Status.Available) {
+                viewModelScope.launch {
+                    Toast.makeText(application.applicationContext, "You need an internet connection to perform this operation", Toast.LENGTH_LONG).show()
+                    _data.postValue(WriteResult(false, R.string.no_internet))
+                }
+                return
+            }
             Amplify.DataStore.save(
                 playist,
                 {
@@ -448,7 +466,6 @@ class RequestsViewModel @Inject constructor(
         }
 
         fun addSongToPlaylist(song: Song, owner: String = "") {
-
             val requestSong = song.toRequestSong(playlistToEdit.value!!, Temporal.DateTime(Calendar.getInstance().time, 0), Temporal.DateTime(Calendar.getInstance().time, 0), currentAuthUserString)
 
             unsubscribeFromTopic(playlistToEdit.value!!.name.trim().replace(" ", "_"))
@@ -485,6 +502,13 @@ class RequestsViewModel @Inject constructor(
         }
 
         fun sendNotification(notification: PushNotification) = CoroutineScope(Dispatchers.IO).launch {
+            if (connectivityStatus.value != ConnectivityObserver.Status.Available) {
+                viewModelScope.launch {
+                    Toast.makeText(application.applicationContext, "You need an internet connection to perform this operation", Toast.LENGTH_LONG).show()
+                    _data.postValue(WriteResult(false, R.string.no_internet))
+                }
+                return@launch
+            }
             val jsonPL = Gson().toJson(notification)
             Log.e("JSON PAYLOAD", jsonPL)
             try {
@@ -492,17 +516,25 @@ class RequestsViewModel @Inject constructor(
                 if (RetrofitInstance.token.isEmpty()) return@launch
                 val response = RetrofitInstance.api.postNotification(notification)
                 if (response.isSuccessful) {
-//                    Log.e("SEND NOTIFICATION RESPONSE", Gson().toJson(response))
+                    Log.e("SEND NOTIFICATION RESPONSE", Gson().toJson(response))
+                    _data.postValue(WriteResult(true))
                 } else {
                     Log.e("SEND NOTIFICATION ERROR", response.errorBody().toString())
+                    _data.postValue(WriteResult(false, R.string.sth_went_wrong))
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
                 Log.e("SEND NOTIFICATION EXCEPTION", e.message.toString())
+                _data.postValue(WriteResult(false, R.string.sth_went_wrong))
             }
         }
 
         fun subscribeToTopic(topic: String) {
+            if (connectivityStatus.value != ConnectivityObserver.Status.Available) {
+                viewModelScope.launch {
+                    Toast.makeText(application.applicationContext, "You may not be able to process requests for your player sessions due to lack of connectivity", Toast.LENGTH_LONG).show()
+                }
+            }
             FirebaseMessaging.getInstance().subscribeToTopic(topic).addOnCompleteListener {
                 if (it.isSuccessful) {
                     Log.e("SUBSCRIBED TO TOPIC", "Topic $topic")
@@ -513,6 +545,11 @@ class RequestsViewModel @Inject constructor(
         }
 
         fun unsubscribeFromTopic(topic: String) {
+            if (connectivityStatus.value != ConnectivityObserver.Status.Available) {
+                viewModelScope.launch {
+                    Toast.makeText(application.applicationContext, "A network operation failed because your internet is unavailable, please check and try again.", Toast.LENGTH_LONG).show()
+                }
+            }
             FirebaseMessaging.getInstance().unsubscribeFromTopic(topic).addOnCompleteListener {
                 if (it.isSuccessful) {
                     Log.e("UNSUBSCRIBED FROM TOPIC", "Topic $topic")
@@ -522,7 +559,7 @@ class RequestsViewModel @Inject constructor(
             }
         }
 
-        fun clearResult(@StringRes success: Int) {
+        fun clearResult(@StringRes success: Int? = null) {
             _data.postValue(WriteResult(false, success))
         }
     }

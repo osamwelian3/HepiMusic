@@ -98,6 +98,16 @@ class AlbumsFragment : BasePlayerFragment<Album>() {
                 }
             }
     }
+
+    override fun onResume() {
+        super.onResume()
+        (viewModel as AlbumsViewModel).startJob()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        (viewModel as AlbumsViewModel).stopJob()
+    }
 }
 
 val albumItemAnimSet = setOf(R.anim.fast_fade_in)

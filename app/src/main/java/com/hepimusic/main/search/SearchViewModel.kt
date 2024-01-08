@@ -60,6 +60,7 @@ class SearchViewModel @Inject constructor(val application: Application, val play
             val albums = async { repository.queryAlbums(query, ascend) }
             val artists = async { repository.queryArtists(query, ascend) }
             val genres = async { repository.queryGenres(query, ascend) }
+            val categories = async { repository.queryCategories(query, ascend) }
             val playlists = async {
                 repository.queryPlaylists(query, ascend).apply {
                     this.forEach { it.songsCount = playlistItemsRepository.fetchSongCount(it.id)/*playlistRepository.fetchSongCount(it.id)*/ }
@@ -70,6 +71,7 @@ class SearchViewModel @Inject constructor(val application: Application, val play
             _albums.value = albums.await() ?: emptyList()
             _artists.value = artists.await() ?: emptyList()
             _genres.value = genres.await() ?: emptyList()
+            _genres.value = categories.await() ?: emptyList()
             _playlists.value = playlists.await() ?: emptyList()
             val totalSize = (_songs.value?.size ?: 0) + (_albums.value?.size ?: 0) + (_artists.value?.size
                 ?: 0) + (_genres.value?.size ?: 0) + (_playlists.value?.size ?: 0)

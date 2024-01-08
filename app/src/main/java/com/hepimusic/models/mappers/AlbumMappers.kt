@@ -2,6 +2,7 @@ package com.hepimusic.models.mappers
 
 import android.net.Uri
 import androidx.media3.common.MediaItem
+import androidx.media3.common.MediaMetadata
 import com.hepimusic.common.Constants
 import com.hepimusic.datasource.local.entities.AlbumEntity
 import com.hepimusic.main.songs.Song
@@ -58,6 +59,34 @@ fun MediaItem.toAlbum(): com.hepimusic.main.albums.Album {
     )
 }
 
+fun com.hepimusic.main.albums.Album.toMediaItem() : MediaItem {
+    val metaData = MediaMetadata.Builder()
+        .setArtworkUri(this.albumArt)
+        .setAlbumTitle(this.name)
+        .setArtist(this.artist)
+        .setTitle(this.name)
+        .setSubtitle(this.name)
+        .setDescription(this.name)
+        .build()
+    return MediaItem.Builder()
+        .setMediaMetadata(metaData)
+        .setMediaId("[album]"+this.name)
+        .build()
+}
+
 fun MediaItem.toSong(): Song {
     return Song(this)
 }
+
+fun com.amplifyframework.datastore.generated.model.Album.toLAlbum(): com.hepimusic.main.albums.Album {
+    return com.hepimusic.main.albums.Album(
+        "[album]"+this.name,
+        this.name,
+        "",
+        Uri.parse(Constants.BASE_URL+this.thumbnailKey),
+        null,
+        this.createdAt.toDate().year.toString(),
+        "[album]"+this.key
+    )
+}
+

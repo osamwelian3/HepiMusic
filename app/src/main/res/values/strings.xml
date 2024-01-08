@@ -278,4 +278,5 @@
     <string name="delete_request_playlist">Delete Playlist</string>
     <string name="playlist_chat">Playlist Chat (Coming soon)</string>
     <string name="request_song_added_to_playlist">Song added to playlist</string>
+    <string name="no_internet">No Internet: You need an internet connection to perform this operation</string>
 </resources>

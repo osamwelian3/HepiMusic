@@ -153,4 +153,14 @@ class SongsFragment : BasePlayerFragment<Song>() {
                 }
             }
     }
+
+    override fun onResume() {
+        super.onResume()
+        (viewModel as SongsViewModel).startJob()
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        (viewModel as SongsViewModel).stopJob()
+    }
 }

@@ -22,10 +22,13 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.core.graphics.drawable.toDrawable
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.NavHostFragment
 import com.amplifyframework.core.Amplify
 import com.hepimusic.R
 import com.hepimusic.common.crossFadeWidth
+import com.hepimusic.common.networkobserver.ConnectivityObserver
+import com.hepimusic.common.networkobserver.NetworkConnectivityObserver
 import com.hepimusic.databinding.FragmentRequestsMainBinding
 import com.hepimusic.main.common.utils.Utils
 import com.hepimusic.main.profile.ProfileViewModel
@@ -33,6 +36,9 @@ import com.hepimusic.main.requests.common.toRequestPlayer
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 
 // TODO: Rename parameter arguments, choose names that match
@@ -65,6 +71,25 @@ class RequestsMainFragment : Fragment() {
         viewModel.initialize()
         profileViewModel = ViewModelProvider(requireActivity())[ProfileViewModel::class.java]
         showMenu()
+
+        val connectivityManager = NetworkConnectivityObserver(requireContext())
+        connectivityManager.observe()
+            .onEach {
+                if (viewModel.connectivityStatus.value != null && viewModel.connectivityStatus.value == ConnectivityObserver.Status.Available) {
+                    Toast.makeText(requireContext(), "Internet connection restored", Toast.LENGTH_LONG).show()
+                }
+                viewModel.connectivityStatus.postValue(it)
+                Log.e("REQUESTS MAIN FRAGMENT", "Internet is $it - ${it.name}")
+                if (it == ConnectivityObserver.Status.Lost) {
+                    Toast.makeText(requireContext(), "Your internet connection is lost, most request features  may require an internet connection.", Toast.LENGTH_LONG).show()
+                }
+            }
+            .catch {
+                it.printStackTrace()
+                Log.e("REQUESTS MAIN FRAGMENT", "Error on connectivity observer: ${it.message.toString()}")
+            }
+            .launchIn(lifecycleScope)
+
         arguments?.let {
             param1 = it.getString(ARG_PARAM1)
             param2 = it.getString(ARG_PARAM2)
@@ -151,14 +176,21 @@ class RequestsMainFragment : Fragment() {
         val progressBar = dialog.findViewById<ProgressBar>(R.id.progressBar)
 
         viewModel.getObservable().data.observe(viewLifecycleOwner) {
-            if (it.success || it.message == null) {
+            if (it.success) {
                 Utils.vibrateAfterAction(activity)
                 viewModel.getObservable().clearResult(R.string.saved)
                 dialog.dismiss()
                 job?.cancel()
             } else {
-                writePlayerButton.crossFadeWidth(progressBar)
-                Toast.makeText(activity, it.message, Toast.LENGTH_SHORT).show()
+                if (it.message != null) {
+                    writePlayerButton.crossFadeWidth(
+                        progressBar,
+                        visibility = View.INVISIBLE,
+                        duration = 0
+                    )
+                    Toast.makeText(activity, it.message, Toast.LENGTH_SHORT).show()
+                    viewModel.getObservable().clearResult()
+                }
             }
         }
 
@@ -246,7 +278,7 @@ class RequestsMainFragment : Fragment() {
         playerDescField.addTextChangedListener(textWatcher)
 
         writePlayerButton.setOnClickListener {
-            progressBar.crossFadeWidth(writePlayerButton)
+            progressBar.crossFadeWidth(writePlayerButton, visibility = View.INVISIBLE, duration = 0)
             if (viewModel.players.value.isNullOrEmpty()) {
                 viewModel.getObservable().createNewPlayer()
             }

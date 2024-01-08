@@ -26,6 +26,7 @@ import com.hepimusic.main.albums.Album
 import com.hepimusic.main.common.callbacks.OnItemClickListener
 import com.hepimusic.main.common.view.BaseAdapter
 import com.hepimusic.main.common.view.BaseFragment
+import com.hepimusic.main.songs.Song
 
 // TODO: Rename parameter arguments, choose names that match
 // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
@@ -45,6 +46,7 @@ class ArtistAlbumsFragment : BaseFragment(), OnItemClickListener {
     lateinit var artist: Artist
     lateinit var viewModel: ArtistAlbumsViewModel
     private var albums = emptyList<Album>()
+    private var songs = emptyList<Song>()
     lateinit var binding: FragmentArtistAlbumsBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {

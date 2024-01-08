@@ -93,6 +93,17 @@ object MediaItemTree {
     var job: Job? = null
     var hubInit = false
 
+    // splash user journey
+
+    val firstTimemessage = MutableLiveData<String>()
+    val startingStorageEngine = MutableLiveData<String>()
+    val storageEngineStarted = MutableLiveData<String>()
+    val fetchingSongs = MutableLiveData<String>()
+    val fetchingAlbums = MutableLiveData<String>()
+    val fetchingArtists = MutableLiveData<String>()
+
+    // splash user journey
+
     private class MediaItemNode(var item: MediaItem) {
         private val children: MutableList<MediaItem> = ArrayList()
 
@@ -102,7 +113,12 @@ object MediaItemTree {
         }
 
         fun getChildren(): List<MediaItem> {
-            return ImmutableList.copyOf(children)
+            return try {
+                ImmutableList.copyOf(children)
+            } catch (e: Exception) {
+                e.printStackTrace()
+                emptyList<MediaItem>()
+            }
         }
 
         fun updateTracksCount() {
@@ -129,7 +145,7 @@ object MediaItemTree {
                 .setReleaseYear(data.releaseYear)
                 .setReleaseMonth(data.releaseMonth)
                 .setReleaseDay(data.releaseDay)
-                .setTotalTrackCount(this.getChildren().size)
+                .setTotalTrackCount(this.getChildren()?.size ?: 0)
                 .build()
             this.item = MediaItem.Builder()
                 .setMediaId(this.item.mediaId)
@@ -310,6 +326,11 @@ object MediaItemTree {
 
         // first time installation
         if (!context.applicationContext.getSharedPreferences("main", Context.MODE_PRIVATE).getBoolean(OnBoardingActivity.HAS_SEEN_ON_BOARDING, false)) {
+            firstTimemessage.postValue("Thank you for choosing Hepi Music.")
+            delay(3000)
+            firstTimemessage.postValue("We are glad you are here.")
+            delay(3000)
+            firstTimemessage.postValue("We are setting up your device for the first time.")
             Amplify.Hub.subscribe(
                 HubChannel.DATASTORE,
                 {
@@ -323,13 +344,12 @@ object MediaItemTree {
                     if (it.name.equals("ready")) {
                         if (!hubInit) {
                             hubInit = true
+                            firstTimemessage.postValue("Connection to Hepi Music cloud successful.")
                             queryAllData(context)
                         }
                     }
                 }
             )
-
-
 
             fun datastoreStart() {
                 Amplify.DataStore.start(
@@ -360,12 +380,22 @@ object MediaItemTree {
                     }
                 )
             }
+            delay(3000)
+            firstTimemessage.postValue("Please wait...")
+            // starting staorage engine
+            delay(3000)
+            firstTimemessage.postValue("Firing up Hepi Music cloud storage")
             datastoreStart()
         } else {
             if (!hubInit) {
+                // startingStorageEngine
+                delay(3000)
+                firstTimemessage.postValue("Firing up Hepi Music cloud storage")
                 Amplify.DataStore.start(
                     {
                         hubInit = true
+                        // storageEngineStarted
+                        firstTimemessage.postValue("Connection to Hepi Music cloud successful.")
                         queryAllData(context)
                     },
                     {
@@ -695,6 +725,8 @@ object MediaItemTree {
     private fun queryAllData(context: Context) {
         val options = Where.matchesAll()
         // query all data
+        // fetchingSongs
+        firstTimemessage.postValue("Fetching songs ...")
         Amplify.DataStore.query(
             Song::class.java,
             options,
@@ -708,6 +740,8 @@ object MediaItemTree {
                 }
                 Log.e("MEDIA ITEM TREE", "Queried ${songsList.size} songs $count.")
 
+                // fetchingAlbums
+                firstTimemessage.postValue("Fetching albums ...")
                 Amplify.DataStore.query(
                     Album::class.java,
                     options,
@@ -719,6 +753,8 @@ object MediaItemTree {
                         }
                         Log.e("MEDIA ITEM TREE", "Queried ${albumsList.size} albums.")
 
+                        // fetchingCreators
+                        firstTimemessage.postValue("Fetching artists ...")
                         Amplify.DataStore.query(
                             Creator::class.java,
                             options,

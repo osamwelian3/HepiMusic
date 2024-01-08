@@ -4,13 +4,22 @@ import android.app.Application
 import android.content.Context
 import android.content.SharedPreferences
 import android.net.Uri
-import android.util.Log
 import androidx.annotation.WorkerThread
 import androidx.lifecycle.LiveData
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
 import androidx.media3.session.MediaBrowser
+import com.amplifyframework.core.Amplify
+import com.amplifyframework.core.model.query.Where
+import com.amplifyframework.datastore.generated.model.Album
+import com.amplifyframework.datastore.generated.model.Category
+import com.amplifyframework.datastore.generated.model.Creator
+import com.amplifyframework.datastore.generated.model.Song
 import com.hepimusic.datasource.repositories.MediaItemTree
+import com.hepimusic.models.mappers.toArtist
+import com.hepimusic.models.mappers.toGenre
+import com.hepimusic.models.mappers.toLAlbum
+import com.hepimusic.models.mappers.toMediaItem
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -30,12 +39,12 @@ abstract class BaseMediaStoreRepository(private val application: Application, va
 
     @WorkerThread
     suspend fun<T> loadData(parentId: String = "[albumID]", transform: (data: MediaItem) -> T): List<T> = suspendCoroutine { continuation ->
-        if (liveBrowser.value != null) {
+        /*if (liveBrowser.value != null) {
             browser = liveBrowser.value!!
 
             backgroundScope.launch {
                 val results = mutableListOf<T>()
-                val data = query(parentId)/*if (Constants.LAST_PARENT_ID != "") Constants.LAST_PARENT_ID else Constants.SONGS_ROOT*/
+                val data = query(parentId)*//*if (Constants.LAST_PARENT_ID != "") Constants.LAST_PARENT_ID else Constants.SONGS_ROOT*//*
                 data.map {
                     results.add(transform(it))
                 }
@@ -50,7 +59,7 @@ abstract class BaseMediaStoreRepository(private val application: Application, va
 
                         backgroundScope.launch {
                             val results = mutableListOf<T>()
-                            val data = query(parentId)/*if (Constants.LAST_PARENT_ID != "") Constants.LAST_PARENT_ID else Constants.SONGS_ROOT*/
+                            val data = query(parentId)*//*if (Constants.LAST_PARENT_ID != "") Constants.LAST_PARENT_ID else Constants.SONGS_ROOT*//*
                             data.map {
                                 results.add(transform(it))
                             }
@@ -58,6 +67,75 @@ abstract class BaseMediaStoreRepository(private val application: Application, va
                         }
                     }
                 }
+            }
+        }*/
+
+        if (parentId.contains("[allSongsID]")) {
+            getSongs {
+                backgroundScope.launch {
+                    val results = mutableListOf<T>()
+                    val data = it
+                    data.map {
+                        results.add(transform(it))
+                    }
+                    continuation.resume(results)
+                }
+            }
+        }
+        if (parentId.contains("[item]")) {
+            getSong(parentId.replace("[item]", "")) {
+                continuation.resume(listOf(transform(it)))
+            }
+        }
+        if (parentId.contains("[albumID]")) {
+            getAlbums {
+                backgroundScope.launch {
+                    val results = mutableListOf<T>()
+                    val data = it
+                    data.map {
+                        results.add(transform(it))
+                    }
+                    continuation.resume(results)
+                }
+            }
+        }
+        if (parentId.contains("[album]")) {
+            getAlbum(parentId.replace("[album]", "")) {
+                continuation.resume(listOf(transform(it)))
+            }
+        }
+        if (parentId.contains("[artistID]")) {
+            getArtists {
+                backgroundScope.launch {
+                    val results = mutableListOf<T>()
+                    val data = it
+                    data.map {
+                        results.add(transform(it))
+                    }
+                    continuation.resume(results)
+                }
+            }
+        }
+        if (parentId.contains("[artist]")) {
+            getArtist(parentId.replace("[artist]", "")) {
+                continuation.resume(listOf(transform(it)))
+            }
+        }
+        if (parentId.contains("[categoryID]")) {
+            getCategories {
+                backgroundScope.launch {
+                    val results = mutableListOf<T>()
+                    val data = it
+                    data.map {
+                        results.add(transform(it))
+                    }
+                    continuation.resume(results)
+                }
+            }
+        }
+        if (parentId.contains("[category]")) {
+            getCategory(parentId.replace("[category]", "")) {
+                continuation.resume(listOf(transform(it)))
             }
         }
 
@@ -223,6 +301,130 @@ abstract class BaseMediaStoreRepository(private val application: Application, va
         }
 
         list
+    }
+
+    fun getSongs(onSuccess: (List<MediaItem>) -> Unit) {
+        Amplify.DataStore.query(
+            Song::class.java,
+            {
+                val temp = mutableListOf<MediaItem>()
+                while (it.hasNext()) {
+                    temp.add(it.next().toMediaItem())
+                }
+                onSuccess.invoke(temp)
+            },
+            {
+
+            }
+        )
+    }
+
+    fun getSong(key: String, onSuccess: (MediaItem) -> Unit) {
+        Amplify.DataStore.query(
+            Song::class.java,
+            Where.identifier(Song::class.java, key),
+            {
+                while (it.hasNext()) {
+                    onSuccess.invoke(it.next().toMediaItem())
+                }
+            },
+            {
+
+            }
+        )
+    }
+
+    fun getAlbums(onSuccess: (List<MediaItem>) -> Unit) {
+        Amplify.DataStore.query(
+            Album::class.java,
+            {
+                val temp = mutableListOf<MediaItem>()
+                while (it.hasNext()) {
+                    temp.add(it.next().toLAlbum().toMediaItem())
+                }
+                onSuccess.invoke(temp)
+            },
+            {
+
+            }
+        )
+    }
+
+    fun getAlbum(key: String, onSuccess: (MediaItem) -> Unit) {
+        Amplify.DataStore.query(
+            Album::class.java,
+            Where.matches(Album.NAME.contains(key.trim()).or(Album.NAME.eq(key)).or(Creator.KEY.eq(key))),
+            {
+                while (it.hasNext()) {
+                    onSuccess.invoke(it.next().toLAlbum().toMediaItem())
+                }
+            },
+            {
+
+            }
+        )
+    }
+
+    fun getArtists(onSuccess: (List<MediaItem>) -> Unit) {
+        Amplify.DataStore.query(
+            Creator::class.java,
+            {
+                val temp = mutableListOf<MediaItem>()
+                while (it.hasNext()) {
+                    temp.add(it.next().toArtist().toMediaItem())
+                }
+                onSuccess.invoke(temp)
+            },
+            {
+
+            }
+        )
+    }
+
+    fun getArtist(key: String, onSuccess: (MediaItem) -> Unit) {
+        Amplify.DataStore.query(
+            Creator::class.java,
+            Where.matches(Creator.NAME.contains(key.trim()).or(Creator.NAME.eq(key).or(Creator.KEY.eq(key)))),
+            {
+                while (it.hasNext()) {
+                    onSuccess.invoke(it.next().toArtist().toMediaItem())
+                }
+            },
+            {
+
+            }
+        )
+    }
+
+    fun getCategories(onSuccess: (List<MediaItem>) -> Unit) {
+        Amplify.DataStore.query(
+            Category::class.java,
+            {
+                val temp = mutableListOf<MediaItem>()
+                while (it.hasNext()) {
+                    temp.add(it.next().toGenre().toMediaItem())
+                }
+                onSuccess.invoke(temp)
+            },
+            {
+
+            }
+        )
+    }
+
+    fun getCategory(key: String, onSuccess: (MediaItem) -> Unit) {
+        Amplify.DataStore.query(
+            Category::class.java,
+            Where.matches(Category.NAME.contains(key.trim()).or(Category.NAME.eq(key).or(Category.KEY.eq(key)))),
+            {
+                while (it.hasNext()) {
+                    onSuccess.invoke(it.next().toGenre().toMediaItem())
+                }
+            },
+            {
+
+            }
+        )
     }
 
 }

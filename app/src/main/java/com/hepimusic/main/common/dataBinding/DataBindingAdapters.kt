@@ -38,6 +38,7 @@ import com.hepimusic.main.albums.Album
 import com.hepimusic.main.artists.Artist
 import com.hepimusic.main.common.image.CircularTransparentCenter
 import com.hepimusic.main.explore.RecentlyPlayed
+import com.hepimusic.main.genres.Genre
 import com.hepimusic.main.playlist.Playlist
 import com.hepimusic.main.songs.Song
 import com.hepimusic.playback.MediaItemData
@@ -54,6 +55,24 @@ import java.util.Locale
 object DataBindingAdapters {
     @JvmStatic val centerCrop = CenterCrop()
     @JvmStatic val circleCrop = CircleCrop()
+
+    @BindingAdapter("genreSrc")
+    @JvmStatic
+    fun setGenreSrc(view: ImageView, genre: Genre) {
+        Glide.with(view)
+            .setDefaultRequestOptions(
+                RequestOptions()
+                    .placeholder(R.drawable.album_art)
+                    .error(R.drawable.album_art)
+                    .diskCacheStrategy(DiskCacheStrategy.DATA)
+            )
+            .load(genre)
+            .transform(
+                MultiTransformation(centerCrop, RoundedCorners(10))
+            )
+            .placeholder(R.drawable.album_art)
+            .into(view)
+    }
 
     @BindingAdapter("android:src")
     @JvmStatic

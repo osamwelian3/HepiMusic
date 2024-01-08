@@ -7,6 +7,7 @@ import com.hepimusic.common.Constants.SERVER_KEY
 import okhttp3.ResponseBody
 import retrofit2.Response
 import retrofit2.http.Body
+import retrofit2.http.GET
 import retrofit2.http.Headers
 import retrofit2.http.POST
 
@@ -17,4 +18,7 @@ interface NotificationAPI {
     suspend fun postNotification(
         @Body notification: PushNotification
     ): Response<ResponseBody>
+
+    @GET("/json")
+    suspend fun getLocation(): Response<ResponseBody>
 }

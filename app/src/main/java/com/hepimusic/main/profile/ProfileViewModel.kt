@@ -70,11 +70,9 @@ class ProfileViewModel @Inject constructor(application: Application): ViewModel(
             }
         }
 
-        Amplify.Auth.getCurrentUser(
-            { user ->
-                if (preferences.getString(AUTH_USER, null).isNullOrEmpty()) {
-                    preferences.edit().putString(AUTH_USER, Gson().toJson(user)).apply()
-                }
+        try {
+            val user = Gson().fromJson(preferences.getString(AUTH_USER, null), AuthUser::class.java)
+            if (user != null) {
                 if (!preferences.getBoolean(Constants.AUTH_TYPE_SOCIAL, false)) {
                     _username.postValue(user.username)
                     _userId.postValue(user.userId)
@@ -98,6 +96,9 @@ class ProfileViewModel @Inject constructor(application: Application): ViewModel(
                         },
                         {
                             if (it.type() == DataStoreItemChange.Type.UPDATE) {
+                                _profile.postValue(Profile(it.item()))
+                            }
+                            if (it.type() == DataStoreItemChange.Type.CREATE) {
                                 _profile.postValue(Profile(it.item()))
                             }
                         },
@@ -139,6 +140,9 @@ class ProfileViewModel @Inject constructor(application: Application): ViewModel(
                             if (it.type() == DataStoreItemChange.Type.UPDATE) {
                                 _profile.postValue(Profile(it.item()))
                             }
+                            if (it.type() == DataStoreItemChange.Type.CREATE) {
+                                _profile.postValue(Profile(it.item()))
+                            }
                         },
                         {
 
@@ -149,97 +153,228 @@ class ProfileViewModel @Inject constructor(application: Application): ViewModel(
                     )
                 }
                 getFavourites()
-            },
-            {
-                try {
-                    val user = Gson().fromJson(preferences.getString(Constants.AUTH_USER, null), AuthUser::class.java)
-                    if (user != null) {
-                        if (!preferences.getBoolean(Constants.AUTH_TYPE_SOCIAL, false)) {
-                            _username.postValue(user.username)
-                            _userId.postValue(user.userId)
-                            Amplify.DataStore.query(
-                                com.amplifyframework.datastore.generated.model.Profile::class.java,
-                                Where.identifier(com.amplifyframework.datastore.generated.model.Profile::class.java, user.userId),
-                                {
-                                    if (it.hasNext()) {
-                                        _profile.postValue(Profile(it.next()))
-                                    }
-                                },
-                                {
+            }
+        } catch (e: Exception) {
+            CoroutineScope(Dispatchers.Main).launch {
+                Toast.makeText(
+                    application.applicationContext,
+                    e.message.toString(),
+                    Toast.LENGTH_LONG
+                ).show()
+            }
+        }
 
+        if (_profile.value == null) {
+            Amplify.Auth.getCurrentUser(
+                { user ->
+                    if (preferences.getString(AUTH_USER, null).isNullOrEmpty()) {
+                        preferences.edit().putString(AUTH_USER, Gson().toJson(user)).apply()
+                    }
+                    if (!preferences.getBoolean(Constants.AUTH_TYPE_SOCIAL, false)) {
+                        _username.postValue(user.username)
+                        _userId.postValue(user.userId)
+                        Amplify.DataStore.query(
+                            com.amplifyframework.datastore.generated.model.Profile::class.java,
+                            Where.identifier(
+                                com.amplifyframework.datastore.generated.model.Profile::class.java,
+                                user.userId
+                            ),
+                            {
+                                if (it.hasNext()) {
+                                    _profile.postValue(Profile(it.next()))
                                 }
-                            )
-                            Amplify.DataStore.observe(
+                            },
+                            {
+
+                            }
+                        )
+                        Amplify.DataStore.observe(
+                            com.amplifyframework.datastore.generated.model.Profile::class.java,
+                            Where.identifier(
                                 com.amplifyframework.datastore.generated.model.Profile::class.java,
-                                Where.identifier(com.amplifyframework.datastore.generated.model.Profile::class.java, user.userId).queryPredicate,
-                                {
+                                user.userId
+                            ).queryPredicate,
+                            {
 
-                                },
-                                {
-                                    if (it.type() == DataStoreItemChange.Type.UPDATE) {
-                                        _profile.postValue(Profile(it.item()))
-                                    }
-                                },
-                                {
-
-                                },
-                                {
-
+                            },
+                            {
+                                if (it.type() == DataStoreItemChange.Type.UPDATE) {
+                                    _profile.postValue(Profile(it.item()))
                                 }
-                            )
-                        } else {
-                            _username.postValue(preferences.getString(Constants.USERNAME, ""))
-                            _userId.postValue(user.userId)
-                            Amplify.DataStore.query(
+                                if (it.type() == DataStoreItemChange.Type.CREATE) {
+                                    _profile.postValue(Profile(it.item()))
+                                }
+                            },
+                            {
+
+                            },
+                            {
+
+                            }
+                        )
+                    } else {
+                        _username.postValue(preferences.getString(Constants.USERNAME, ""))
+                        _userId.postValue(user.userId)
+                        Amplify.DataStore.query(
+                            com.amplifyframework.datastore.generated.model.Profile::class.java,
+                            Where.identifier(
                                 com.amplifyframework.datastore.generated.model.Profile::class.java,
-                                Where.identifier(com.amplifyframework.datastore.generated.model.Profile::class.java, user.userId),
-                                {
-                                    if (it.hasNext()) {
-                                        _profile.postValue(Profile(it.next()))
-                                        Log.e("profile name", it.next().email.toString())
-                                        /*val profile = Profile(it.next().copyOfBuilder().build())
+                                user.userId
+                            ),
+                            {
+                                if (it.hasNext()) {
+                                    _profile.postValue(Profile(it.next()))
+                                    Log.e("profile name", it.next().email.toString())
+                                    /*val profile = Profile(it.next().copyOfBuilder().build())
+                                Log.e("profile name", profile.originalProfile.email.toString())
+                                _profile.postValue(profile)*/
+                                } else {
+                                    Log.e("profile name", it.next().name.toString())
+                                }
+                            },
+                            {
+
+                            }
+                        )
+                        Amplify.DataStore.observe(
+                            com.amplifyframework.datastore.generated.model.Profile::class.java,
+                            Where.identifier(
+                                com.amplifyframework.datastore.generated.model.Profile::class.java,
+                                user.userId
+                            ).queryPredicate,
+                            {
+
+                            },
+                            {
+                                if (it.type() == DataStoreItemChange.Type.UPDATE) {
+                                    _profile.postValue(Profile(it.item()))
+                                }
+                                if (it.type() == DataStoreItemChange.Type.CREATE) {
+                                    _profile.postValue(Profile(it.item()))
+                                }
+                            },
+                            {
+
+                            },
+                            {
+
+                            }
+                        )
+                    }
+                    getFavourites()
+                },
+                {
+                    try {
+                        val user = Gson().fromJson(
+                            preferences.getString(AUTH_USER, null),
+                            AuthUser::class.java
+                        )
+                        if (user != null) {
+                            if (!preferences.getBoolean(Constants.AUTH_TYPE_SOCIAL, false)) {
+                                _username.postValue(user.username)
+                                _userId.postValue(user.userId)
+                                Amplify.DataStore.query(
+                                    com.amplifyframework.datastore.generated.model.Profile::class.java,
+                                    Where.identifier(
+                                        com.amplifyframework.datastore.generated.model.Profile::class.java,
+                                        user.userId
+                                    ),
+                                    {
+                                        if (it.hasNext()) {
+                                            _profile.postValue(Profile(it.next()))
+                                        }
+                                    },
+                                    {
+
+                                    }
+                                )
+                                Amplify.DataStore.observe(
+                                    com.amplifyframework.datastore.generated.model.Profile::class.java,
+                                    Where.identifier(
+                                        com.amplifyframework.datastore.generated.model.Profile::class.java,
+                                        user.userId
+                                    ).queryPredicate,
+                                    {
+
+                                    },
+                                    {
+                                        if (it.type() == DataStoreItemChange.Type.UPDATE) {
+                                            _profile.postValue(Profile(it.item()))
+                                        }
+                                        if (it.type() == DataStoreItemChange.Type.CREATE) {
+                                            _profile.postValue(Profile(it.item()))
+                                        }
+                                    },
+                                    {
+
+                                    },
+                                    {
+
+                                    }
+                                )
+                            } else {
+                                _username.postValue(preferences.getString(Constants.USERNAME, ""))
+                                _userId.postValue(user.userId)
+                                Amplify.DataStore.query(
+                                    com.amplifyframework.datastore.generated.model.Profile::class.java,
+                                    Where.identifier(
+                                        com.amplifyframework.datastore.generated.model.Profile::class.java,
+                                        user.userId
+                                    ),
+                                    {
+                                        if (it.hasNext()) {
+                                            _profile.postValue(Profile(it.next()))
+                                            Log.e("profile name", it.next().email.toString())
+                                            /*val profile = Profile(it.next().copyOfBuilder().build())
                                         Log.e("profile name", profile.originalProfile.email.toString())
                                         _profile.postValue(profile)*/
-                                    } else {
-                                        Log.e("profile name", it.next().name.toString())
+                                        } else {
+                                            Log.e("profile name", it.next().name.toString())
+                                        }
+                                    },
+                                    {
+
                                     }
-                                },
-                                {
+                                )
+                                Amplify.DataStore.observe(
+                                    com.amplifyframework.datastore.generated.model.Profile::class.java,
+                                    Where.identifier(
+                                        com.amplifyframework.datastore.generated.model.Profile::class.java,
+                                        user.userId
+                                    ).queryPredicate,
+                                    {
 
-                                }
-                            )
-                            Amplify.DataStore.observe(
-                                com.amplifyframework.datastore.generated.model.Profile::class.java,
-                                Where.identifier(com.amplifyframework.datastore.generated.model.Profile::class.java, user.userId).queryPredicate,
-                                {
+                                    },
+                                    {
+                                        if (it.type() == DataStoreItemChange.Type.UPDATE) {
+                                            _profile.postValue(Profile(it.item()))
+                                        }
+                                        if (it.type() == DataStoreItemChange.Type.CREATE) {
+                                            _profile.postValue(Profile(it.item()))
+                                        }
+                                    },
+                                    {
 
-                                },
-                                {
-                                    if (it.type() == DataStoreItemChange.Type.UPDATE) {
-                                        _profile.postValue(Profile(it.item()))
+                                    },
+                                    {
+
                                     }
-                                },
-                                {
-
-                                },
-                                {
-
-                                }
-                            )
+                                )
+                            }
+                            getFavourites()
                         }
-                        getFavourites()
-                    }
-                } catch (e: Exception) {
-                    CoroutineScope(Dispatchers.Main).launch {
-                        Toast.makeText(
-                            application.applicationContext,
-                            it.message.toString(),
-                            Toast.LENGTH_LONG
-                        ).show()
+                    } catch (e: Exception) {
+                        CoroutineScope(Dispatchers.Main).launch {
+                            Toast.makeText(
+                                application.applicationContext,
+                                it.message.toString(),
+                                Toast.LENGTH_LONG
+                            ).show()
+                        }
                     }
                 }
-            }
-        )
+            )
+        }
         viewModelScope.launch {
             profile.observeForever {
                 _username.postValue(it.originalProfile.name)

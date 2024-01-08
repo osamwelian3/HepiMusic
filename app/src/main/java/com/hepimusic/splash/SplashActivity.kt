@@ -1,11 +1,14 @@
 package com.hepimusic.splash
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
 import android.util.Log
+import android.view.LayoutInflater
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
@@ -18,6 +21,11 @@ import com.hepimusic.auth.LoginActivity
 import com.hepimusic.common.BaseActivity
 import com.hepimusic.common.Constants
 import com.hepimusic.common.Constants.INITIALIZATION_COMPLETE
+import com.hepimusic.common.fadeIn
+import com.hepimusic.common.fadeInSlideDown
+import com.hepimusic.common.fadeOut
+import com.hepimusic.common.fadeOutSlideDown
+import com.hepimusic.databinding.ActivitySplashBinding
 import com.hepimusic.datasource.repositories.MediaItemTree
 import com.hepimusic.datasource.repositories.SongRepository
 import com.hepimusic.getStarted.GetStartedActivity
@@ -40,10 +48,13 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import java.util.Timer
 import javax.inject.Inject
 
+@SuppressLint("CustomSplashScreen")
 @AndroidEntryPoint
 class SplashActivity : BaseActivity() {
 
@@ -61,6 +72,8 @@ class SplashActivity : BaseActivity() {
     private lateinit var viewModel: SongViewModel
 
     private lateinit var preferences: SharedPreferences
+
+    private lateinit var binding: ActivitySplashBinding
 
     var conditionOne: Boolean = false
 
@@ -102,25 +115,73 @@ class SplashActivity : BaseActivity() {
         findViewById<AmplifyMapView>(R.id.mapView)
     }
 
+    var timeInSeconds: Long = 0L
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_splash)
+        binding = ActivitySplashBinding.inflate(LayoutInflater.from(this))
+        setContentView(binding.root/*R.layout.activity_splash*/)
         amplifyMapView.mapView.getMapAsync {
 
         }
         preferences = application.getSharedPreferences("main", Context.MODE_PRIVATE)
 
-        runBlocking {
-            if (preferences.getBoolean(Constants.LOGGED_IN, false)) {
-                isAuthenticated = true
+        fun timerTask() {
+            Handler(mainLooper).postDelayed(
+                Runnable {
+                    timeInSeconds += 2000
+                    timerTask()
+                }, 2000
+            )
+        }
 
+        timerTask()
+
+        MediaItemTree.firstTimemessage.observe(this) {
+            runBlocking {
+                delay(1000)
+                binding.splashText.fadeOutSlideDown()
+                binding.splashText.text = it
+                binding.splashText.fadeInSlideDown()
+            }
+        }
+
+        runBlocking {
+            binding.splashText.fadeOutSlideDown()
+            binding.splashText.text = "Verifying if you are logged in."
+            binding.splashText.fadeInSlideDown()
+            delay(3000)
+            if (preferences.getBoolean(Constants.LOGGED_IN, false)) {
+                binding.splashText.fadeOutSlideDown()
+                binding.splashText.text = "User verification complete. Welcome back."
+                binding.splashText.fadeInSlideDown()
+                delay(3000)
+                isAuthenticated = true
+                binding.splashText.fadeOutSlideDown()
+                binding.splashText.text = "Checking on-device Hepi Music cache"
+                binding.splashText.fadeInSlideDown()
+                delay(3000)
                 if (!MediaItemTree.liveDataSongs.value.isNullOrEmpty()) {
+                    binding.splashText.fadeOutSlideDown()
+                    binding.splashText.text = "Loading complete. Enjoy the best music on Hepi Music"
+                    binding.splashText.fadeInSlideDown()
+                    delay(3000)
                     goToNextScreen()
                 } else {
                     CoroutineScope(Dispatchers.Main + Job()).launch {
                         MediaItemTree.liveDataSongs.observe(this@SplashActivity) {
-                            goToNextScreen()
+                            runBlocking {
+                                binding.splashText.fadeOutSlideDown()
+                                binding.splashText.text = "Loading complete. Enjoy the best music on Hepi Music"
+                                binding.splashText.fadeInSlideDown()
+                                delay(3000)
+                                goToNextScreen()
+                            }
                         }
+                        binding.splashText.fadeOutSlideDown()
+                        binding.splashText.text = "Initializing music database"
+                        binding.splashText.fadeInSlideDown()
+                        delay(3000)
                         MediaItemTree.initialize(this@SplashActivity, songRepository)
                     }
                 }
@@ -145,6 +206,10 @@ class SplashActivity : BaseActivity() {
                     MediaItemTree.initialize(this@SplashActivity.applicationContext, songRepository)
                 }*/
             } else {
+                binding.splashText.fadeOutSlideDown()
+                binding.splashText.text = "Not logged in yet. Switching to Log in Screen."
+                binding.splashText.fadeInSlideDown()
+                delay(3000)
                 startActivity(Intent(this@SplashActivity, LoginActivity::class.java).setFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
                 finish()
             }

@@ -7,9 +7,10 @@ import com.hepimusic.main.common.data.Model
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class Genre(override val id: String, val name: String) : Model(), Parcelable {
+data class Genre(override val id: String, val name: String, val key: String) : Model(), Parcelable {
 
     constructor(parcel: Parcel) : this(
+        parcel.readString()!!,
         parcel.readString()!!,
         parcel.readString()!!
     ) {
@@ -17,12 +18,14 @@ data class Genre(override val id: String, val name: String) : Model(), Parcelabl
 
     constructor(mediaItem: MediaItem) : this(
         id = mediaItem.mediaId,
-        name = mediaItem.mediaMetadata.title.toString()
+        name = mediaItem.mediaMetadata.title.toString(),
+        key = mediaItem.mediaMetadata.description.toString()
     )
 
     override fun writeToParcel(parcel: Parcel, flags: Int) {
         parcel.writeString(id)
         parcel.writeString(name)
+        parcel.writeString(key)
     }
 
     override fun describeContents(): Int {

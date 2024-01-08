@@ -37,7 +37,7 @@ abstract class BaseRequestsFragment: Fragment(), ChannelListener, LocationTask.L
     // WIFI DIRECT
 
     var manager: WifiP2pManager? = null
-    private var isWifiP2pEnabled = false
+    var isWifiP2pEnabled = false
     private var retryChannel = false
 
     val intentFilter = IntentFilter().apply {
@@ -259,7 +259,7 @@ abstract class BaseRequestsFragment: Fragment(), ChannelListener, LocationTask.L
     fun disconnect(onSuccess: () -> Unit, onFailure: (reason: Int) -> Unit) {
         manager?.let { manager ->
             channel?.let { channel ->
-                if (ActivityCompat.checkSelfPermission(requireActivity(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED || ActivityCompat.checkSelfPermission(requireActivity(), Manifest.permission.NEARBY_WIFI_DEVICES) != PackageManager.PERMISSION_GRANTED) {
+                if (!(ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED || ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.NEARBY_WIFI_DEVICES) == PackageManager.PERMISSION_GRANTED)) {
                     return
                 }
 

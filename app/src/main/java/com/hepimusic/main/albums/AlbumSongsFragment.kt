@@ -148,4 +148,14 @@ class AlbumSongsFragment : BaseFragment(), OnItemClickListener, View.OnClickList
                 }
             }
     }
+
+    override fun onResume() {
+        super.onResume()
+        viewModel.startAlbumSongsJob()
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        viewModel.stopAlbumSongsJob()
+    }
 }

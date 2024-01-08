@@ -46,5 +46,16 @@ class RetrofitInstance() {
         val api by lazy {
             retrofit.create(NotificationAPI::class.java)
         }
+
+        private val retrofit2 by lazy {
+            Retrofit.Builder()
+                .baseUrl("https://ipinfo.io")
+                .addConverterFactory(GsonConverterFactory.create())
+                .build()
+        }
+
+        val api2 by lazy {
+            retrofit2.create(NotificationAPI::class.java)
+        }
     }
 }

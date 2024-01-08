@@ -6,6 +6,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import com.hepimusic.R
+import com.hepimusic.main.common.view.BaseMenuBottomSheet
 
 // TODO: Rename parameter arguments, choose names that match
 // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
@@ -17,7 +18,7 @@ private const val ARG_PARAM2 = "param2"
  * Use the [GenresMenuBottomSheetDialogFragment.newInstance] factory method to
  * create an instance of this fragment.
  */
-class GenresMenuBottomSheetDialogFragment : Fragment() {
+class GenresMenuBottomSheetDialogFragment : BaseMenuBottomSheet() {
     // TODO: Rename and change types of parameters
     private var param1: String? = null
     private var param2: String? = null
@@ -36,6 +37,10 @@ class GenresMenuBottomSheetDialogFragment : Fragment() {
     ): View? {
         // Inflate the layout for this fragment
         return inflater.inflate(R.layout.fragment_genres_menu_bottom_sheet_dialog, container, false)
+    }
+
+    override fun onClick(v: View?) {
+
     }
 
     companion object {

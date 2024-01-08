@@ -123,7 +123,41 @@ class PlayerControlFragment : BaseRequestsFragment(), View.OnClickListener, OnIt
                     Log.e("PLAYER PLAYLIST SIZE", requestPlayer.playlists?.size.toString())
                     if (requestPlayer.key == playerKey) {
                         playlists = requestPlayer.playlists ?: emptyList()
-                        requestPlayer.owners?.map { owner ->
+                        if (requestPlayer.ownerData.contains(viewModel.currentAuthUserString ?: "VERYWEIRDRANDOMUSERNAMETHATWILLNEVEREVEREXIST")) {
+                            binding.addPlaylistsFAB.visibility = View.VISIBLE
+                            binding.myPlaylists.setText("     My Playlists")
+                            for (playlist in playlists) {
+                                viewModel.getObservable().subscribeToTopic(playlist.name.trim().replace(" ", "_"))
+                            }
+                            viewModel.startAdvertising(requestPlayer.name)
+                            disconnect(
+                                {
+                                    if (baseViewModel.wifiP2PEnabled.value == true) {
+                                        createGroup(requestPlayer.name)
+                                    } else {
+                                        baseViewModel.wifiP2PEnabled.observe(viewLifecycleOwner) {enabled ->
+                                            if (enabled || isWifiP2pEnabled) {
+                                                createGroup(requestPlayer.name)
+                                            }
+                                        }
+                                    }
+                                },
+                                {
+                                    if (baseViewModel.wifiP2PEnabled.value == true) {
+                                        createGroup(requestPlayer.name)
+                                    } else {
+                                        baseViewModel.wifiP2PEnabled.observe(viewLifecycleOwner) {enabled ->
+                                            if (enabled) {
+                                                createGroup(requestPlayer.name)
+                                            }
+                                        }
+                                    }
+                                }
+                            )
+                        } else {
+                            binding.myPlaylists.setText("     ${requestPlayer.name}'s Playlists")
+                        }
+                        /*requestPlayer.owners?.map { owner ->
                             if (owner.takeLast(username.length).contains(username, true) || owner.takeLast(email.length).contains(email, true)) {
                                 binding.addPlaylistsFAB.visibility = View.VISIBLE
                                 binding.myPlaylists.setText("     My Playlists")
@@ -159,7 +193,7 @@ class PlayerControlFragment : BaseRequestsFragment(), View.OnClickListener, OnIt
                             } else {
                                 binding.myPlaylists.setText("     ${requestPlayer.name}'s Playlists")
                             }
-                        }
+                        }*/
                         viewModel.getObservable().pplaylistPlayer.postValue(requestPlayer.toRequestPlayer())
                         (binding.playlistsRV.adapter as RequestsBaseAdapter<RequestPlaylist>).updateItems(playlists.sortedByDescending { it.createdDate })
                     }
@@ -175,7 +209,42 @@ class PlayerControlFragment : BaseRequestsFragment(), View.OnClickListener, OnIt
                     Log.e("PLAYER OBJECT", Gson().toJson(requestPlayer))
                     Log.e("PLAYER PLAYLIST SIZE", requestPlayer.playlists?.size.toString())
                     if (requestPlayer.key == playerKey) {
-                        requestPlayer.owners?.map { owner ->
+                        playlists = requestPlayer.playlists ?: emptyList()
+                        if (requestPlayer.ownerData.contains(viewModel.currentAuthUserString ?: "VERYWEIRDRANDOMUSERNAMETHATWILLNEVEREVEREXIST")) {
+                            binding.addPlaylistsFAB.visibility = View.VISIBLE
+                            binding.myPlaylists.setText("     My Playlists")
+                            for (playlist in playlists) {
+                                viewModel.getObservable().subscribeToTopic(playlist.name.trim().replace(" ", "_"))
+                            }
+                            viewModel.startAdvertising(requestPlayer.name)
+                            disconnect(
+                                {
+                                    if (baseViewModel.wifiP2PEnabled.value == true) {
+                                        createGroup(requestPlayer.name)
+                                    } else {
+                                        baseViewModel.wifiP2PEnabled.observe(viewLifecycleOwner) {enabled ->
+                                            if (enabled) {
+                                                createGroup(requestPlayer.name)
+                                            }
+                                        }
+                                    }
+                                },
+                                {
+                                    if (baseViewModel.wifiP2PEnabled.value == true) {
+                                        createGroup(requestPlayer.name)
+                                    } else {
+                                        baseViewModel.wifiP2PEnabled.observe(viewLifecycleOwner) {enabled ->
+                                            if (enabled) {
+                                                createGroup(requestPlayer.name)
+                                            }
+                                        }
+                                    }
+                                }
+                            )
+                        } else {
+                            binding.myPlaylists.setText("     ${requestPlayer.name}'s Playlists")
+                        }
+                        /*requestPlayer.owners?.map { owner ->
                             playlists = requestPlayer.playlists ?: emptyList()
                             if (owner.takeLast(username.length).contains(username, true) || owner.takeLast(email.length).contains(email, true)) {
                                 binding.addPlaylistsFAB.visibility = View.VISIBLE
@@ -211,7 +280,7 @@ class PlayerControlFragment : BaseRequestsFragment(), View.OnClickListener, OnIt
                             } else {
                                 binding.myPlaylists.setText("     ${requestPlayer.name}'s Playlists")
                             }
-                        }
+                        }*/
                         viewModel.getObservable().pplaylistPlayer.postValue(requestPlayer.toRequestPlayer())
                         (binding.playlistsRV.adapter as RequestsBaseAdapter<RequestPlaylist>).updateItems(playlists.sortedByDescending { it.createdDate })
                     }
@@ -228,20 +297,24 @@ class PlayerControlFragment : BaseRequestsFragment(), View.OnClickListener, OnIt
         dialog.window?.setBackgroundDrawable(ColorDrawable(Color.BLACK))
         dialog.show()
 
-        viewModel.getObservable().data.observe(viewLifecycleOwner) {
-            if (it.success || it.message == null) {
-                Utils.vibrateAfterAction(activity)
-                viewModel.getObservable().clearResult(R.string.saved)
-                dialog.dismiss()
-            } else {
-                Toast.makeText(activity, it.message, Toast.LENGTH_SHORT).show()
-            }
-        }
-
         val playlistNameField = dialog.findViewById<EditText>(R.id.playlistNameField)
         val playlistDescField = dialog.findViewById<EditText>(R.id.playlistDescField)
         val writePlaylistButton = dialog.findViewById<Button>(R.id.writePlaylist)
         val progressBar = dialog.findViewById<ProgressBar>(R.id.progressBar)
+
+        viewModel.getObservable().data.observe(viewLifecycleOwner) {
+            if (it.success) {
+                Utils.vibrateAfterAction(activity)
+                viewModel.getObservable().clearResult(R.string.saved)
+                dialog.dismiss()
+            } else {
+                if (it.message != null) {
+                    writePlaylistButton.crossFadeWidth(progressBar, duration = 0)
+                    Toast.makeText(activity, it.message, Toast.LENGTH_SHORT).show()
+                    viewModel.getObservable().clearResult()
+                }
+            }
+        }
 
         fun validateData() : Boolean {
             viewModel.getObservable().pplaylistName.postValue(playlistNameField.text.toString())
@@ -283,7 +356,7 @@ class PlayerControlFragment : BaseRequestsFragment(), View.OnClickListener, OnIt
         playlistDescField.addTextChangedListener(textWatcher)
 
         writePlaylistButton.setOnClickListener {
-            progressBar.crossFadeWidth(writePlaylistButton)
+            progressBar.crossFadeWidth(writePlaylistButton, duration = 0)
             if (viewModel.getObservable().playlistToEdit.value == null) {
                 viewModel.getObservable().createNewPlaylist()
             } else {

@@ -9,7 +9,7 @@
 
     <Button
         android:id="@+id/myPlaylists"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         style="@style/Theme.HepiMusic.SectionTitle"
         android:drawableStart="@drawable/ic_back"
@@ -19,7 +19,7 @@
         android:text="     Playlists"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"/>
+        app:layout_constraintEnd_toStartOf="@id/addPlaylistsFAB"/>
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/playlistsRV"
@@ -35,13 +35,12 @@
         android:id="@+id/addPlaylistsFAB"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:src="@drawable/baseline_add_24"
+        android:src="@drawable/ic_playlist2"
         android:tint="@color/black"
+        app:maxImageSize="25dp"
         android:visibility="gone"
-        app:maxImageSize="40dp"
-        android:layout_margin="15dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:contentDescription="Add Playlists FAB" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

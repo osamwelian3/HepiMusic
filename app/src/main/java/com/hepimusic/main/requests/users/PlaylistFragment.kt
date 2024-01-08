@@ -139,7 +139,7 @@ class PlaylistFragment : Fragment(), View.OnClickListener, OnItemClickListener {
         binding.requestPlaylistSongsRV.layoutManager = layoutManager
         binding.requestPlaylistSongsRV.getChildAt(0)?.requestFocus()
 
-        if (requestSongs.isNotEmpty() && playbackViewModel.isPlaying.value == false) {
+        if (playlist!!.ownerData.contains(viewModel.currentAuthUserString ?: "SADNJNDDSCJNIJNJCDNJNIDNNJJNUCDCKDJNNCNHJD") && requestSongs.isNotEmpty() && playbackViewModel.isPlaying.value == false) {
             playbackViewModel.playAll(
                 requestSongs[0].key,
                 requestSongs.map { it.toMediaItem() })
@@ -157,7 +157,7 @@ class PlaylistFragment : Fragment(), View.OnClickListener, OnItemClickListener {
             (binding.requestPlaylistSongsRV.adapter as RequestsBaseAdapter<RequestSong>).updateItems(requestSongs.sortedBy { it.requests.size }.sortedByDescending { it.createdDate })
             binding.requestPlaylistSongsRV.getChildAt(0)?.requestFocus()
 
-            if (requestSongs.isNotEmpty() && playbackViewModel.isPlaying.value == false) {
+            if (playlist!!.ownerData.contains(viewModel.currentAuthUserString ?: "SADNJNDDSCJNIJNJCDNJNIDNNJJNUCDCKDJNNCNHJD") && requestSongs.isNotEmpty() && playbackViewModel.isPlaying.value == false) {
                 playbackViewModel.playAll(
                     requestSongs[0].key,
                     requestSongs.map { it.toMediaItem() })
@@ -193,6 +193,7 @@ class PlaylistFragment : Fragment(), View.OnClickListener, OnItemClickListener {
             if (it.success || it.message == null) {
                 Utils.vibrateAfterAction(activity)
                 viewModel.getObservable().clearResult(R.string.saved)
+                Toast.makeText(requireContext(), "Request sent to player.", Toast.LENGTH_LONG).show()
                 dialog.dismiss()
                 job?.cancel()
             } else {

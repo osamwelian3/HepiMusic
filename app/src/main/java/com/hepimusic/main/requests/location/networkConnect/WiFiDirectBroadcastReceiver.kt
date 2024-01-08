@@ -67,13 +67,13 @@ class WiFiDirectBroadcastReceiver
             // asynchronous call and the calling activity is notified with a
             // callback on PeerListListener.onPeersAvailable()
             Log.d(TAG, "P2P peers changed")
-            if (ActivityCompat.checkSelfPermission(
+            if (!(ActivityCompat.checkSelfPermission(
                     activity,
                     Manifest.permission.ACCESS_FINE_LOCATION
-                ) != PackageManager.PERMISSION_GRANTED || ActivityCompat.checkSelfPermission(
+                ) == PackageManager.PERMISSION_GRANTED || ActivityCompat.checkSelfPermission(
                     activity,
                     Manifest.permission.NEARBY_WIFI_DEVICES
-                ) != PackageManager.PERMISSION_GRANTED
+                ) == PackageManager.PERMISSION_GRANTED)
             ) {
                 // TODO: Consider calling
                 //    ActivityCompat#requestPermissions
